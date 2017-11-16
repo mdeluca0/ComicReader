@@ -1,0 +1,23 @@
+<div id="issue-display">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="comic" style="background-image:url({{issue.image.super_url}})"></div>
+        </div>
+        <div class="col-md-9">
+            <div class="row issue-title">
+                <a href="/reader/{{issue.id}}/0">{{issue.volumeName}} #{{issue.issue_number}}</a>
+            </div>
+            <div class="row issue-name">
+                <p>{{issue.name}}</p>
+            </div>
+            <div class="row">
+                <p>
+                    <span class="pull-left">{{issue.page_count}} pages</span>
+                    <span class="pull-right">{{issue.cover_date}}</span>
+                </p>
+            </div>
+            <hr/>
+            <div class="row" ng-bind-html="issue.description"></div>
+        </div>
+    </div>
+</div>

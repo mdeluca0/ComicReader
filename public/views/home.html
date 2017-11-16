@@ -1,0 +1,12 @@
+<div id="home-display">
+    <div class="row">
+        <div ng-repeat="volume in library">
+            <div class="clearfix" ng-if="$index % 4 == 0"></div>
+            <div class="col-xs-3">
+                <div class="comic" style="background-image:url({{volume.image.super_url}})"></div>
+                <a href="/volume/{{volume.id}}">{{volume.name}}</a>
+                <p>{{volume.count_of_issues}} issues</p>
+            </div>
+        </div>
+    </div>
+</div>

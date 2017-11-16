@@ -1,0 +1,15 @@
+Essential:
+    Book reader
+    Volume and issue selection
+    Top level navigation
+    Api metadata
+    Image loading icon
+    Breadcrumbs
+
+Nice to have:
+    Accounts
+    Bookmarks
+    Read lists
+    Next on deck
+    Issues apart of read list
+    Search

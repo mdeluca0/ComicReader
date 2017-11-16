@@ -1,0 +1,16 @@
+#issue-display {
+    width: 960px;
+    margin: 10px auto 0;
+}
+#issue-display .comic {
+    width: 225px;
+    height: 339px;
+    background-size: 225px 339px;
+    background-repeat: no-repeat;
+}
+#issue-display .issue-title {
+    font-size: 25px;
+}
+#issue-display .issue-name {
+    font-size: 16px;
+}
