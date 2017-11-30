@@ -1,25 +1,9 @@
-<div class="row text-center" style="margin:10px 0">
-    <div class="btn-group" role="group">
-        <a href="/"
-           class="btn btn-default"
-           role="button"
-        >
-            <span class="glyphicon glyphicon-home"></span>
-        </a>
-        <a href="/reader/{{id}}/{{previousPage}}"
-           class="btn btn-default"
-           role="button"
-        >
-            <span class="glyphicon glyphicon-arrow-left"></span>
-        </a>
-        <a href="/reader/{{id}}/{{nextPage}}"
-           class="btn btn-default next-button"
-           role="button"
-        >
-            <span class="glyphicon glyphicon-arrow-right"></span>
-        </a>
-    </div>
-</div>
 <div id="page-image-container" class="row">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="#!/volume/{{issue.volumeId}}">{{issue.volumeName}}</a></li>
+        <li class="breadcrumb-item"><a href="#!/issue/{{issue.id}}">{{issue.name}}</a></li>
+        <li class="breadcrumb-item active">Page {{pageNoDisplay}} of {{issue.page_count}}</li>
+    </ol>
     <img ng-src="data:image/jpg;base64,{{base64Img}}"/>
 </div>

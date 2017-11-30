@@ -22,7 +22,7 @@ myApp.config(function($routeProvider, $locationProvider) {
             redirectTo: 'views/404.html'
         });
 
-    $locationProvider.html5Mode(true);
+    //$locationProvider.html5Mode(true); //TODO: fix this for page refreshes
 });
 
 
@@ -47,15 +47,17 @@ myApp.controller('issueController', function($scope, $routeParams, $http, $sce) 
     });
 });
 
-myApp.controller('readerController', function($scope, $routeParams, $http) {
+myApp.controller('readerController', function($scope, $routeParams, $document, $window, $http) {
     var issueId = $routeParams.id;
     var pageNo = $routeParams.page;
     $http.get('/readIssue?id='+issueId+'&page='+pageNo).then(function (response) {
+        $scope.issue = response.data;
         $scope.base64Img = response.data.base64Img;
-        $scope.id = response.data.id;
         $scope.currentPage = pageNo;
+        $scope.pageNoDisplay = parseInt(pageNo) + 1;
 
-        var pageCount = response.data.pageCount;
+        // Page bounds check
+        var pageCount = response.data.page_count;
         if (pageNo == 0) {
             $scope.previousPage = 0;
         } else {
@@ -66,6 +68,23 @@ myApp.controller('readerController', function($scope, $routeParams, $http) {
         } else {
             $scope.nextPage = parseInt(pageNo) + 1;
         }
+
+        // Keyboard Events for reader
+        var handleKeyDown = function(event) {
+            switch (event.keyCode) {
+                case 37: // [Left]
+                    $window.location.href = '#!/reader/'+issueId+'/'+$scope.previousPage;
+                    break;
+                case 39: // [Right]
+                    $window.location.href = '#!/reader/'+issueId+'/'+$scope.nextPage;
+                    break;
+            }
+            $scope.$apply();
+        };
+        $document.on('keydown', handleKeyDown);
+        $scope.$on('$destroy', function() {
+            $document.unbind('keydown', handleKeyDown);
+        });
 
     });
 });

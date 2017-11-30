@@ -8,19 +8,17 @@ function startRefresh(debug) {
     if (debug) {
         var date = new Date();
         console.log('[' + date.getTime() + '] Running DB refresh...')
-        scanForNewVolumes();
-        scanForActiveIssues();
+        scanVolumes();
     } else {
         setInterval(function () {
             var date = new Date();
             console.log('[' + date.getTime() + '] Running DB refresh...')
-            scanForNewVolumes();
-            scanForActiveIssues();
+            scanVolumes();
         }, consts.refreshInterval * 60 * 1000);
     }
 }
 
-function scanForNewVolumes () {
+function scanVolumes() {
     scanner.scan(function(err, directory) {
         db.getAllVolumes(function(library) {
             for (var i = 0; i < directory.length; i++) {
@@ -28,57 +26,107 @@ function scanForNewVolumes () {
                 for (var j = 0; j < library.length; j++) {
                     if (directory[i].volume === library[j].name && directory[i].start_year === library[j].start_year) {
                         match = true;
+                        break;
                     }
                 }
-                if (!match) {
-                    //new volume found, insert it
-                    pullMetadata(directory[i].volume, directory[i].start_year);
+                if (match) {
+                    //existing volume
+                    processVolume(directory[i], library[j]);
+                } else {
+                    //new volume
+                    processVolume(directory[i], null);
                 }
             }
         });
     });
 }
-
-function pullMetadata (volume, startYear) {
-    api.getFullVolume(volume, startYear, function(err, res) {
-        db.upsertVolume(res);
-    });
-}
-
-function scanForActiveIssues () {
-    scanner.scan(function(err, directory) {
-        db.getAllVolumes(function(library) {
-            for (var i = 0; i < directory.length; i++) {
-                for (var j = 0; j < library.length; j++) {
-                    if (directory[i].volume === library[j].name && directory[i].start_year === library[j].start_year) {
-                        markIssues(directory[i].issues, library[j].issues, library[j].name, library[j].id);
+function processVolume(dirVolume, dbVolume) {
+    if (dbVolume === null) {
+        api.getFullVolume(dirVolume.volume, dirVolume.start_year, function(volume) {
+            processIssues(dirVolume, volume, function(issues) {
+                issues.sort(function (a, b) {
+                    if (parseInt(a.issue_number) < parseInt(b.issue_number)) {
+                        return -1;
                     }
-                }
-            }
+                    if (parseInt(a.issue_number) > parseInt(b.issue_number)) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                volume.issues = issues;
+                db.upsertVolume(volume);
+                console.log('Finished processing "' + volume.name + '"');
+            });
         });
-    });
+    } else {
+        processIssues(dirVolume, dbVolume, function(issues) {
+            issues.sort(function (a, b) {
+                if (parseInt(a.issue_number) < parseInt(b.issue_number)) {
+                    return -1;
+                }
+                if (parseInt(a.issue_number) > parseInt(b.issue_number)) {
+                    return 1;
+                }
+                return 0;
+            });
+            dbVolume.issues = issues;
+            db.upsertVolume(dbVolume);
+            console.log('Finished processing "' + dbVolume.name + '"');
+        });
+    }
 }
+function processIssues(directoryVolume, dbVolume, cb) {
+    var results = [];
 
-function markIssues (directoryIssues, libraryIssues, libraryVolumeName, libraryVolumeId) {
-    for (var i = 0; i < libraryIssues.length; i++) {
+    for (var i = 0; i < dbVolume.issues.length; i++) {
+        var curDbIssue = dbVolume.name + ' - ' + consts.convertToThreeDigits(dbVolume.issues[i].issue_number);
         var match = false;
-        for (var j = 0; j < directoryIssues.length; j++) {
-            var issueNumber = consts.convertToThreeDigits(libraryIssues[i].issue_number);
-            var libraryIssue = libraryVolumeName + ' - ' + issueNumber;
-            var directoryIssue = directoryIssues[j].replace(/\.[^/.]+$/, "");
-
-            if (directoryIssue === libraryIssue) {
-                libraryIssues[i].active = 'Y';
+        for (var j = 0; j < directoryVolume.issues.length; j++) {
+            var curDirIssue = directoryVolume.issues[j].slice(0, -4);
+            if (curDirIssue === curDbIssue) {
                 match = true;
+                break;
             }
         }
-        if (!match) {
-            libraryIssues[i].active = 'N';
+        if (match) {
+            dbVolume.issues[i].active = 'Y';
+            dbVolume.issues[i].file_path = directoryVolume.folder + '/' + directoryVolume.issues[i];
+            processIssue(dbVolume.issues[i], function (issue) {
+                results.push(issue);
+                if (results.length === dbVolume.issues.length) {
+                    return cb(results);
+                }
+            });
+        } else {
+            dbVolume.issues[i].active = 'N';
+            results.push(dbVolume.issues[i]);
+            if (results.length === dbVolume.issues.length) {
+                return cb(results);
+            }
         }
     }
-    archive.populatePageCounts(libraryIssues, function(issues) {
-        db.updateIssues(libraryVolumeId, issues);
-    });
+}
+function processIssue(dbIssue, cb) {
+    if (typeof(dbIssue.page_count) === 'undefined' || typeof(dbIssue.cover) === 'undefined') {// || typeof(dbIssue.thumbnails) === 'undefined') {
+        archive.extractIssue(dbIssue.file_path, function (err, handler, entries, ext) {
+            if (!err) {
+                archive.getPageCount(entries, function (count) {
+                    archive.getPage(handler, entries, ext, 0, function (cover) {
+                        //archive.getThumbnails(handler, entries, ext, function(thumbnails) {
+                            dbIssue.page_count = count;
+                            dbIssue.cover = cover;
+                            //dbIssue.thumbnails = thumbnails;
+                            return cb(dbIssue);
+                        //});
+                    });
+                });
+            } else {
+                return cb(dbIssue);
+            }
+        });
+    } else {
+        return cb(dbIssue);
+    }
 }
 
 module.exports.startRefresh = startRefresh;

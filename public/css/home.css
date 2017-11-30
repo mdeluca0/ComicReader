@@ -2,9 +2,7 @@
     width: 960px;
     margin: 10px auto 0;
 }
-#home-display .comic {
+#home-display .volume-cover{
     width: 204px;
     height: 307px;
-    background-size: 204px 307px;
-    background-repeat: no-repeat;
 }

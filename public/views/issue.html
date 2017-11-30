@@ -1,11 +1,16 @@
 <div id="issue-display">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="#!/volume/{{issue.volumeId}}">{{issue.volumeName}}</a></li>
+        <li class="breadcrumb-item active">{{issue.name}}</li>
+    </ol>
     <div class="row">
         <div class="col-md-3">
-            <div class="comic" style="background-image:url({{issue.image.super_url}})"></div>
+            <img class="comic" ng-src="data:image/jpg;base64,{{issue.cover}}"/>
         </div>
         <div class="col-md-9">
             <div class="row issue-title">
-                <a href="/reader/{{issue.id}}/0">{{issue.volumeName}} #{{issue.issue_number}}</a>
+                <a href="#!/reader/{{issue.id}}/0">{{issue.volumeName}} #{{issue.issue_number}}</a>
             </div>
             <div class="row issue-name">
                 <p>{{issue.name}}</p>

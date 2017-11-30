@@ -1,5 +1,9 @@
-#page-image-container img{
-    display: block;
-    margin: 0 auto;
-    height: 100%;
+#page-image-container {
+    width: 960px;
+    margin: 10px auto 0;
 }
+#page-image-container img{
+     display: block;
+     margin: 0 auto;
+     height: 900px;
+ }

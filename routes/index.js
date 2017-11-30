@@ -5,7 +5,7 @@ var db = require('../db');
 var archive = require('../archive');
 
 // Initialize metadata refresher
-require('../DataManager').startRefresh(false);
+require('../DataManager').startRefresh(true);
 
 router.get('/getLibrary', function(req, res) {
     db.getActive(function(library) {
@@ -28,9 +28,11 @@ router.get('/readIssue', function(req, res) {
     var issueId = req.query.id;
     var pageNo = req.query.page;
     db.getIssue(issueId, function(issue) {
-        archive.getPage(issue, pageNo, function(base64Img) {
-            issue.base64Img = base64Img;
-            res.send(issue);
+        archive.extractIssue(issue.file_path, function(err, handler, entries, ext) {
+            archive.getPage(handler, entries, ext, pageNo, function (base64Img) {
+                issue.base64Img = base64Img;
+                res.send(issue);
+            });
         });
     });
 });

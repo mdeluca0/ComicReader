@@ -14,6 +14,7 @@ function getActive (cb) {
                 'image': {'$first': '$image'},
                 'name': {'$first': '$name'},
                 'start_year': {'$first': '$start_year'},
+                'cover': {'$first': '$cover'},
                 'issues': {'$push': '$issues'}
             }},
             {$sort: {'name': 1}}

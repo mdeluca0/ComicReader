@@ -21,10 +21,10 @@ var issuesOptions = {
 };
 
 function getFullVolume (name, year, cb) {
-    getVolume(name, year, function(err, volume) {
-        getIssues(volume.id, function(err, issues) {
+    getVolume(name, year, function(volume) {
+        getIssues(volume.id, function(issues) {
             volume.issues = issues.issue;
-            return cb(0, volume);
+            return cb(volume);
         });
     });
 }
@@ -40,12 +40,15 @@ function getVolume (name, year, cb) {
     request(options, function (err, res) {
         // res.body is xml
         xml.parseVolume(res.body, name, year, function(err, res) {
-            return cb(err, res);
+            getVolumeCover(res.image.super_url, function(img) { //get volume cover as base 64
+                res.cover = img;
+                return cb(res);
+            });
         });
     });
 }
 
-function getIssues (volumeId, cb) {
+function getIssues(volumeId, cb) {
     var options = {
         'url': issuesOptions.url,
         'headers': issuesOptions.headers
@@ -59,11 +62,11 @@ function getIssues (volumeId, cb) {
     issuesRequest(options, offset, issues, function(err, res) {
         // sort issues by issue number
         res.issue.sort(function(a, b) { return a.issue_number - b.issue_number });
-        return cb(0, res);
+        return cb(res);
     });
 }
 
-function issuesRequest (options, offset, issues, cb) {
+function issuesRequest(options, offset, issues, cb) {
     request(options, function (err, res) {
         // res.body is xml
         issues += res.body.match(/<results>(.*)<\/results>/g);
@@ -86,6 +89,17 @@ function issuesRequest (options, offset, issues, cb) {
             xml.stringToXml(issues, function(err, res) {
                 return cb(0, res);
             });
+        }
+    });
+}
+
+function getVolumeCover(url, cb) {
+    request.get({'url': url, 'headers': {'User-Agent': userAgent}, 'encoding': null}, function (err, res, body) {
+        if (!err && res.statusCode === 200) {
+            var base64Img = new Buffer(body).toString('base64');
+            return cb(base64Img);
+        } else {
+            return cb('');
         }
     });
 }
