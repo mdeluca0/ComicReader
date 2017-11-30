@@ -98,7 +98,8 @@ function processIssues(directoryVolume, dbVolume, cb) {
         }
         if (match) {
             dbVolume.issues[i].active = 'Y';
-            dbVolume.issues[i].file_path = directoryVolume.folder + '/' + directoryVolume.issues[i];
+            dbVolume.issues[i].file_path = directoryVolume.folder + '/' + directoryVolume.issues[j];
+            console.log('Started processing issue: ' + dbVolume.issues[i].file_path);
             processIssue(dbVolume.issues[i], function (issue) {
                 results.push(issue);
                 console.log('Finished processing issue: ' + issue.file_path);

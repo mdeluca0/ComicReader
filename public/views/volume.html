@@ -7,11 +7,11 @@
         <div ng-repeat="issue in volume.issues">
             <div class="clearfix" ng-if="$index % 6 == 0"></div>
             <div class="col-xs-2">
-                <img class="issue-cover" ng-src="/images/thumbs/{{issue.cover}}"/>
-                <span class="issue-name">
-                    <a href="#!/issue/{{issue.id}}">{{volume.name}} #{{issue.issue_number}}</a>
-                    <p>{{issue.name}}</p>
-                </span>
+                <a href="#!/issue/{{issue.id}}">
+                    <img class="issue-cover" ng-src="/images/thumbs/{{issue.cover}}"/>
+                    <span class="issue-name">{{volume.name}} #{{issue.issue_number}}</span>
+                </a>
+                <p><span class="issue-name">{{issue.name}}</span></p>
             </div>
         </div>
     </div>

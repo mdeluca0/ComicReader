@@ -3,9 +3,11 @@
         <div ng-repeat="volume in library">
             <div class="clearfix" ng-if="$index % 4 == 0"></div>
             <div class="col-xs-3">
-                <img class="volume-cover" src="/images/thumbs/{{volume.cover}}"/>
-                <a href="#!/volume/{{volume.id}}">{{volume.name}}</a>
-                <p>{{volume.count_of_issues}} issues</p>
+                <a href="#!/volume/{{volume.id}}">
+                    <img class="volume-cover" src="/images/thumbs/{{volume.cover}}"/>
+                    <span>{{volume.name}}</span>
+                </a>
+                <p>{{volume.active_issues}} issues</p>
             </div>
         </div>
     </div>

@@ -1,10 +1,9 @@
 Essential:
-    Book reader (left click or right arrow to next page, right click or left arrow to previous page)
+    Book reader - done
     Volume and issue selection - done
     Api metadata - done
-    Image loading icon
-    Breadcrumbs
-    Account for non-numeric issue numbers
+    Breadcrumbs - done
+    Account for non-numeric issue numbers - done
 
 Nice to have:
     Accounts
@@ -13,3 +12,4 @@ Nice to have:
     Next on deck
     Issues apart of read list
     Search
+    Image loading icon
