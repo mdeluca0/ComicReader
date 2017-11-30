@@ -1,3 +1,4 @@
+var fs = require('fs');
 var scanner = require('./scanner');
 var db = require('./db');
 var api = require('./api');
@@ -19,6 +20,10 @@ function startRefresh(debug) {
 }
 
 function scanVolumes() {
+    if (!fs.existsSync(consts.thumbDirectory)) {
+        fs.mkdirSync(consts.thumbDirectory);
+    }
+
     scanner.scan(function(err, directory) {
         db.getAllVolumes(function(library) {
             for (var i = 0; i < directory.length; i++) {
@@ -43,19 +48,22 @@ function scanVolumes() {
 function processVolume(dirVolume, dbVolume) {
     if (dbVolume === null) {
         api.getFullVolume(dirVolume.volume, dirVolume.start_year, function(volume) {
-            processIssues(dirVolume, volume, function(issues) {
-                issues.sort(function (a, b) {
-                    if (parseInt(a.issue_number) < parseInt(b.issue_number)) {
-                        return -1;
-                    }
-                    if (parseInt(a.issue_number) > parseInt(b.issue_number)) {
-                        return 1;
-                    }
-                    return 0;
+            api.getCover(volume.image.super_url, consts.thumbDirectory + '/' + dirVolume.folder, function (path) {
+                volume.cover = path;
+                processIssues(dirVolume, volume, function(issues) {
+                    issues.sort(function (a, b) {
+                        if (parseInt(a.issue_number) < parseInt(b.issue_number)) {
+                            return -1;
+                        }
+                        if (parseInt(a.issue_number) > parseInt(b.issue_number)) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    volume.issues = issues;
+                    db.upsertVolume(volume);
+                    console.log('Finished processing "' + volume.name + '"');
                 });
-                volume.issues = issues;
-                db.upsertVolume(volume);
-                console.log('Finished processing "' + volume.name + '"');
             });
         });
     } else {
@@ -93,6 +101,7 @@ function processIssues(directoryVolume, dbVolume, cb) {
             dbVolume.issues[i].file_path = directoryVolume.folder + '/' + directoryVolume.issues[i];
             processIssue(dbVolume.issues[i], function (issue) {
                 results.push(issue);
+                console.log('Finished processing issue: ' + issue.file_path);
                 if (results.length === dbVolume.issues.length) {
                     return cb(results);
                 }
@@ -111,10 +120,11 @@ function processIssue(dbIssue, cb) {
         archive.extractIssue(dbIssue.file_path, function (err, handler, entries, ext) {
             if (!err) {
                 archive.getPageCount(entries, function (count) {
-                    archive.getPage(handler, entries, ext, 0, function (cover) {
+                    var imagePath = consts.thumbDirectory + '/' + dbIssue.file_path.split('/')[0];
+                    api.getCover(dbIssue.image.super_url, imagePath, function(path) {
                         //archive.getThumbnails(handler, entries, ext, function(thumbnails) {
                             dbIssue.page_count = count;
-                            dbIssue.cover = cover;
+                            dbIssue.cover = path;
                             //dbIssue.thumbnails = thumbnails;
                             return cb(dbIssue);
                         //});

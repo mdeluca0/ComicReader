@@ -1,4 +1,5 @@
 var request = require('request');
+var fs = require('fs');
 var xml = require('./xml');
 
 var apiKey = require('./consts').apiKey;
@@ -40,10 +41,7 @@ function getVolume (name, year, cb) {
     request(options, function (err, res) {
         // res.body is xml
         xml.parseVolume(res.body, name, year, function(err, res) {
-            getVolumeCover(res.image.super_url, function(img) { //get volume cover as base 64
-                res.cover = img;
-                return cb(res);
-            });
+            return cb(res);
         });
     });
 }
@@ -93,11 +91,20 @@ function issuesRequest(options, offset, issues, cb) {
     });
 }
 
-function getVolumeCover(url, cb) {
+function getCover(url, path, cb) {
     request.get({'url': url, 'headers': {'User-Agent': userAgent}, 'encoding': null}, function (err, res, body) {
         if (!err && res.statusCode === 200) {
-            var base64Img = new Buffer(body).toString('base64');
-            return cb(base64Img);
+            if (!fs.existsSync(path)){
+                fs.mkdirSync(path);
+            }
+
+            var folder = path.split('/').pop();
+            var filename = url.split('/').pop().replace(/[^0-9a-z.]/gi, '');
+
+
+            fs.writeFile(path + '/' + filename, new Buffer(body));
+
+            return cb(folder + '/' + filename);
         } else {
             return cb('');
         }
@@ -105,3 +112,4 @@ function getVolumeCover(url, cb) {
 }
 
 module.exports.getFullVolume = getFullVolume;
+module.exports.getCover = getCover;

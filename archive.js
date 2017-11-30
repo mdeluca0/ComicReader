@@ -2,6 +2,7 @@ var unrar = require('unrar'); //UnRar.exe must be installed and listed in the PA
 var admZip = require('adm-zip'); //Batch archive rebuild: FOR %i IN (*.*) DO E:\7-Zip\7z.exe a "%~ni.7z" "%i"
 var thumb = require('node-thumbnail').thumb;
 var fs = require('fs');
+var toArray = require('stream-to-array');
 var consts = require('./consts');
 
 function extractIssue(file, cb) {
@@ -98,18 +99,12 @@ function getCbrPage(handler, entries, pageNo, cb) {
     }
 
     var archiveFilePath = entries[pageNo].name;
-    var fileName = archiveFilePath.replace(/^.*[\\\/]/, '');
     var stream = handler.stream(archiveFilePath);
-    var tempPath = consts.pageDirectory + fileName;
 
-    stream.pipe(fs.createWriteStream(tempPath));
-
-    stream.on('end', function() {
-        fs.readFile(tempPath, function(err, buf) {
-            var base64Img = buf.toString('base64');
-            fs.unlink(tempPath);
-            return cb(base64Img);
-        });
+    toArray(stream, function (err, arr) {
+        var buf = Buffer.concat(arr);
+        var base64Img = buf.toString('base64');
+        return cb(base64Img);
     });
 }
 function getCbzPage(handler, entries, pageNo, cb) {
@@ -122,16 +117,11 @@ function getCbzPage(handler, entries, pageNo, cb) {
     }
 
     var entryName = entries[pageNo].entryName;
-    var tempPath = consts.pageDirectory;
-    var name = entries[pageNo].name.replace(/^.*[\\\/]/, '');
 
-    handler.extractEntryTo(entryName, tempPath, false, true);
+    var buf = handler.getEntry(entryName).getData();
+    var base64Img = buf.toString('base64');
 
-    fs.readFile(tempPath + '/' + name, function(err, buf) {
-        var base64Img = buf.toString('base64');
-        fs.unlink(tempPath + '/' + name);
-        return cb(base64Img);
-    });
+    return cb(base64Img);
 }
 function getPageCount(entries, cb) {
     //takes an extracted issue and returns the page count
