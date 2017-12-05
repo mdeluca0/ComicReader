@@ -1,0 +1,13 @@
+<div id="reader-breadcrumb-container" class="row">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="#!/volume/{{currentIssue.volumeId}}">{{currentIssue.volumeName}}</a></li>
+        <li class="breadcrumb-item"><a href="#!/issue/{{currentIssue.issueId}}">{{currentIssue.issueName}}</a></li>
+        <li class="breadcrumb-item active">Page {{currentIssue.currentPageNo + 1}} of {{currentIssue.pageCount}}</li>
+    </ol>
+</div>
+<div id="page-image-container" class="row">
+    <div ng-show="currentIssue.currentIssue != ''" ng-swipe-left="swipeLeft()" ng-swipe-right="swipeRight()" ng-click="touchClick()">
+        <img ng-src="data:image/jpg;base64,{{currentIssue.currentPageImage}}"/>
+    </div>
+</div>

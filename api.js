@@ -101,7 +101,6 @@ function getCover(url, path, cb) {
             var folder = path.split('/').pop();
             var filename = url.split('/').pop().replace(/[^0-9a-z.]/gi, '');
 
-
             fs.writeFile(path + '/' + filename, new Buffer(body));
 
             return cb(folder + '/' + filename);
