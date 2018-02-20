@@ -5,42 +5,52 @@ var db = require('../db');
 var archive = require('../archive');
 
 // Initialize metadata refresher
-require('../DataManager').startRefresh(false);
+require('../DataManager').startRefresh(true);
 
-router.get('/getLibrary', function(req, res) {
-    db.getActive(function(library) {
-        res.send(library);
-   });
-});
-router.get('/getVolume', function(req, res) {
-    var volumeId = req.query.id;
-    db.getVolume(volumeId, function(volume) {
-        res.send(volume[0]);
+router.get('/volumes', function(req, res) {
+    var volumeIds = req.query.id;
+
+    if (typeof(req.query.id) !== 'undefined') {
+        volumeIds = req.query.id.split(',');
+    }
+
+    db.getActiveVolumes(volumeIds, function(volumes) {
+        res.send(volumes);
     });
 });
-router.get('/getIssue', function(req, res) {
-    var issueId = req.query.id;
-    db.getIssue(issueId, function(issue) {
-        res.send(issue);
+router.get('/issues', function(req, res) {
+    var issueIds = req.query.id;
+
+    if (typeof(req.query.id) !== 'undefined') {
+        issueIds = req.query.id.split(',');
+    }
+
+    db.getActiveIssues(issueIds, function(issues) {
+        res.send(issues);
     });
 });
-router.get('/readIssue', function(req, res) {
-    var issueId = req.query.id;
+router.get('/page', function(req, res) {
+    var issueId = [req.query.id];
     var pageNo = req.query.page;
-    db.getIssue(issueId, function(issue) {
-        archive.extractIssue(issue.file_path, function(err, handler, entries, ext) {
-            archive.getPage(handler, entries, ext, pageNo, function (base64Img) {
-                var result = {
-                    'volumeName': issue.volumeName,
-                    'volumeId': issue.volumeId,
-                    'issueName': issue.name,
-                    'issueId': issue.id,
-                    'pageCount': issue.page_count,
-                    'pageImage': base64Img
-                };
-                res.send(result);
+    db.getActiveIssues(issueId, function(issue) {
+        if (issue.length > 0) {
+            issue = issue[0];
+            archive.extractIssue(issue.issues.file_path, function (err, handler, entries, ext) {
+                archive.getPage(handler, entries, ext, pageNo, function (base64Img) {
+                    var result = {
+                        'volumeName': issue.name,
+                        'volumeId': issue.id,
+                        'issueName': issue.issues.name,
+                        'issueId': issue.issues.id,
+                        'pageCount': issue.issues.page_count,
+                        'pageImage': base64Img
+                    };
+                    res.send(result);
+                });
             });
-        });
+        } else {
+            res.send({});
+        }
     });
 });
 

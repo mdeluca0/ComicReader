@@ -1,28 +1,28 @@
 <div id="issue-display">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="/">Home</a></li>
-        <li class="breadcrumb-item"><a href="#!/volume/{{issue.volumeId}}">{{issue.volumeName}}</a></li>
-        <li class="breadcrumb-item active">{{issue.name}}</li>
+        <li class="breadcrumb-item"><a href="#!/volume/{{issue.id}}">{{issue.name}}</a></li>
+        <li class="breadcrumb-item active">{{issue.issues.name}}</li>
     </ol>
     <div class="row">
-        <div class="col-md-3">
-            <a href="#!/reader/{{issue.id}}"><img class="comic" src="/images/thumbs/{{issue.cover}}"/></a>
+        <div class="col-xs-3">
+            <a href="#!/reader/{{issue.issues.id}}"><img class="comic" ng-src="/images/thumbs/{{issue.issues.cover}}"/></a>
         </div>
-        <div class="col-md-9">
+        <div class="col-xs-9">
             <div class="row issue-title">
-                <a href="#!/reader/{{issue.id}}">{{issue.volumeName}} #{{issue.issue_number}}</a>
+                <a href="#!/reader/{{issue.issues.id}}">{{issue.name}} #{{issue.issues.issue_number}}</a>
             </div>
             <div class="row issue-name">
-                <p>{{issue.name}}</p>
+                <p>{{issue.issues.name}}</p>
             </div>
             <div class="row">
                 <p>
-                    <span class="pull-left">{{issue.page_count}} pages</span>
-                    <span class="pull-right">{{issue.cover_date}}</span>
+                    <span class="pull-left">{{issue.issues.page_count}} pages</span>
+                    <span class="pull-right">{{issue.issues.cover_date}}</span>
                 </p>
             </div>
             <hr/>
-            <div class="row" ng-bind-html="issue.description"></div>
+            <div class="row" ng-bind-html="issue.issues.description"></div>
         </div>
     </div>
 </div>

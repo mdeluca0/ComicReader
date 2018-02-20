@@ -1,10 +1,10 @@
 <div id="home-display">
     <div class="row">
-        <div ng-repeat="volume in library">
+        <div ng-repeat="volume in volumes">
             <div class="clearfix" ng-if="$index % 4 == 0"></div>
             <div class="col-xs-3">
                 <a href="#!/volume/{{volume.id}}">
-                    <img class="volume-cover" src="/images/thumbs/{{volume.cover}}"/>
+                    <img class="volume-cover" ng-src="/images/thumbs/{{volume.cover}}"/>
                     <span>{{volume.name}}</span>
                 </a>
                 <p>{{volume.active_issues}} issues</p>

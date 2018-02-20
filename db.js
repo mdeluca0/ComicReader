@@ -1,30 +1,6 @@
 var mongo = require('mongodb').MongoClient;
 var url = require('./consts').dbUrl;
 
-// Get's every volume that has active issues in it
-function getActive (cb) {
-    mongo.connect(url, function(err, db) {
-        db.collection('volumes').aggregate([
-            {$unwind: '$issues'},
-            {$match: {'issues.active': 'Y'}},
-            {$group: {
-                '_id': '$_id',
-                'count_of_issues': {'$first': '$count_of_issues'},
-                'id': {'$first': '$id'},
-                'image': {'$first': '$image'},
-                'name': {'$first': '$name'},
-                'start_year': {'$first': '$start_year'},
-                'cover': {'$first': '$cover'},
-                'issues': {'$push': '$issues'}
-            }},
-            {$sort: {'name': 1}}
-        ], function (err, res) {
-            db.close();
-            return cb(res);
-        });
-    });
-}
-
 // Gets every volume in the database regardless of active status
 function getAllVolumes (cb) {
     mongo.connect(url, function(err, db) {
@@ -35,6 +11,7 @@ function getAllVolumes (cb) {
     });
 }
 
+// Gets every issue in the database regardless of active status
 function getAllIssues (cb) {
     mongo.connect(url, function(err, db) {
         db.collection('volumes').aggregate([
@@ -46,42 +23,63 @@ function getAllIssues (cb) {
     });
 }
 
-// Gets a volume by its id
-function getVolume (volumeId, cb) {
-    mongo.connect(url, function(err, db) {
-        db.collection('volumes').aggregate([
-            {$match: {'id' : volumeId}},
-            {$unwind: '$issues'},
-            {$match: {'issues.active': 'Y'}},
-            {$group: {
-                '_id': '$_id',
-                'count_of_issues': {'$first': '$count_of_issues'},
-                'id': {'$first': '$id'},
-                'image': {'$first': '$image'},
-                'name': {'$first': '$name'},
-                'start_year': {'$first': '$start_year'},
-                'issues': {'$push': '$issues'}
-            }}
-        ], function (err, res) {
+// Gets every active volume listed in volumeIds or every active volume if volumeIds is empty
+function getActiveVolumes (volumeIds, cb) {
+    var aggregation = [];
+
+    aggregation.push({$unwind: '$issues'});
+
+    if (typeof(volumeIds) !== 'undefined') {
+        aggregation.push({$match: {'id': {$in: volumeIds}}});
+    }
+
+    aggregation.push({$match:  {'issues.active': 'Y'}});
+
+    aggregation.push(
+        {$group: {
+            '_id': '$_id',
+            'count_of_issues': {'$first': '$count_of_issues'},
+            'id': {'$first': '$id'},
+            'name': {'$first': '$name'},
+            'start_year': {'$first': '$start_year'},
+            'cover': {'$first': '$cover'},
+            'issues': {'$push': '$issues'}
+        }}
+    );
+    aggregation.push({$sort: {'name': 1}});
+
+    mongo.connect(url, function (err, db) {
+        db.collection('volumes').aggregate(aggregation, function (err, res) {
             db.close();
-            return cb(res);
+            if (typeof(res) === 'undefined') {
+                return [];
+            } else {
+                return cb(res);
+            }
         });
     });
 }
 
-// Gets an issue by its id
-function getIssue (issueId, cb) {
-    mongo.connect(url, function(err, db) {
-        db.collection('volumes').aggregate([
-            {$unwind: '$issues'},
-            {$match: {'issues.id': issueId}}
-        ], function(err, res) {
-            var issue = res[0].issues;
-            issue.volumeId = res[0].id;
-            issue.volumeName = res[0].name;
-            issue.startYear = res[0].start_year;
+// Gets every active issue listed in issueIds or every active issue if issueIds is empty
+function getActiveIssues (issueIds, cb) {
+    var aggregation = [];
+
+    aggregation.push({$unwind: '$issues'});
+
+    if (typeof(issueIds) !== 'undefined') {
+        aggregation.push({$match: {'issues.id': {$in: issueIds}}});
+    }
+
+    aggregation.push({$match:  {'issues.active': 'Y'}});
+
+    mongo.connect(url, function (err, db) {
+        db.collection('volumes').aggregate(aggregation, function (err, res) {
             db.close();
-            return cb(issue);
+            if (typeof(res) === 'undefined') {
+                return [];
+            } else {
+                return cb(res);
+            }
         });
     });
 }
@@ -102,10 +100,9 @@ function updateIssues (volumeId, issues) {
     });
 }
 
-module.exports.getActive = getActive;
 module.exports.getAllVolumes = getAllVolumes;
 module.exports.getAllIssues = getAllIssues;
-module.exports.getVolume = getVolume;
-module.exports.getIssue = getIssue;
+module.exports.getActiveVolumes = getActiveVolumes;
+module.exports.getActiveIssues = getActiveIssues;
 module.exports.upsertVolume = upsertVolume;
 module.exports.updateIssues = updateIssues;

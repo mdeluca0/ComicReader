@@ -15,4 +15,20 @@ module.exports.convertToThreeDigits = function(number) {
     } else {
         return ('000' + number).substr(-3);
     }
-}
+};
+
+module.exports.replaceEscapedCharacters = function(s) {
+    s = s.replace("&#47;", '/');
+    s = s.replace("&#92;", '\\');
+    s = s.replace("&#58;", ':');
+    s = s.replace("&#42;", '*');
+    s = s.replace("&#63;", '?');
+    s = s.replace("&#34;", '"');
+    s = s.replace("&#60;", '<');
+    s = s.replace("&lt;", '<');
+    s = s.replace("&#62;", '>');
+    s = s.replace("&gt;", '>');
+    s = s.replace("&#124;", '|');
+
+    return s;
+};

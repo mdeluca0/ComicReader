@@ -5,8 +5,25 @@
 #reader-breadcrumb-container .breadcrumb {
     margin: 0;
 }
-#page-image-container img{
-     display: block;
-     margin: 10px auto;
-     height: 1450px;
- }
+#page-container {
+    position: relative;
+}
+#page-container img{
+    display: block;
+    margin: 10px auto;
+    height: 1450px;
+}
+#page-container .left-zone {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+}
+#page-container .right-zone {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+}

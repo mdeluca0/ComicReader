@@ -1,6 +1,7 @@
 var request = require('request');
 var fs = require('fs');
 var xml = require('./xml');
+var consts = require('./consts');
 
 var apiKey = require('./consts').apiKey;
 var volumeFieldList = '&field_list=count_of_issues,name,id,image,start_year';
@@ -35,6 +36,7 @@ function getVolume (name, year, cb) {
         'url': volumesOptions.url,
         'headers': volumesOptions.headers
     };
+    name = consts.replaceEscapedCharacters(name);
     options.url += name.toLowerCase().replace(/[ ]/g, '_');
     options.url += volumeFieldList;
 

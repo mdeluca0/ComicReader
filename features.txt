@@ -1,15 +1,27 @@
-Essential:
+MVP:
     Book reader - done
     Volume and issue selection - done
     Api metadata - done
     Breadcrumbs - done
     Account for non-numeric issue numbers - done
+    Image loading icon - done
+    Allow for colons in volume name
 
-Nice to have:
+Upgrades:
     Accounts
-    Bookmarks
-    Read lists
-    Next on deck
-    Issues apart of read list
-    Search
-    Image loading icon
+    •	User name (email)
+    •	Password (md5 encoded)
+    •	Issues opened
+        o	Finished flag
+        o	Last page viewed
+    •	Show next on deck from volumes and read lists based on finished issues
+    Read Lists
+    •	Name
+    •	Issues (array of ids)
+    •	Add to read list button on issue
+    Reader enhancements
+    •	Correct double page support
+    •	Zoom in and out
+    •	Better mouse and touch support
+    Navigation enhancements
+    Searching

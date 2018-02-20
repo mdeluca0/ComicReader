@@ -18,7 +18,7 @@ var backwardsPageLoad = 1;
 angular.module('reader').controller('readerCtrl', function($scope, $routeParams, $document, $window, $http) {
     var issueId = $routeParams.id;
 
-    $http.get('/readIssue?id='+issueId+'&page=0').then(function (response) {
+    $http.get('/page?id='+issueId+'&page=0').then(function (response) {
         currentIssue.volumeName = response.data.volumeName;
         currentIssue.volumeId = response.data.volumeId;
         currentIssue.issueName = response.data.issueName;
@@ -48,12 +48,15 @@ angular.module('reader').controller('readerCtrl', function($scope, $routeParams,
                 currentIssue.currentPageImage = loadingImg;
             }
 
-            for (var i = pageNo; i < pageNo+forwardPageLoad; i++) {
+            var lookAhead = pageNo + forwardPageLoad  >=  currentIssue.pageCount ? currentIssue.pageCount : pageNo + forwardPageLoad;
+            var lookBack = pageNo - backwardsPageLoad < 0 ? 0 : pageNo - backwardsPageLoad;
+
+            for (var i = pageNo; i < lookAhead; i++) {
                 if (typeof(currentIssue.loadedPages[i]) === 'undefined') {
                     loadPage($http, currentIssue.issueId, i);
                 }
             }
-            for (i = pageNo-1; i >= pageNo-backwardsPageLoad; i--) {
+            for (i = pageNo-1; i >= lookBack; i--) {
                 if (typeof(currentIssue.loadedPages[i]) === 'undefined') {
                     loadPage($http, currentIssue.issueId, i);
                 }
@@ -61,15 +64,16 @@ angular.module('reader').controller('readerCtrl', function($scope, $routeParams,
         };
 
         var loadPage = function ($http, issueId, pageNo) {
-            $http.get('/readIssue?id='+issueId+'&page='+pageNo).then(function (response) {
+            $http.get('/page?id='+issueId+'&page='+pageNo).then(function (response) {
                 currentIssue.loadedPages[pageNo] = response.data.pageImage;
                 if (currentIssue.issueId == issueId && pageNo == currentIssue.currentPageNo) {
                     currentIssue.currentPageImage = loadedPages[pageNo];
+                    //goToPage($http, currentIssue.currentPageNo);
                 }
             });
         };
 
-        // Keyboard and Swipe Events
+        // Keyboard and Touch/Click Events
         var handleKeyDown = function(event) {
             switch (event.keyCode) {
                 case 37: // [Left]
@@ -85,13 +89,10 @@ angular.module('reader').controller('readerCtrl', function($scope, $routeParams,
         $scope.$on('$destroy', function() {
             $document.unbind('keydown', handleKeyDown);
         });
-        $scope.swipeLeft = function() {
-            goToPage($http, currentIssue.currentPageNo+1);
-        };
-        $scope.swipeRight = function() {
+        $scope.touchLeft = function () {
             goToPage($http, currentIssue.currentPageNo-1);
         };
-        $scope.touchClick = function () {
+        $scope.touchRight = function () {
             goToPage($http, currentIssue.currentPageNo+1);
         };
 

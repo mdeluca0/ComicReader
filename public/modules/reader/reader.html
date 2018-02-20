@@ -6,8 +6,8 @@
         <li class="breadcrumb-item active">Page {{currentIssue.currentPageNo + 1}} of {{currentIssue.pageCount}}</li>
     </ol>
 </div>
-<div id="page-image-container" class="row">
-    <div ng-show="currentIssue.currentIssue != ''" ng-swipe-left="swipeLeft()" ng-swipe-right="swipeRight()" ng-click="touchClick()">
-        <img ng-src="data:image/jpg;base64,{{currentIssue.currentPageImage}}"/>
-    </div>
+<div id="page-container" class="row">
+    <img ng-src="data:image/jpg;base64,{{currentIssue.currentPageImage}}"/>
+    <div class="left-zone" ng-click="touchLeft()"></div>
+    <div class="right-zone" ng-click="touchRight()"></div>
 </div>
