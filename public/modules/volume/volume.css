@@ -9,7 +9,7 @@
     width: 160px;
     height: 241px;
 }
-#volume-display .volume-name {
+#volume-display .volume-name a {
     font-size: 13px;
     color: white;
     font-weight: bold;

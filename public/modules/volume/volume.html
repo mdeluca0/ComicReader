@@ -11,9 +11,10 @@
                     <img class="issue-cover" ng-src="/images/thumbs/{{issue.cover}}"/>
                 </a>
             </div>
-            <a href="#!/issue/{{issue.id}}">
-                <div class="volume-name">#{{issue.issue_number}} - {{issue.name}}</div>
-            </a>
+            <div class="volume-name" title="{{issue.name}}">
+                <a href="#!/issue/{{issue.id}}">#{{issue.issue_number}} - {{issue.display_name}}</a>
+            </div>
         </div>
     </div>
 </div>
+<!-- 23 characters -->

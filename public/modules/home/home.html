@@ -1,4 +1,3 @@
-<div
 <div id="home-display">
     <div ng-repeat="volume in volumes" class="volume">
         <div class="curl-img-container">
@@ -10,7 +9,7 @@
         <a href="#!/volume/{{volume.id}}">
             <div class="volume-name" title="{{volume.name}}">{{volume.name}}</div>
         </a>
-        <div ng-if="volume.active_issues == 1" class="issue-count">{{volume.active_issues}} issue</div>
-        <div ng-if="volume.active_issues != 1" class="issue-count">{{volume.active_issues}} issues</div>
+        <div ng-if="volume.active_issues == 1" class="issue-count">{{volume.start_year}} - {{volume.active_issues}} issue</div>
+        <div ng-if="volume.active_issues != 1" class="issue-count">{{volume.start_year}} - {{volume.active_issues}} issues</div>
     </div>
 </div>
