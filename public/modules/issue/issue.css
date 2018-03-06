@@ -1,14 +1,24 @@
-#issue-display {
-    width: 960px;
-    margin: 10px auto 0;
+#issue-display .row {
+    margin: 0;
 }
 #issue-display .comic {
-    width: 225px;
-    height: 339px;
+    width: 230px;
 }
-#issue-display .issue-title {
+#issue-display .issue-title a {
     font-size: 25px;
+    color: white;
 }
-#issue-display .issue-name {
+#issue-display .issue-name p {
     font-size: 16px;
+    color: white;
+}
+#issue-display .cover-date span {
+    color: gray;
+}
+#issue-display .page-count span {
+    color: gray;
+}
+#issue-display .description {
+    color: white;
+    width: 90%;
 }

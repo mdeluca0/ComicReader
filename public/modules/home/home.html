@@ -1,14 +1,16 @@
+<div
 <div id="home-display">
-    <div class="row">
-        <div ng-repeat="volume in volumes">
-            <div class="clearfix" ng-if="$index % 4 == 0"></div>
-            <div class="col-xs-3">
-                <a href="#!/volume/{{volume.id}}">
-                    <img class="volume-cover" ng-src="/images/thumbs/{{volume.cover}}"/>
-                    <span>{{volume.name}}</span>
-                </a>
-                <p>{{volume.active_issues}} issues</p>
-            </div>
+    <div ng-repeat="volume in volumes" class="volume">
+        <div class="curl-img-container">
+            <a href="#!/volume/{{volume.id}}">
+                <div class="curl"></div>
+                <img class="volume-cover" ng-src="/images/thumbs/{{volume.cover}}"/>
+            </a>
         </div>
+        <a href="#!/volume/{{volume.id}}">
+            <div class="volume-name" title="{{volume.name}}">{{volume.name}}</div>
+        </a>
+        <div ng-if="volume.active_issues == 1" class="issue-count">{{volume.active_issues}} issue</div>
+        <div ng-if="volume.active_issues != 1" class="issue-count">{{volume.active_issues}} issues</div>
     </div>
 </div>

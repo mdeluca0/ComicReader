@@ -5,7 +5,7 @@ MVP:
     Breadcrumbs - done
     Account for non-numeric issue numbers - done
     Image loading icon - done
-    Allow for colons in volume name
+    Allow for special characters in names - done
 
 Upgrades:
     Accounts

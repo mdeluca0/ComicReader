@@ -93,7 +93,7 @@ function processIssues(directoryVolume, dbVolume, cb) {
         var curDbIssue = dbVolume.name + ' - ' + consts.convertToThreeDigits(dbVolume.issues[i].issue_number);
         var match = false;
         for (var j = 0; j < directoryVolume.issues.length; j++) {
-            var curDirIssue = directoryVolume.issues[j].slice(0, -4);
+            var curDirIssue = consts.replaceEscapedCharacters(directoryVolume.issues[j].slice(0, -4));
             if (curDirIssue === curDbIssue) {
                 match = true;
                 break;
@@ -101,6 +101,7 @@ function processIssues(directoryVolume, dbVolume, cb) {
         }
         if (match) {
             dbVolume.issues[i].active = 'Y';
+            dbVolume.issues[i].date_added = consts.getToday();
             dbVolume.issues[i].file_path = directoryVolume.folder + '/' + directoryVolume.issues[j];
             console.log('Started processing issue: ' + dbVolume.issues[i].file_path);
             processIssue(dbVolume.issues[i], function (issue) {

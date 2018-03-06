@@ -1,7 +1,21 @@
-#home-display {
-    width: 960px;
-    margin: 10px auto 0;
+#home-display .volume {
+    display: inline-block;
+    width: 204px;
+    margin: 5px 10px;
 }
+#home-display .volume-name{
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+#home-display .volume-name:hover {
+    text-decoration: underline;
+}
+#home-display .issue-count{
+    color: gray;
+    cursor: default;
+}
+
 #home-display .volume-cover{
     width: 204px;
     height: 307px;

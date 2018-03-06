@@ -1,4 +1,4 @@
-var unrar = require('unrar'); //UnRar.exe must be installed and listed in the PATH variable.
+var unrar = require('unrar'); //UnRAR must be listed in your PATH variable.
 var admZip = require('adm-zip'); //Batch archive rebuild: FOR %i IN (*.*) DO E:\7-Zip\7z.exe a "%~ni.7z" "%i"
 var thumb = require('node-thumbnail').thumb;
 var fs = require('fs');

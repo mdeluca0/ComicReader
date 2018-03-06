@@ -4,7 +4,7 @@ var xml = require('./xml');
 var consts = require('./consts');
 
 var apiKey = require('./consts').apiKey;
-var volumeFieldList = '&field_list=count_of_issues,name,id,image,start_year';
+var volumeFieldList = '&field_list=count_of_issues,name,id,image,start_year,description';
 var issueFieldList = '&field_list=cover_date,description,id,image,issue_number,name';
 var userAgent = 'Mozilla/5.0';
 

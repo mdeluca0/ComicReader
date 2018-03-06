@@ -1,11 +1,28 @@
-#volume-display {
-    width: 960px;
-    margin: 10px auto 0;
+#volume-display .issue-container {
+    padding-left: 16px;
+}
+#volume-display .issue {
+    display: inline-block;
+    margin: 0 5px;
 }
 #volume-display .issue-cover {
     width: 160px;
     height: 241px;
 }
+#volume-display .volume-name {
+    font-size: 13px;
+    color: white;
+    font-weight: bold;
+}
 #volume-display .issue-name {
     font-size: 13px;
+    color: lightgray;
+}
+#volume-display .curl {
+    top: 241px;
+    left: 160px;
+}
+#volume-display .curl-img-container:hover .curl {
+    top: 201px;
+    left: 120px;
 }

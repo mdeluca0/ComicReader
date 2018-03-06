@@ -1,18 +1,19 @@
 <div id="volume-display">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item home"><a href="/"><span class="glyphicon glyphicon-home"/></a></li>
         <li class="breadcrumb-item active">{{volume.name}}</li>
     </ol>
-    <div class="row">
-        <div ng-repeat="issue in volume.issues">
-            <div class="clearfix" ng-if="$index % 6 == 0"></div>
-            <div class="col-xs-2">
+    <div class="issue-container">
+        <div ng-repeat="issue in volume.issues" class="issue">
+            <div class="curl-img-container">
                 <a href="#!/issue/{{issue.id}}">
+                    <div class="curl"></div>
                     <img class="issue-cover" ng-src="/images/thumbs/{{issue.cover}}"/>
-                    <span class="issue-name">{{volume.name}} #{{issue.issue_number}}</span>
                 </a>
-                <p><span class="issue-name">{{issue.name}}</span></p>
             </div>
+            <a href="#!/issue/{{issue.id}}">
+                <div class="volume-name">#{{issue.issue_number}} - {{issue.name}}</div>
+            </a>
         </div>
     </div>
 </div>
