@@ -8,6 +8,9 @@
 #volume-display .issue-cover {
     width: 160px;
     height: 241px;
+    background-image: url('../../images/loading.gif');
+    background-repeat: no-repeat;
+    background-position: center;
 }
 #volume-display .volume-name a {
     font-size: 13px;

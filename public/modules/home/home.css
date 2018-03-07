@@ -19,4 +19,7 @@
 #home-display .volume-cover{
     width: 204px;
     height: 307px;
+    background-image: url('../../images/loading.gif');
+    background-repeat: no-repeat;
+    background-position: center;
 }
