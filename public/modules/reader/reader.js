@@ -12,8 +12,9 @@ var currentIssue = {
 };
 
 var loadingImg = '/images/loading.gif';
-var forwardPageLoad = 3;
-var backwardsPageLoad = 1;
+var forwardPageLoad = 5;
+var backwardsPageLoad = 3;
+var zoom = 100;
 
 angular.module('reader').controller('readerCtrl', function($scope, $routeParams, $document, $window, $http) {
     var issueId = $routeParams.id;
@@ -31,7 +32,6 @@ angular.module('reader').controller('readerCtrl', function($scope, $routeParams,
 
         $scope.currentIssue = currentIssue;
 
-
         var goToPage  = function ($http, pageNo) {
             if (pageNo <= 0) {
                 pageNo = 0;
@@ -44,8 +44,6 @@ angular.module('reader').controller('readerCtrl', function($scope, $routeParams,
 
             if (typeof(currentIssue.loadedPages[pageNo]) !== 'undefined') {
                 currentIssue.currentPageImage = currentIssue.loadedPages[pageNo];
-            } else {
-                currentIssue.currentPageImage = loadingImg;
             }
 
             var lookAhead = pageNo + forwardPageLoad  >=  currentIssue.pageCount ? currentIssue.pageCount : pageNo + forwardPageLoad;
@@ -61,6 +59,9 @@ angular.module('reader').controller('readerCtrl', function($scope, $routeParams,
                     loadPage($http, currentIssue.issueId, i);
                 }
             }
+
+            $('body').scrollTop(0);
+            //$('body').animate({scrollTop: 0}, 2000);
         };
 
         var loadPage = function ($http, issueId, pageNo) {
@@ -68,9 +69,22 @@ angular.module('reader').controller('readerCtrl', function($scope, $routeParams,
                 currentIssue.loadedPages[pageNo] = response.data.pageImage;
                 if (currentIssue.issueId == issueId && pageNo == currentIssue.currentPageNo) {
                     currentIssue.currentPageImage = loadedPages[pageNo];
-                    //goToPage($http, currentIssue.currentPageNo);
+                    goToPage($http, currentIssue.currentPageNo);
                 }
             });
+        };
+
+        $scope.fitToPage = function() {
+            zoom = 100;
+            $('#page-container').css('height', '90%');
+        };
+        $scope.zoomIn = function() {
+            zoom += 10;
+            $('#page-container').css('height', zoom + '%');
+        };
+        $scope.zoomOut = function() {
+            zoom -= 10;
+            $('#page-container').css('height', zoom + '%');
         };
 
         // Keyboard and Touch/Click Events
