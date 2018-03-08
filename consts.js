@@ -48,4 +48,4 @@ module.exports.getToday = function() {
     }
 
     return yyyy + '-' + mm + '-' + dd;
-}
+};
