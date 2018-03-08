@@ -11,10 +11,8 @@ var currentIssue = {
     'loadedPages': []
 };
 
-var loadingImg = '/images/loading.gif';
 var forwardPageLoad = 5;
 var backwardsPageLoad = 3;
-var zoom = 100;
 
 angular.module('reader').controller('readerCtrl', function($scope, $routeParams, $document, $window, $http) {
     var issueId = $routeParams.id;
@@ -29,6 +27,7 @@ angular.module('reader').controller('readerCtrl', function($scope, $routeParams,
         currentIssue.currentPageImage = response.data.pageImage;
         currentIssue.loadedPages = Array.apply(null, Array(parseInt(response.data.pageCount))).map(function () {});
         currentIssue.loadedPages[0] = response.data.pageImage;
+        currentIssue.zoom = 100;
 
         $scope.currentIssue = currentIssue;
 
@@ -69,22 +68,22 @@ angular.module('reader').controller('readerCtrl', function($scope, $routeParams,
                 currentIssue.loadedPages[pageNo] = response.data.pageImage;
                 if (currentIssue.issueId == issueId && pageNo == currentIssue.currentPageNo) {
                     currentIssue.currentPageImage = loadedPages[pageNo];
-                    goToPage($http, currentIssue.currentPageNo);
+                    //goToPage($http, currentIssue.currentPageNo);
                 }
             });
         };
 
         $scope.fitToPage = function() {
-            zoom = 100;
+            currentIssue.zoom = 100;
             $('#page-container').css('height', '90%');
         };
         $scope.zoomIn = function() {
-            zoom += 10;
-            $('#page-container').css('height', zoom + '%');
+            currentIssue.zoom += 10;
+            $('#page-container').css('height', currentIssue.zoom + '%');
         };
         $scope.zoomOut = function() {
-            zoom -= 10;
-            $('#page-container').css('height', zoom + '%');
+            currentIssue.zoom -= 10;
+            $('#page-container').css('height', currentIssue.zoom + '%');
         };
 
         // Keyboard and Touch/Click Events

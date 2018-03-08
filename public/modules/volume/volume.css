@@ -12,14 +12,16 @@
     background-repeat: no-repeat;
     background-position: center;
 }
-#volume-display .volume-name a {
-    font-size: 13px;
+#volume-display .issue-name a {
     color: white;
+    font-size: 13px;
     font-weight: bold;
 }
 #volume-display .issue-name {
-    font-size: 13px;
-    color: lightgray;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 160px;
 }
 #volume-display .curl {
     top: 241px;

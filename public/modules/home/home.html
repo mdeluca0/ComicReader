@@ -6,9 +6,9 @@
                 <img class="volume-cover" ng-src="/images/thumbs/{{volume.cover}}"/>
             </a>
         </div>
-        <a href="#!/volume/{{volume.id}}">
-            <div class="volume-name" title="{{volume.name}}">{{volume.name}}</div>
-        </a>
+        <div class="volume-name" title="{{volume.name}}">
+            <a href="#!/volume/{{volume.id}}">{{volume.name}}</a>
+        </div>
         <div ng-if="volume.active_issues == 1" class="issue-count">{{volume.start_year}} - {{volume.active_issues}} issue</div>
         <div ng-if="volume.active_issues != 1" class="issue-count">{{volume.start_year}} - {{volume.active_issues}} issues</div>
     </div>

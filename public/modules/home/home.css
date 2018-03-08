@@ -4,9 +4,14 @@
     margin: 5px 10px;
 }
 #home-display .volume-name{
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 204px;
+}
+#home-display .volume-name a{
     color: white;
     font-weight: bold;
-    cursor: pointer;
 }
 #home-display .volume-name:hover {
     text-decoration: underline;
@@ -15,7 +20,6 @@
     color: gray;
     cursor: default;
 }
-
 #home-display .volume-cover{
     width: 204px;
     height: 307px;
