@@ -2,7 +2,8 @@
     <ol class="breadcrumb">
         <li class="breadcrumb-item home"><a href="/"><span class="glyphicon glyphicon-home"/></a></li>
         <li class="breadcrumb-item"><a href="#!/volume/{{issue.id}}">{{issue.name}}</a></li>
-        <li class="breadcrumb-item active">{{issue.issues.name}}</li>
+        <li ng-if="issue.issues.name.length > 0" class="breadcrumb-item active">{{issue.issues.name}}</li>
+        <li ng-if="issue.issues.name.length == 0" class="breadcrumb-item active">#{{issue.issues.issue_number}}</li>
     </ol>
     <div class="row no-margin">
         <div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">

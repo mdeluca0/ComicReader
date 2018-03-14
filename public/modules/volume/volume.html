@@ -12,7 +12,10 @@
                 </a>
             </div>
             <div class="issue-name" title="{{issue.name}}">
-                <a href="#!/issue/{{issue.id}}">#{{issue.issue_number}} - {{issue.name}}</a>
+                <a href="#!/issue/{{issue.id}}">
+                    <span ng-if="issue.name.length > 0">#{{issue.issue_number}} - {{issue.name}}</span>
+                    <span ng-if="issue.name.length == 0">#{{issue.issue_number}}</span>
+                </a>
             </div>
         </div>
     </div>

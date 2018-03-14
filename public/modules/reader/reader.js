@@ -5,6 +5,7 @@ var currentIssue = {
     'volumeId': '',
     'issueName': '',
     'issueId': '',
+    'issueNo': '',
     'pageCount': 0,
     'currentPageNo': 0,
     'currentPageImage': '',
@@ -22,6 +23,7 @@ angular.module('reader').controller('readerCtrl', function($scope, $routeParams,
         currentIssue.volumeId = response.data.volumeId;
         currentIssue.issueName = response.data.issueName;
         currentIssue.issueId = response.data.issueId;
+        currentIssue.issueNo = response.data.issueNo;
         currentIssue.pageCount = response.data.pageCount;
         currentIssue.currentPageNo = 0;
         currentIssue.currentPageImage = response.data.pageImage;

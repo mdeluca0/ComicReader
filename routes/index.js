@@ -42,6 +42,7 @@ router.get('/page', function(req, res) {
                         'volumeId': issue.id,
                         'issueName': issue.issues.name,
                         'issueId': issue.issues.id,
+                        'issueNo': issue.issues.issue_number,
                         'pageCount': issue.issues.page_count,
                         'pageImage': base64Img
                     };

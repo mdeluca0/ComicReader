@@ -2,7 +2,8 @@
     <ol class="breadcrumb">
         <li class="breadcrumb-item home"><a href="/"><span class="glyphicon glyphicon-home"/></a></li>
         <li class="breadcrumb-item"><a href="#!/volume/{{currentIssue.volumeId}}">{{currentIssue.volumeName}}</a></li>
-        <li class="breadcrumb-item"><a href="#!/issue/{{currentIssue.issueId}}">{{currentIssue.issueName}}</a></li>
+        <li ng-if="currentIssue.issueName.length > 0" class="breadcrumb-item"><a href="#!/issue/{{currentIssue.issueId}}">{{currentIssue.issueName}}</a></li>
+        <li ng-if="currentIssue.issueName.length == 0" class="breadcrumb-item"><a href="#!/issue/{{currentIssue.issueId}}">#{{currentIssue.issueNo}}</a></li>
         <li class="breadcrumb-item active">Page {{currentIssue.currentPageNo + 1}} of {{currentIssue.pageCount}}</li>
         <li class="breadcrumb-item active">
             <div class="btn-group mr-2" role="group">
