@@ -19,7 +19,7 @@ function parseVolume (xml, name, year, cb) {
 
 function stringToXml (xml, cb) {
     parser.parseString(xml, function(err, res) {
-        xml = res.results;
+        xml = res.response.results;
         return cb(0, xml);
     });
 }

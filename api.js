@@ -4,93 +4,74 @@ var xml = require('./xml');
 var consts = require('./consts');
 
 var apiKey = require('./consts').apiKey;
-var volumeFieldList = '&field_list=count_of_issues,name,id,image,start_year,description';
-var issueFieldList = '&field_list=cover_date,description,id,image,issue_number,name';
+var volumeUrl =  'https://www.comicvine.gamespot.com' + '/api/volumes/?api_key=' + apiKey + '&offset=0&filter=name:';
+var volumeFieldList = '&field_list=count_of_issues,description,id,image,name,start_year,characters,issues';
+var issueFieldList = '&field_list=cover_date,description,id,image,issue_number,name,person_credits';
 var userAgent = 'Mozilla/5.0';
 
-var volumesOptions = {
-    url: 'https://www.comicvine.gamespot.com' + '/api/volumes/?api_key=' + apiKey + '&offset=0&filter=name:',
-    headers: {
-        'User-Agent': userAgent
-    }
-};
 
-var issuesOptions = {
-    url: 'https://www.comicvine.gamespot.com' + '/api/issues/?api_key=' + apiKey + '&offset=0&filter=volume:',
-    headers: {
-        'User-Agent': userAgent
-    }
-};
-
-function getFullVolume (name, year, cb) {
+function requestVolume (name, year, cb) {
     getVolume(name, year, function(volume) {
-        getIssues(volume.id, function(issues) {
-            volume.issues = issues.issue;
+        getIssues(volume.issues.issue, function(issues) {
+            volume.issues = issues;
             return cb(volume);
         });
     });
 }
 
-function getVolume (name, year, cb) {
+function getVolume(name, year, cb) {
     var options = {
-        'url': volumesOptions.url,
-        'headers': volumesOptions.headers
+        'url': volumeUrl,
+        'headers': {'user-agent': userAgent}
     };
     name = consts.replaceEscapedCharacters(name);
     options.url += name.toLowerCase().replace(/[ ]/g, '_');
-    options.url += volumeFieldList;
+    options.url += '&field_list=name,start_year,api_detail_url';
 
     request(options, function (err, res) {
         // res.body is xml
         xml.parseVolume(res.body, name, year, function(err, res) {
-            return cb(res);
+            getVolumeDetails(res.api_detail_url, function(err, res) {
+                return cb(res);
+            });
         });
     });
 }
 
-function getIssues(volumeId, cb) {
+function getVolumeDetails(url, cb) {
+    url += '?api_key=' + apiKey + volumeFieldList;
     var options = {
-        'url': issuesOptions.url,
-        'headers': issuesOptions.headers
+        'url': url,
+        'headers': {'user-agent': userAgent}
     };
-    options.url += volumeId;
-    options.url += issueFieldList;
-
-    var offset = 0;
-    var issues = "";
-
-    issuesRequest(options, offset, issues, function(err, res) {
-        // sort issues by issue number
-        res.issue.sort(function(a, b) { return a.issue_number - b.issue_number });
-        return cb(res);
-    });
-}
-
-function issuesRequest(options, offset, issues, cb) {
     request(options, function (err, res) {
         // res.body is xml
-        issues += res.body.match(/<results>(.*)<\/results>/g);
-        issues = issues.replace('<results>', '');
-        issues = issues.replace('</results>', '');
-
-        //regex match number of page results and total results
-        var pageResults = res.body.match(/<number_of_page_results>(.*?)<\/number_of_page_results>/g);
-        pageResults = pageResults[0].match(/[0-9]+/g);
-        var totalResults = res.body.match(/<number_of_total_results>(.*)<\/number_of_total_results>/g);
-        totalResults = totalResults[0].match(/[0-9]+/g);
-
-        // if page results < total results recall request with new offset
-        if (parseInt(pageResults[0]) + offset < parseInt(totalResults[0])) {
-            offset = parseInt(offset)+parseInt(pageResults[0]);
-            options.url = options.url.replace(/offset=[0-9]+/g, 'offset=' + offset);
-            issuesRequest(options, offset, issues, cb);
-        } else {
-            issues = '<results>' + issues + '</results>';
-            xml.stringToXml(issues, function(err, res) {
-                return cb(0, res);
-            });
-        }
+        xml.stringToXml(res.body, function(err, res) {
+            return cb(0, res);
+        });
     });
+};
+
+function getIssues(issues, cb) {
+    var results = [];
+
+    for (var i = 0; i < issues.length; i++) {
+        var options = {
+            'url': issues[i].api_detail_url + '?api_key=' + apiKey + issueFieldList,
+            'headers': {'user-agent': userAgent}
+        };
+
+        request(options, function (err, res) {
+            // res.body is xml
+            xml.stringToXml(res.body, function(err, res) {
+                results.push(res);
+                if (results.length == issues.length) {
+                    results.sort(function(a, b) { return a.issue_number - b.issue_number });
+                    return cb(results);
+                }
+            });
+        });
+    }
 }
 
 function getCover(url, path, cb) {
@@ -112,5 +93,5 @@ function getCover(url, path, cb) {
     });
 }
 
-module.exports.getFullVolume = getFullVolume;
+module.exports.requestVolume = requestVolume;
 module.exports.getCover = getCover;
