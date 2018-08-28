@@ -1,6 +1,6 @@
 var path = require('path');
 
-module.exports.ComicDirectory = 'C:/Comics';
+module.exports.comicDirectory = 'C:/Comics';
 module.exports.thumbDirectory = path.join(__dirname, 'public', 'images', 'thumbs').replace(/\\/g, '/');
 module.exports.thumbnailDirectory = path.join(__dirname, 'temp', 'thumbs').replace(/\\/g, '/'); //deprecated
 module.exports.apiKey = '391531cd4d7943ad91be002c53f74dca5f461d9b';

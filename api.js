@@ -1,80 +1,143 @@
 var request = require('request');
 var fs = require('fs');
+
 var xml = require('./xml');
 var consts = require('./consts');
 
-var apiKey = require('./consts').apiKey;
-var volumeUrl =  'https://www.comicvine.gamespot.com' + '/api/volumes/?api_key=' + apiKey + '&offset=0&filter=name:';
-var volumeFieldList = '&field_list=count_of_issues,description,id,image,name,start_year,characters,issues';
-var issueFieldList = '&field_list=cover_date,description,id,image,issue_number,name,person_credits';
+var apiKey = '?api_key=' + consts.apiKey;
 var userAgent = 'Mozilla/5.0';
+var volume = {
+    url: 'https://www.comicvine.gamespot.com/api/volumes/' + apiKey + '&offset=0&filter=name:',
+    fieldList: ['api_detail_url', 'name', 'start_year'].join(','),
+    fieldListDetailed: ['characters', 'count_of_issues', 'description' , 'id' , 'image', 'issues', 'locations', 'name', 'people', 'publisher', 'start_year'].join(',')
+};
+var issue = {
+    url: 'https://www.comicvine.gamespot.com/api/issues/' + apiKey + '&offset=0&filter=volume:',
+    fieldList: ['api_detail_url', 'cover_date', 'id' , 'image', 'issue_number', 'name'].join(','),
+    fieldListDetailed: ['character_credits', 'description', 'location_credits', 'person_credits'].join(',')
+};
 
-
-function requestVolume (name, year, cb) {
-    getVolume(name, year, function(volume) {
-        getIssues(volume.issues.issue, function(issues) {
+function getVolume(name, year, cb) {
+    requestVolume(name, year, function(volume) {
+        requestIssues(volume.issues.issue, function(issues) {
             volume.issues = issues;
             return cb(volume);
         });
     });
 }
 
-function getVolume(name, year, cb) {
+function requestVolume(name, year, cb) {
     var options = {
-        'url': volumeUrl,
+        'url': volume.url,
         'headers': {'user-agent': userAgent}
     };
-    name = consts.replaceEscapedCharacters(name);
-    options.url += name.toLowerCase().replace(/[ ]/g, '_');
-    options.url += '&field_list=name,start_year,api_detail_url';
+    options.url += consts.replaceEscapedCharacters(name).toLowerCase().replace(/[ ]/g, '_');
+    options.url += '&field_list=' + volume.fieldList;
 
     request(options, function (err, res) {
+        if (err) {
+            return cb(err);
+        }
         // res.body is xml
         xml.parseVolume(res.body, name, year, function(err, res) {
-            getVolumeDetails(res.api_detail_url, function(err, res) {
+            if (err) {
+                return cb(err);
+            }
+            requestDetailedVolume(res.api_detail_url, function(err, res) {
+                if (err) {
+                    return cb(err);
+                }
                 return cb(res);
             });
         });
     });
 }
 
-function getVolumeDetails(url, cb) {
-    url += '?api_key=' + apiKey + volumeFieldList;
+function requestDetailedVolume(url, cb) {
     var options = {
-        'url': url,
+        'url': url + '?api_key=' + apiKey + volume.fieldList,
         'headers': {'user-agent': userAgent}
     };
     request(options, function (err, res) {
+        if (err) {
+            return cb(err);
+        }
         // res.body is xml
-        xml.stringToXml(res.body, function(err, res) {
+        xml.xmlToJs(res.body, function(err, res) {
+            if (err) {
+                return cb(err);
+            }
             return cb(0, res);
         });
     });
-};
-
-function getIssues(issues, cb) {
-    var results = [];
-
-    for (var i = 0; i < issues.length; i++) {
-        var options = {
-            'url': issues[i].api_detail_url + '?api_key=' + apiKey + issueFieldList,
-            'headers': {'user-agent': userAgent}
-        };
-
-        request(options, function (err, res) {
-            // res.body is xml
-            xml.stringToXml(res.body, function(err, res) {
-                results.push(res);
-                if (results.length == issues.length) {
-                    results.sort(function(a, b) { return a.issue_number - b.issue_number });
-                    return cb(results);
-                }
-            });
-        });
-    }
 }
 
-function getCover(url, path, cb) {
+function requestIssues(volumeId, cb) {
+    var options = {
+        'url': issue.url + volumeId + '&field_list=' + issue.fieldList,
+        'headers': {'user-agent': userAgent}
+    };
+
+    requestIssuesHelper(options, 0, "", function(err, res) {
+        if (err) {
+            return cb(err);
+        }
+        // sort issues by issue number
+        res.issue.sort(function(a, b) { return a.issue_number - b.issue_number });
+        return cb(res);
+    });
+}
+
+function requestIssuesHelper(options, offset, issues, cb) {
+    request(options, function (err, res) {
+        // res.body is xml
+        issues += res.body.match(/<results>(.*)<\/results>/g);
+        issues = issues.replace('<results>', '');
+        issues = issues.replace('</results>', '');
+
+        //regex match number of page results and total results
+        var pageResults = res.body.match(/<number_of_page_results>(.*?)<\/number_of_page_results>/g);
+        pageResults = pageResults[0].match(/[0-9]+/g);
+        var totalResults = res.body.match(/<number_of_total_results>(.*)<\/number_of_total_results>/g);
+        totalResults = totalResults[0].match(/[0-9]+/g);
+
+        // if page results < total results recall helper with new offset
+        if (parseInt(pageResults[0]) + offset < parseInt(totalResults[0])) {
+            offset = parseInt(offset)+parseInt(pageResults[0]);
+            options.url = options.url.replace(/offset=[0-9]+/g, 'offset=' + offset);
+            requestIssuesHelper(options, offset, issues, cb);
+        } else {
+            issues = '<results>' + issues + '</results>';
+            xml.xmlToJs(issues, function(err, res) {
+                if (err) {
+                    return cb(err);
+                }
+                return cb(res);
+            });
+        }
+    });
+}
+
+function requestDetailedIssue(url, cb) {
+    var options = {
+        'url': url + apiKey + issue.fieldListDetailed,
+        'headers': {'user-agent': userAgent}
+    };
+    request(options, function (err, res) {
+        if (err) {
+            return cb(err);
+        }
+        // res.body is xml
+        xml.xmlToJs(res.body, function(err, res) {
+            if (err) {
+                return cb(err);
+            }
+            return cb(res);
+        });
+    });
+}
+
+function requestCover(url, path, cb) {
     request.get({'url': url, 'headers': {'User-Agent': userAgent}, 'encoding': null}, function (err, res, body) {
         if (!err && res.statusCode === 200) {
             if (!fs.existsSync(path)){
@@ -88,10 +151,11 @@ function getCover(url, path, cb) {
 
             return cb(folder + '/' + filename);
         } else {
-            return cb('');
+            return cb(err);
         }
     });
 }
 
-module.exports.requestVolume = requestVolume;
-module.exports.getCover = getCover;
+module.exports.getVolume = getVolume;
+module.exports.requestDetailedIssue = requestDetailedIssue;
+module.exports.requestCover = requestCover;
