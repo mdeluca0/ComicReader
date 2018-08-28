@@ -144,7 +144,12 @@ function requestDetailedIssue(url, cb) {
 }
 
 function requestCover(url, path, cb) {
-    request.get({'url': url, 'headers': {'User-Agent': userAgent}, 'encoding': null}, function (err, res, body) {
+    var options = {
+        'url': url,
+        'headers': {'user-agent': userAgent},
+        'encoding': null
+    };
+    request.get(options, function (err, res, body) {
         if (!err && res.statusCode === 200) {
             if (!fs.existsSync(path)){
                 fs.mkdirSync(path);
