@@ -18,10 +18,16 @@ var issue = {
 };
 
 function getVolume(name, year, cb) {
-    requestVolume(name, year, function(volume) {
-        requestIssues(volume.issues.issue, function(issues) {
+    requestVolume(name, year, function(err, volume) {
+        if (err) {
+            return cb(err);
+        }
+        requestIssues(volume.issues.issue, function(err, issues) {
+            if (err) {
+                return cb(err);
+            }
             volume.issues = issues;
-            return cb(volume);
+            return cb(null, volume);
         });
     });
 }
@@ -47,7 +53,7 @@ function requestVolume(name, year, cb) {
                 if (err) {
                     return cb(err);
                 }
-                return cb(res);
+                return cb(null, res);
             });
         });
     });
@@ -67,7 +73,7 @@ function requestDetailedVolume(url, cb) {
             if (err) {
                 return cb(err);
             }
-            return cb(0, res);
+            return cb(null, res);
         });
     });
 }
@@ -84,7 +90,7 @@ function requestIssues(volumeId, cb) {
         }
         // sort issues by issue number
         res.issue.sort(function(a, b) { return a.issue_number - b.issue_number });
-        return cb(res);
+        return cb(null, res);
     });
 }
 
@@ -112,7 +118,7 @@ function requestIssuesHelper(options, offset, issues, cb) {
                 if (err) {
                     return cb(err);
                 }
-                return cb(res);
+                return cb(null, res);
             });
         }
     });
@@ -132,7 +138,7 @@ function requestDetailedIssue(url, cb) {
             if (err) {
                 return cb(err);
             }
-            return cb(res);
+            return cb(null, res);
         });
     });
 }
@@ -149,7 +155,7 @@ function requestCover(url, path, cb) {
 
             fs.writeFile(path + '/' + filename, new Buffer(body));
 
-            return cb(folder + '/' + filename);
+            return cb(null, folder + '/' + filename);
         } else {
             return cb(err);
         }

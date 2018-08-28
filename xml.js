@@ -8,7 +8,7 @@ function xmlToJs (xml, cb) {
         }
 
         xml = res.response.results;
-        return cb(0, xml);
+        return cb(null, xml);
     });
 }
 
@@ -22,7 +22,7 @@ function parseVolume (xml, name, year, cb) {
 
         for (var i = 0; i < volumeXml.length; i++) {
             if (volumeXml[i].name === name && volumeXml[i].start_year === year) {
-                return cb(0, volumeXml[i]);
+                return cb(null, volumeXml[i]);
             }
         }
 
