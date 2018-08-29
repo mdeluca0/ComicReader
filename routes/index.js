@@ -7,54 +7,70 @@ var archive = require('../archive');
 // Tests
 //require('../tests/test').test();
 
-// Initialize metadata refresher
-//require('../DataManager').startRefresh(true);
-
 router.get('/volumes', function(req, res) {
-    var volumeIds = req.query.id;
-
-    if (typeof(req.query.id) !== 'undefined') {
-        volumeIds = req.query.id.split(',');
-    }
-
-    db.getActiveVolumes(volumeIds, function(volumes) {
+    db.getVolumes(function(err, volumes) {
+        if (err) {
+            return err;
+        }
         res.send(volumes);
     });
 });
-router.get('/issues', function(req, res) {
-    var issueIds = req.query.id;
 
-    if (typeof(req.query.id) !== 'undefined') {
-        issueIds = req.query.id.split(',');
-    }
+router.get('/volumes/:volumeId', function(req, res) {
+    var volumeId = req.params.volumeId;
 
-    db.getActiveIssues(issueIds, function(issues) {
+    db.getVolume(volumeId, function(err, volume) {
+        if (err) {
+            return err;
+        }
+        res.send(volume);
+    });
+});
+
+router.get('/volumes/:volumeId/issues', function(req, res) {
+    var volumeId = req.params.volumeId;
+
+    db.getIssues(volumeId, function(err, issues) {
+        if (err) {
+            return err;
+        }
         res.send(issues);
     });
 });
-router.get('/page', function(req, res) {
-    var issueId = [req.query.id];
-    var pageNo = req.query.page;
-    db.getActiveIssues(issueId, function(issue) {
-        if (issue.length > 0) {
-            issue = issue[0];
-            archive.extractIssue(issue.issues.file_path, function (err, handler, entries, ext) {
-                archive.getPage(handler, entries, ext, pageNo, function (base64Img) {
-                    var result = {
-                        'volumeName': issue.name,
-                        'volumeId': issue.id,
-                        'issueName': issue.issues.name,
-                        'issueId': issue.issues.id,
-                        'issueNo': issue.issues.issue_number,
-                        'pageCount': issue.issues.page_count,
-                        'pageImage': base64Img
-                    };
-                    res.send(result);
-                });
-            });
-        } else {
-            res.send({});
+
+router.get('/volumes/:volumeId/issues/:issueId', function(req, res) {
+    var volumeId = req.params.volumeId;
+    var issueId = req.params.issueId;
+
+    db.getIssue(volumeId, issueId, function(err, issue) {
+        if (err) {
+            return err;
         }
+        res.send(issue);
+    });
+});
+
+router.get('/volumes/:volumeId/issues/:issueId/:pageNo', function(req, res) {
+    var volumeId = req.params.volumeId;
+    var issueId = req.params.issueId;
+    var pageNo = req.params.pageNo;
+
+    db.getIssue(volumeId, issueId, function(err, issue) {
+        if (err) {
+            return err;
+        }
+        archive.extractIssue(issue.issues.file_path, function (err, handler, entries, ext) {
+            if (err) {
+                return err;
+            }
+            archive.getPage(handler, entries, ext, pageNo, function (err, base64Img) {
+                if (err) {
+                    return err;
+                }
+                res.send(base64Img);
+            });
+        });
+
     });
 });
 
