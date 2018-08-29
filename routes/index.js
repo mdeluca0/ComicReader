@@ -4,8 +4,11 @@ var router = express.Router();
 var db = require('../db');
 var archive = require('../archive');
 
+// Tests
+require('../tests/test').test();
+
 // Initialize metadata refresher
-require('../DataManager').startRefresh(true);
+//require('../DataManager').startRefresh(true);
 
 router.get('/volumes', function(req, res) {
     var volumeIds = req.query.id;

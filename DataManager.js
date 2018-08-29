@@ -21,7 +21,7 @@ function startRefresh(debug) {
 
 // Scans the book directory for new volumes or issues added so that we can populate their metadata.
 function scanVolumes() {
-    // Makes s directory for the thumbnails if it doesn't exist
+    // Makes a directory for the thumbnails if it doesn't exist
     if (!fs.existsSync(consts.thumbDirectory)) {
         fs.mkdirSync(consts.thumbDirectory);
     }
@@ -50,7 +50,7 @@ function scanVolumes() {
 function processVolume(dirVolume, dbVolume) {
     // New volume found in the directory which is why dbVolume is null. Going to attempt to find it's metadata.
     if (dbVolume === null) {
-        api.getFullVolume(dirVolume.volume, dirVolume.start_year, function(volume) {
+        api.requestVolume(dirVolume.volume, dirVolume.start_year, function(volume) {
             api.getCover(volume.image.super_url, consts.thumbDirectory + '/' + dirVolume.folder, function (path) {
                 volume.cover = path;
                 processIssues(dirVolume, volume, function(issues) {
