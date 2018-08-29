@@ -21,11 +21,6 @@ function startRefresh(debug) {
 
 // Scans the book directory for new volumes or issues added so that we can populate their metadata.
 function scanVolumes() {
-    // Makes a directory for the thumbnails if it doesn't exist
-    if (!fs.existsSync(consts.thumbDirectory)) {
-        fs.mkdirSync(consts.thumbDirectory);
-    }
-
     scanner.scan(function(err, directory) {
         db.getAllVolumes(function(library) {
             for (var i = 0; i < directory.length; i++) {

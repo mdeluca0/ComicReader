@@ -10,3 +10,7 @@ watcher
 
 
 // watches for changes to the directory and looks for missing metadata or active files
+
+//when loading a new directory, queue a detailed request for every issue
+//every second pop a request, check if it needs to be requested, and send if so.
+// If the user navigates to an issue that doesn't have info, request it and remove that request from the queue.
