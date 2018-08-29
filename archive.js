@@ -10,20 +10,33 @@ function extractIssue(file, cb) {
     //on success it returns err = 0 and the extracted issue
     //on fail it return err = 1 and empty array
     var ext = file.substr(file.lastIndexOf('.') + 1);
-    file = consts.ComicDirectory + '/' + file;
+    file = consts.comicDirectory + '/' + file;
+
     if (ext === 'cbr') {
         extractCbr(file, function (err, handler, entries) {
-            return cb(err, handler, entries, ext);
+            if (err) {
+                return cb(err);
+            }
+            return cb(null, handler, entries, ext);
         });
     } else if (ext === 'cbz') {
         extractCbz(file, function (err, handler, entries) {
-            return cb(err, handler, entries, ext);
+            if (err) {
+                return cb(err);
+            }
+            return cb(null, handler, entries, ext);
         });
+    } else {
+        return cb(1);
     }
 }
+
 function extractCbr(file, cb) {
     var archive = new unrar(file);
     archive.list(function(err, entries) {
+        if (err) {
+            return cb(err);
+        }
         if (typeof(entries) !== 'undefined') {
             // remove non-file elements from entries
             for (var i = 0; i < entries.length; i++) {
@@ -35,21 +48,18 @@ function extractCbr(file, cb) {
 
             // sort rar images into correct order because sometimes they aren't
             entries.sort(function (a, b) {
-                if (a.name < b.name) {
-                    return -1;
-                }
-                if (a.name > b.name) {
-                    return 1;
-                }
+                if (a.name < b.name) { return -1; }
+                if (a.name > b.name) { return 1; }
                 return 0;
             });
 
-            return cb(0, archive, entries);
+            return cb(null, archive, entries);
         } else {
             return cb(1, null, []);
         }
     });
 }
+
 function extractCbz(file, cb) {
     try {
         var zip = new admZip(file);
@@ -73,22 +83,30 @@ function extractCbz(file, cb) {
         return 0;
     });
 
-    return cb(0, zip, entries);
+    return cb(null, zip, entries);
 }
+
 function getPage(handler, entries, ext, pageNo, cb) {
     //takes an issue from the db and a page no
     //calls extract issue
     //returns base 64 encoded page from archive
     if (ext === 'cbr') {
-        getCbrPage(handler, entries, pageNo, function (page) {
-            return cb(page);
+        getCbrPage(handler, entries, pageNo, function (err, page) {
+            if (err) {
+                return cb(err);
+            }
+            return cb(null, page);
         });
     } else if (ext === 'cbz') {
-        getCbzPage(handler, entries, pageNo, function (page) {
-            return cb(page);
+        getCbzPage(handler, entries, pageNo, function (err, page) {
+            if (err) {
+                return cb(err);
+            }
+            return cb(null, page);
         });
     }
 }
+
 function getCbrPage(handler, entries, pageNo, cb) {
     // out of bounds checks
     if (pageNo < 0) {
@@ -102,11 +120,15 @@ function getCbrPage(handler, entries, pageNo, cb) {
     var stream = handler.stream(archiveFilePath);
 
     toArray(stream, function (err, arr) {
+        if (err) {
+            return cb(err);
+        }
         var buf = Buffer.concat(arr);
         var base64Img = buf.toString('base64');
-        return cb(base64Img);
+        return cb(null, base64Img);
     });
 }
+
 function getCbzPage(handler, entries, pageNo, cb) {
     // out of bounds checks
     if (pageNo < 0) {
@@ -121,12 +143,19 @@ function getCbzPage(handler, entries, pageNo, cb) {
     var buf = handler.getEntry(entryName).getData();
     var base64Img = buf.toString('base64');
 
-    return cb(base64Img);
+    return cb(null, base64Img);
 }
+
 function getPageCount(entries, cb) {
     //takes an extracted issue and returns the page count
-    return cb(entries.length);
+    if (entries.length) {
+        return cb(null, entries.length);
+    } else {
+        return cb(1);
+    }
 }
+
+// Thumbnails disabled for now
 function getThumbnails(handler, entries, ext, cb) {
     //takes an extracted issue and returns an array of base 64 encoded thumbnails for each page
     if (ext === 'cbr') {
@@ -230,6 +259,7 @@ function getCbzThumb(handler, entries, thumbs, cb) {
         });
     });
 }
+// End Thumbnails
 
 module.exports.extractIssue = extractIssue;
 module.exports.getPage = getPage;
