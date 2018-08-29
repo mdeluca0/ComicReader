@@ -7,8 +7,13 @@ function xmlToJs (xml, cb) {
             return cb(err);
         }
 
-        xml = res.response.results;
-        return cb(null, xml);
+        if (res.results) {
+            return cb(null, res.results);
+        } else if (res.response.results) {
+            return cb(null, res.response.results);
+        } else {
+            return cb(1);
+        }
     });
 }
 

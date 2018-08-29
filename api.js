@@ -22,7 +22,7 @@ function getVolume(name, year, cb) {
         if (err) {
             return cb(err);
         }
-        requestIssues(volume.issues.issue, function(err, issues) {
+        requestIssues(volume.id, function(err, issues) {
             if (err) {
                 return cb(err);
             }
@@ -61,7 +61,7 @@ function requestVolume(name, year, cb) {
 
 function requestDetailedVolume(url, cb) {
     var options = {
-        'url': url + '?api_key=' + apiKey + volume.fieldList,
+        'url': url + apiKey + '&field_list=' + volume.fieldListDetailed,
         'headers': {'user-agent': userAgent}
     };
     request(options, function (err, res) {
@@ -90,7 +90,7 @@ function requestIssues(volumeId, cb) {
         }
         // sort issues by issue number
         res.issue.sort(function(a, b) { return a.issue_number - b.issue_number });
-        return cb(null, res);
+        return cb(null, res.issue);
     });
 }
 
@@ -126,7 +126,7 @@ function requestIssuesHelper(options, offset, issues, cb) {
 
 function requestDetailedIssue(url, cb) {
     var options = {
-        'url': url + apiKey + issue.fieldListDetailed,
+        'url': url + apiKey + '&field_list=' + issue.fieldListDetailed,
         'headers': {'user-agent': userAgent}
     };
     request(options, function (err, res) {
