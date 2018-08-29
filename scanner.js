@@ -23,7 +23,7 @@ function scanIssues (folders, directory, cb) {
     startYear = startYear[startYear.length-1].replace('(', '').replace(')', '');
 
     var title = folder.replace(/\.[^/.]+$/, '');
-    title = folder.replace('(' + startYear + ')', '');
+    title = folder.replace('(' + startYear + ')', '').trim();
 
     var path = consts.comicDirectory + '/' + folder;
 

@@ -5,7 +5,7 @@ var db = require('../db');
 var archive = require('../archive');
 
 // Tests
-require('../tests/test').test();
+//require('../tests/test').test();
 
 // Initialize metadata refresher
 //require('../DataManager').startRefresh(true);
