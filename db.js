@@ -2,12 +2,15 @@ var mongo = require('mongodb').MongoClient;
 var url = require('./consts').dbUrl;
 
 function getVolumes(cb) {
-    mongo.connect(url, function(err, db) {
+    mongo.connect(url, function(err, client) {
         if (err) {
             return cb(err);
         }
-        db.collection('volumes').find().toArray(function (err, res) {
-            db.close();
+
+        var db = client.db('main');
+
+        db.collection('volumes').find().sort({'name': 1}).toArray(function (err, res) {
+            client.close();
             if (err) {
                 return cb(err);
             }
@@ -24,12 +27,15 @@ function getVolume(volumeId, cb) {
     var aggregation = [];
     aggregation.push({$match: {'id': volumeId}});
 
-    mongo.connect(url, function (err, db) {
+    mongo.connect(url, function (err, client) {
         if (err) {
             return cb(err);
         }
+
+        var db = client.db('main');
+
         db.collection('volumes').aggregate(aggregation, function (err, res) {
-            db.close();
+            client.close();
             if (err) {
                 return cb(err);
             } else if (typeof(res) === 'undefined') {
@@ -47,12 +53,15 @@ function getVolumeByNameAndYear(name, year, cb) {
     aggregation.push({$match: {'name': name}});
     aggregation.push({$match: {'start_year': year}});
 
-    mongo.connect(url, function (err, db) {
+    mongo.connect(url, function (err, client) {
         if (err) {
             return cb(err);
         }
+
+        var db = client.db('main');
+
         db.collection('volumes').aggregate(aggregation, function (err, res) {
-            db.close();
+            client.close();
             if (err) {
                 return cb(err);
             } else {
@@ -63,12 +72,15 @@ function getVolumeByNameAndYear(name, year, cb) {
 }
 
 function getIssues(cb) {
-    mongo.connect(url, function(err, db) {
+    mongo.connect(url, function(err, client) {
         if (err) {
             return cb(err);
         }
-        db.collection('issues').find().toArray(function (err, res) {
-            db.close();
+
+        var db = client.db('main');
+
+        db.collection('issues').find().sort({'issue_number': 1}).toArray(function (err, res) {
+            client.close();
             if (err) {
                 return cb(err);
             }
@@ -84,12 +96,15 @@ function getIssue(issueId, cb) {
     var aggregation = [];
     aggregation.push({$match:  {'id': issueId}});
 
-    mongo.connect(url, function (err, db) {
+    mongo.connect(url, function (err, client) {
         if (err) {
             return cb(err);
         }
+
+        var db = client.db('main');
+
         db.collection('issues').aggregate(aggregation, function (err, res) {
-            db.close();
+            client.close();
             if (err) {
                 return cb(err);
             } else if (typeof(res) === 'undefined') {
@@ -107,14 +122,18 @@ function getIssuesByVolume(volumeId, cb) {
         return cb('volumeId not supplied');
     }
     var aggregation = [];
-    aggregation.push({$match:  {'volume.id': volumeId}});
+    aggregation.push({$match: {'volume.id': volumeId}});
+    aggregation.push({$sort: {'issue_number': 1}});
 
-    mongo.connect(url, function (err, db) {
+    mongo.connect(url, function (err, client) {
         if (err) {
             return cb(err);
         }
+
+        var db = client.db('main');
+
         db.collection('issues').aggregate(aggregation, function (err, res) {
-            db.close();
+            client.close();
             if (err) {
                 return cb(err);
             } else {
@@ -125,12 +144,15 @@ function getIssuesByVolume(volumeId, cb) {
 }
 
 function upsertVolume(document) {
-    mongo.connect(url, function(err, db) {
+    mongo.connect(url, function(err, client) {
         if (err) {
             return cb(err);
         }
+
+        var db = client.db('main');
+
         db.collection('volumes').replaceOne({id: document.id}, document, {upsert: true}, function(err, res) {
-            db.close();
+            client.close();
             if (err) {
                 return cb(err);
             }
@@ -139,16 +161,19 @@ function upsertVolume(document) {
 }
 
 function upsertIssue(document) {
-    mongo.connect(url, function(err, db) {
+    mongo.connect(url, function(err, client) {
         if (err) {
             return cb(err);
         }
-       db.collection('issues').replaceOne({id: document.id}, document, {upsert: true}, function(err, res) {
-           db.close();
-           if (err) {
+
+        var db = client.db('main');
+
+        db.collection('issues').replaceOne({id: document.id}, document, {upsert: true}, function(err, res) {
+            client.close();
+            if (err) {
                return cb(err);
-           }
-       });
+            }
+        });
     });
 }
 
@@ -156,12 +181,15 @@ function getUndetailedIssues(cb) {
     var aggregation = [];
     aggregation.push({$match:  {'detailed': {'$not': /[Y]/}}});
 
-    mongo.connect(url, function (err, db) {
+    mongo.connect(url, function (err, client) {
         if (err) {
             return cb(err);
         }
+
+        var db = client.db('main');
+
         db.collection('issues').aggregate(aggregation, function (err, res) {
-            db.close();
+            client.close();
             if (err) {
                 return cb(err);
             } else if (typeof(res) === 'undefined') {
