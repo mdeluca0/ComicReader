@@ -3,12 +3,14 @@ var router = express.Router();
 
 var db = require('../db');
 var archive = require('../archive');
+var monitor = require('../monitor');
 
 // Tests
-//require('../tests/test').test();
+require('../tests/test').test();
+
 
 router.get('/volumes', function(req, res) {
-    db.getVolumes(function(err, volumes) {
+    db.getActiveVolumes(null, function(err, volumes) {
         if (err) {
             return err;
         }
@@ -19,7 +21,7 @@ router.get('/volumes', function(req, res) {
 router.get('/volumes/:volumeId', function(req, res) {
     var volumeId = req.params.volumeId;
 
-    db.getVolume(volumeId, function(err, volume) {
+    db.getActiveVolume(volumeId, function(err, volume) {
         if (err) {
             return err;
         }
@@ -30,7 +32,7 @@ router.get('/volumes/:volumeId', function(req, res) {
 router.get('/volumes/:volumeId/issues', function(req, res) {
     var volumeId = req.params.volumeId;
 
-    db.getIssues(volumeId, function(err, issues) {
+    db.getActiveIssues(volumeId, function(err, issues) {
         if (err) {
             return err;
         }
@@ -42,7 +44,7 @@ router.get('/volumes/:volumeId/issues/:issueId', function(req, res) {
     var volumeId = req.params.volumeId;
     var issueId = req.params.issueId;
 
-    db.getIssue(volumeId, issueId, function(err, issue) {
+    db.getActiveIssue(volumeId, issueId, function(err, issue) {
         if (err) {
             return err;
         }

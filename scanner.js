@@ -20,6 +20,11 @@ function scanIssues (folders, directory, cb) {
     var folder = folders[directory.length];
 
     var startYear = folder.match(/\([0-9][0-9][0-9][0-9]\)/g);
+
+    if (!startYear) {
+        return cb(1);
+    }
+
     startYear = startYear[startYear.length-1].replace('(', '').replace(')', '');
 
     var title = folder.replace(/\.[^/.]+$/, '');

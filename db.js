@@ -23,22 +23,21 @@ function getAllIssues (cb) {
     });
 }
 
-// Gets every active volume listed in volumeIds or every active volume if volumeIds is empty
-function getActiveVolumes (volumeIds, cb) {
+// Gets every active volume
+function getActiveVolumes(cb) {
     var aggregation = [];
 
     aggregation.push({$unwind: '$issues'});
-
-    if (typeof(volumeIds) !== 'undefined') {
-        aggregation.push({$match: {'id': {$in: volumeIds}}});
-    }
-
     aggregation.push({$match:  {'issues.active': 'Y'}});
-
     aggregation.push(
         {$group: {
             '_id': '$_id',
+            'characters': {'$first': '$characters'},
+            'locations': {'$first': '$locations'},
+            'people': {'$first': '$people'},
+            'publisher': {'$first': '$publisher'},
             'count_of_issues': {'$first': '$count_of_issues'},
+            'description': {'$first': '$description'},
             'id': {'$first': '$id'},
             'name': {'$first': '$name'},
             'start_year': {'$first': '$start_year'},
@@ -51,34 +50,99 @@ function getActiveVolumes (volumeIds, cb) {
     mongo.connect(url, function (err, db) {
         db.collection('volumes').aggregate(aggregation, function (err, res) {
             db.close();
-            if (typeof(res) === 'undefined') {
-                return [];
+            if (err) {
+                return cb(err);
+            } else if (typeof(res) === 'undefined') {
+                return cb(null, {});
             } else {
-                return cb(res);
+                return cb(null, res);
+            }
+        });
+    });
+}
+
+// Gets an active volume
+function getActiveVolume(id, cb) {
+    if (!id) {
+        return cb(1);
+    }
+
+    var aggregation = [];
+
+    aggregation.push({$unwind: '$issues'});
+    aggregation.push({$match: {'id': {$in: id}}});
+    aggregation.push({$match:  {'issues.active': 'Y'}});
+    aggregation.push(
+        {$group: {
+                '_id': '$_id',
+                'characters': {'$first': '$characters'},
+                'locations': {'$first': '$locations'},
+                'people': {'$first': '$people'},
+                'publisher': {'$first': '$publisher'},
+                'count_of_issues': {'$first': '$count_of_issues'},
+                'description': {'$first': '$description'},
+                'id': {'$first': '$id'},
+                'name': {'$first': '$name'},
+                'start_year': {'$first': '$start_year'},
+                'cover': {'$first': '$cover'},
+                'issues': {'$push': '$issues'}
+            }}
+    );
+    aggregation.push({$sort: {'name': 1}});
+
+    mongo.connect(url, function (err, db) {
+        db.collection('volumes').aggregate(aggregation, function (err, res) {
+            db.close();
+            if (err) {
+                return cb(err);
+            } else if (typeof(res) === 'undefined') {
+                return cb(null, {});
+            } else {
+                return cb(null, res);
             }
         });
     });
 }
 
 // Gets every active issue listed in issueIds or every active issue if issueIds is empty
-function getActiveIssues (issueIds, cb) {
+function getActiveIssues (volumeId, cb) {
     var aggregation = [];
 
+    aggregation.push({$match:  {'id': volumeId}});
     aggregation.push({$unwind: '$issues'});
-
-    if (typeof(issueIds) !== 'undefined') {
-        aggregation.push({$match: {'issues.id': {$in: issueIds}}});
-    }
-
     aggregation.push({$match:  {'issues.active': 'Y'}});
 
     mongo.connect(url, function (err, db) {
         db.collection('volumes').aggregate(aggregation, function (err, res) {
             db.close();
-            if (typeof(res) === 'undefined') {
-                return [];
+            if (err) {
+                return cb(err);
+            } else if (typeof(res) === 'undefined') {
+                return cb(null, {});
             } else {
-                return cb(res);
+                return cb(null, res);
+            }
+        });
+    });
+}
+
+function getActiveIssue(volumeId, issueId, cb) {
+    var aggregation = [];
+
+    aggregation.push({$match:  {'id': volumeId}});
+    aggregation.push({$unwind: '$issues'});
+    aggregation.push({$match: {'issues.id': {$in: issueId}}});
+    aggregation.push({$match: {'issues.active': 'Y'}});
+
+    mongo.connect(url, function (err, db) {
+        db.collection('volumes').aggregate(aggregation, function (err, res) {
+            db.close();
+            if (err) {
+                return cb(err);
+            } else if (typeof(res) === 'undefined') {
+                return cb(null, {});
+            } else {
+                return cb(null, res);
             }
         });
     });
@@ -100,9 +164,16 @@ function updateIssues (volumeId, issues) {
     });
 }
 
+function detailIssue (volumeId, issueId, details) {
+
+}
+
 module.exports.getAllVolumes = getAllVolumes;
 module.exports.getAllIssues = getAllIssues;
 module.exports.getActiveVolumes = getActiveVolumes;
+module.exports.getActiveVolume = getActiveVolume;
 module.exports.getActiveIssues = getActiveIssues;
+module.exports.getActiveIssue = getActiveIssue;
 module.exports.upsertVolume = upsertVolume;
 module.exports.updateIssues = updateIssues;
+module.exports.detailIssue = detailIssue;
