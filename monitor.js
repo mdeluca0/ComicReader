@@ -8,33 +8,58 @@ var consts = require('./consts');
 
 var watcher = chokidar.watch(consts.comicDirectory, {ignored: /(^|[\/\\])\../, persistent: true});
 
+var scanThreshold;
+
 // Initial
 watcher.on('ready', function(path) {
-    scanVolumes();
+    scanThreshold = setTimeout(refresh, 3000);
 
     // File added
-    watcher.on('add', function(path) { scanVolumes(); });
+    watcher.on('add', function(path) {
+        clearTimeout(scanThreshold);
+        scanThreshold = setTimeout(refresh, 8000);
+    });
 
     // File changed
-    watcher.on('change', function(path) { scanVolumes(); });
+    watcher.on('change', function(path) {
+        clearTimeout(scanThreshold);
+        scanThreshold = setTimeout(refresh, 8000);
+    });
 
     // File removed
-    watcher.on('unlink', function(path) { scanVolumes(); });
+    watcher.on('unlink', function(path) {
+        clearTimeout(scanThreshold);
+        scanThreshold = setTimeout(refresh, 8000);
+    });
 });
 
 var requestQueue = [];
 
 setInterval(function () {
     if (requestQueue.length) {
-        var func = requestQueue.shift();
-        func();
+        var issue = requestQueue.shift();
+        console.log('Requesting...' + issue.volume.name + ' - ' + issue.name);
+        api.requestDetailedIssue(issue.api_detail_url, function (err, details) {
+            if (err) {
+                return err;
+            }
+            issue.detailed = 'Y';
+            db.upsertIssue(Object.assign(issue, details));
+            console.log('Updated...' + issue.volume.name + ' - ' + issue.name);
+        });
+    } else {
+        db.getUndetailedIssues(function(err, res) {
+            for (var i = 0; i < res.length; i++) {
+                requestQueue.push(res[i]);
+            }
+        });
     }
 }, 1000);
 
 //TODO: get details on demand
 
 // Scans the book directory for new volumes or issues added so that we can populate their metadata.
-function scanVolumes() {
+function refresh() {
     // Makes a directory for the thumbnails if it doesn't exist
     if (!fs.existsSync(consts.thumbDirectory)) {
         fs.mkdirSync(consts.thumbDirectory);
@@ -44,30 +69,27 @@ function scanVolumes() {
         if (err) {
             return err;
         }
-        db.getAllVolumes(function(library) {
-            for (var i = 0; i < directory.length; i++) {
-                var match = false;
-                for (var j = 0; j < library.length; j++) {
-                    if (directory[i].volume === library[j].name && directory[i].start_year === library[j].start_year) {
-                        match = true;
-                        break;
+        directory.forEach(function(dirItem) {
+            db.getVolumeByNameAndYear(dirItem.volume, dirItem.start_year, function(err, dbItem) {
+                if (err) {
+                    return err;
+                }
+                dbItem = dbItem.shift();
+                db.getIssuesByVolume(dbItem.id, function(err, issues) {
+                    if (err) {
+                        return err;
                     }
-                }
-                if (match) {
-                    //existing volume
-                    processVolume(directory[i], library[j]);
-                } else {
-                    //new volume
-                    processVolume(directory[i], null);
-                }
-            }
+                    dbItem.issues = issues;
+                    processVolume(dirItem, dbItem);
+                });
+            });
         });
     });
 }
 
 function processVolume(dirVolume, dbVolume) {
     // New volume found in the directory which is why dbVolume is null. Going to attempt to find it's metadata.
-    if (dbVolume === null) {
+    if (typeof(dbVolume) === 'undefined') {
         api.getVolume(dirVolume.volume, dirVolume.start_year, function(err, volume) {
             if (err) {
                 return err;
@@ -80,44 +102,20 @@ function processVolume(dirVolume, dbVolume) {
                 }
 
                 processIssues(dirVolume, volume, function(issues) {
-                    issues.sort(function (a, b) {
-                        if (parseInt(a.issue_number) < parseInt(b.issue_number)) {
-                            return -1;
-                        }
-                        if (parseInt(a.issue_number) > parseInt(b.issue_number)) {
-                            return 1;
-                        }
-                        return 0;
-                    });
-                    volume.issues = issues;
+                    for (var i = 0; i < issues.length; i++) {
+                        db.upsertIssue(issues[i]);
+                    }
+                    delete volume.issues;
                     db.upsertVolume(volume);
                     console.log('Finished processing "' + volume.name + '"');
-
-                    // Queue detailed requests
-                    for (var i = 0; i < volume.issues.length; i++) {
-                        var curIssue = volume.issues[i];
-                        var requestCb = (function(e) {
-                            api.requestDetailedIssue(e.api_detail_url, function (err, res) {
-                                db.detailIssue(volume.id, e.id, res);
-                            });
-                        })(curIssue);
-                        requestQueue.push(requestCb);
-                    }
                 });
             });
         });
     } else {
         processIssues(dirVolume, dbVolume, function(issues) {
-            issues.sort(function (a, b) {
-                if (parseInt(a.issue_number) < parseInt(b.issue_number)) {
-                    return -1;
-                }
-                if (parseInt(a.issue_number) > parseInt(b.issue_number)) {
-                    return 1;
-                }
-                return 0;
-            });
-            dbVolume.issues = issues;
+            for (var i = 0; i < issues.length; i++) {
+                db.upsertIssue(issues[i]);
+            }
             db.upsertVolume(dbVolume);
             console.log('Finished processing "' + dbVolume.name + '"');
         });

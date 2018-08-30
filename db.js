@@ -1,96 +1,33 @@
 var mongo = require('mongodb').MongoClient;
 var url = require('./consts').dbUrl;
 
-// Gets every volume in the database regardless of active status
-function getAllVolumes (cb) {
+function getVolumes(cb) {
     mongo.connect(url, function(err, db) {
+        if (err) {
+            return cb(err);
+        }
         db.collection('volumes').find().toArray(function (err, res) {
-            db.close();
-            return cb(res);
-        })
-    });
-}
-
-// Gets every issue in the database regardless of active status
-function getAllIssues (cb) {
-    mongo.connect(url, function(err, db) {
-        db.collection('volumes').aggregate([
-            {$unwind: '$issues'}
-        ], function (err, res) {
-            db.close();
-            return cb(res);
-        })
-    });
-}
-
-// Gets every active volume
-function getActiveVolumes(cb) {
-    var aggregation = [];
-
-    aggregation.push({$unwind: '$issues'});
-    aggregation.push({$match:  {'issues.active': 'Y'}});
-    aggregation.push(
-        {$group: {
-            '_id': '$_id',
-            'characters': {'$first': '$characters'},
-            'locations': {'$first': '$locations'},
-            'people': {'$first': '$people'},
-            'publisher': {'$first': '$publisher'},
-            'count_of_issues': {'$first': '$count_of_issues'},
-            'description': {'$first': '$description'},
-            'id': {'$first': '$id'},
-            'name': {'$first': '$name'},
-            'start_year': {'$first': '$start_year'},
-            'cover': {'$first': '$cover'},
-            'issues': {'$push': '$issues'}
-        }}
-    );
-    aggregation.push({$sort: {'name': 1}});
-
-    mongo.connect(url, function (err, db) {
-        db.collection('volumes').aggregate(aggregation, function (err, res) {
             db.close();
             if (err) {
                 return cb(err);
-            } else if (typeof(res) === 'undefined') {
-                return cb(null, {});
-            } else {
-                return cb(null, res);
             }
-        });
+            return cb(null, res);
+        })
     });
 }
 
-// Gets an active volume
-function getActiveVolume(id, cb) {
-    if (!id) {
-        return cb(1);
+function getVolume(volumeId, cb) {
+    if (!volumeId) {
+        return cb('volumeId not supplied');
     }
 
     var aggregation = [];
-
-    aggregation.push({$unwind: '$issues'});
-    aggregation.push({$match: {'id': {$in: id}}});
-    aggregation.push({$match:  {'issues.active': 'Y'}});
-    aggregation.push(
-        {$group: {
-                '_id': '$_id',
-                'characters': {'$first': '$characters'},
-                'locations': {'$first': '$locations'},
-                'people': {'$first': '$people'},
-                'publisher': {'$first': '$publisher'},
-                'count_of_issues': {'$first': '$count_of_issues'},
-                'description': {'$first': '$description'},
-                'id': {'$first': '$id'},
-                'name': {'$first': '$name'},
-                'start_year': {'$first': '$start_year'},
-                'cover': {'$first': '$cover'},
-                'issues': {'$push': '$issues'}
-            }}
-    );
-    aggregation.push({$sort: {'name': 1}});
+    aggregation.push({$match: {'id': volumeId}});
 
     mongo.connect(url, function (err, db) {
+        if (err) {
+            return cb(err);
+        }
         db.collection('volumes').aggregate(aggregation, function (err, res) {
             db.close();
             if (err) {
@@ -98,27 +35,26 @@ function getActiveVolume(id, cb) {
             } else if (typeof(res) === 'undefined') {
                 return cb(null, {});
             } else {
+                res = res.shift();
                 return cb(null, res);
             }
         });
     });
 }
 
-// Gets every active issue listed in issueIds or every active issue if issueIds is empty
-function getActiveIssues (volumeId, cb) {
+function getVolumeByNameAndYear(name, year, cb) {
     var aggregation = [];
-
-    aggregation.push({$match:  {'id': volumeId}});
-    aggregation.push({$unwind: '$issues'});
-    aggregation.push({$match:  {'issues.active': 'Y'}});
+    aggregation.push({$match: {'name': name}});
+    aggregation.push({$match: {'start_year': year}});
 
     mongo.connect(url, function (err, db) {
+        if (err) {
+            return cb(err);
+        }
         db.collection('volumes').aggregate(aggregation, function (err, res) {
             db.close();
             if (err) {
                 return cb(err);
-            } else if (typeof(res) === 'undefined') {
-                return cb(null, {});
             } else {
                 return cb(null, res);
             }
@@ -126,54 +62,123 @@ function getActiveIssues (volumeId, cb) {
     });
 }
 
-function getActiveIssue(volumeId, issueId, cb) {
-    var aggregation = [];
-
-    aggregation.push({$match:  {'id': volumeId}});
-    aggregation.push({$unwind: '$issues'});
-    aggregation.push({$match: {'issues.id': {$in: issueId}}});
-    aggregation.push({$match: {'issues.active': 'Y'}});
-
-    mongo.connect(url, function (err, db) {
-        db.collection('volumes').aggregate(aggregation, function (err, res) {
-            db.close();
-            if (err) {
-                return cb(err);
-            } else if (typeof(res) === 'undefined') {
-                return cb(null, {});
-            } else {
-                return cb(null, res);
-            }
-        });
-    });
-}
-
-function upsertVolume (document) {
+function getIssues(cb) {
     mongo.connect(url, function(err, db) {
+        if (err) {
+            return cb(err);
+        }
+        db.collection('issues').find().toArray(function (err, res) {
+            db.close();
+            if (err) {
+                return cb(err);
+            }
+            return cb(null, res);
+        })
+    });
+}
+
+function getIssue(issueId, cb) {
+    if (!issueId) {
+        return cb('issueId not supplied');
+    }
+    var aggregation = [];
+    aggregation.push({$match:  {'id': issueId}});
+
+    mongo.connect(url, function (err, db) {
+        if (err) {
+            return cb(err);
+        }
+        db.collection('issues').aggregate(aggregation, function (err, res) {
+            db.close();
+            if (err) {
+                return cb(err);
+            } else if (typeof(res) === 'undefined') {
+                return cb(null, {});
+            } else {
+                res = res.shift();
+                return cb(null, res);
+            }
+        });
+    });
+}
+
+function getIssuesByVolume(volumeId, cb) {
+    if (!volumeId) {
+        return cb('volumeId not supplied');
+    }
+    var aggregation = [];
+    aggregation.push({$match:  {'volume.id': volumeId}});
+
+    mongo.connect(url, function (err, db) {
+        if (err) {
+            return cb(err);
+        }
+        db.collection('issues').aggregate(aggregation, function (err, res) {
+            db.close();
+            if (err) {
+                return cb(err);
+            } else {
+                return cb(null, res);
+            }
+        });
+    });
+}
+
+function upsertVolume(document) {
+    mongo.connect(url, function(err, db) {
+        if (err) {
+            return cb(err);
+        }
         db.collection('volumes').replaceOne({id: document.id}, document, {upsert: true}, function(err, res) {
             db.close();
+            if (err) {
+                return cb(err);
+            }
         });
     });
 }
 
-function updateIssues (volumeId, issues) {
+function upsertIssue(document) {
     mongo.connect(url, function(err, db) {
-        db.collection('volumes').update({id: volumeId}, {$set: {'issues': issues}}, function(err, res) {
+        if (err) {
+            return cb(err);
+        }
+       db.collection('issues').replaceOne({id: document.id}, document, {upsert: true}, function(err, res) {
+           db.close();
+           if (err) {
+               return cb(err);
+           }
+       });
+    });
+}
+
+function getUndetailedIssues(cb) {
+    var aggregation = [];
+    aggregation.push({$match:  {'detailed': {'$not': /[Y]/}}});
+
+    mongo.connect(url, function (err, db) {
+        if (err) {
+            return cb(err);
+        }
+        db.collection('issues').aggregate(aggregation, function (err, res) {
             db.close();
+            if (err) {
+                return cb(err);
+            } else if (typeof(res) === 'undefined') {
+                return cb(null, {});
+            } else {
+                return cb(null, res);
+            }
         });
     });
 }
 
-function detailIssue (volumeId, issueId, details) {
-
-}
-
-module.exports.getAllVolumes = getAllVolumes;
-module.exports.getAllIssues = getAllIssues;
-module.exports.getActiveVolumes = getActiveVolumes;
-module.exports.getActiveVolume = getActiveVolume;
-module.exports.getActiveIssues = getActiveIssues;
-module.exports.getActiveIssue = getActiveIssue;
+module.exports.getVolumes = getVolumes;
+module.exports.getVolume = getVolume;
+module.exports.getVolumeByNameAndYear = getVolumeByNameAndYear;
+module.exports.getIssues = getIssues;
+module.exports.getIssue = getIssue;
+module.exports.getIssuesByVolume = getIssuesByVolume;
 module.exports.upsertVolume = upsertVolume;
-module.exports.updateIssues = updateIssues;
-module.exports.detailIssue = detailIssue;
+module.exports.upsertIssue = upsertIssue;
+module.exports.getUndetailedIssues = getUndetailedIssues;
