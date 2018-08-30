@@ -1,7 +1,5 @@
 var unrar = require('unrar'); //UnRAR must be listed in your PATH variable.
 var admZip = require('adm-zip'); //Batch archive rebuild: FOR %i IN (*.*) DO E:\7-Zip\7z.exe a "%~ni.7z" "%i"
-var thumb = require('node-thumbnail').thumb;
-var fs = require('fs');
 var toArray = require('stream-to-array');
 var consts = require('./consts');
 
@@ -155,113 +153,6 @@ function getPageCount(entries, cb) {
     }
 }
 
-// Thumbnails disabled for now
-function getThumbnails(handler, entries, ext, cb) {
-    //takes an extracted issue and returns an array of base 64 encoded thumbnails for each page
-    if (ext === 'cbr') {
-        getCbrThumbs(handler, entries, function(thumbs) {
-            return cb(thumbs);
-        });
-    } else if (ext === 'cbz') {
-        getCbzThumbs(handler, entries, function(thumbs) {
-            return cb(thumbs);
-        });
-    }
-}
-function getCbrThumbs(handler, entries, cb) {
-    getCbrThumb(handler, entries, [], function(thumbsArr) {
-        thumbsArr.sort(function (a, b) {
-            if (a.name < b.name) {
-                return -1;
-            }
-            if (a.name > b.name) {
-                return 1;
-            }
-            return 0;
-        });
-        var results = [];
-        for (var i = 0; i < thumbsArr.length; i++) {
-            results.push(thumbsArr[i].thumb);
-        }
-        return cb(results);
-    });
-}
-function getCbrThumb(handler, entries, thumbs, cb) {
-    var archiveFilePath = entries[thumbs.length].name;
-    var fileName = archiveFilePath.replace(/^.*[\\\/]/, '');
-    var stream = handler.stream(archiveFilePath);
-    var path = consts.thumbnailDirectory;
-
-    stream.pipe(fs.createWriteStream(path + '/' + fileName));
-
-    stream.on('end', function() {
-        thumb({
-            source: path + '/' + fileName,
-            destination: path,
-            concurrency: 4,
-            width: 150
-        }).then(function(files) {
-            fs.readFile(files[0].dstPath, function(err, buf) {
-                var base64Img = buf.toString('base64');
-
-                thumbs.push({
-                    'name': files[0].srcPath,
-                    'thumb': base64Img
-                });
-
-                fs.unlink(files[0].srcPath);
-                fs.unlink(files[0].dstPath);
-
-                if (thumbs.length === entries.length) {
-                    return cb(thumbs);
-                } else {
-                    getCbrThumb(handler, entries, thumbs, cb);
-                }
-            });
-        }).catch(function(e) {});
-    });
-}
-function getCbzThumbs(handler, entries, cb) {
-    var thumbs= [];
-    getCbzThumb(handler, entries, thumbs, function(thumbsArr) {
-        return cb(thumbsArr);
-    });
-}
-function getCbzThumb(handler, entries, thumbs, cb) {
-    var entryName = entries[thumbs.length].entryName;
-    var name = entries[pageNo].name.replace(/^.*[\\\/]/, '');
-    var path = consts.thumbnailDirectory;
-
-    handler.extractEntryTo(entryName, path, false, true);
-
-    thumb({
-        source: sourcePath,
-        destination: destPath,
-        concurrency: 4,
-        width: 150
-    }, function(files, err, stdout, stderr) {
-        fs.readFile(files[0].dstPath, function(err, buf) {
-            var base64Img = buf.toString('base64');
-
-            thumbs.push({
-                'name': files[0].srcPath,
-                'thumb': base64Img
-            });
-
-            fs.unlink(files[0].srcPath);
-            fs.unlink(files[0].dstPath);
-
-            if (thumbs.length === entries.length) {
-                return cb(thumbs);
-            } else {
-                getCbzThumb(handler, entries, thumbs, cb);
-            }
-        });
-    });
-}
-// End Thumbnails
-
 module.exports.extractIssue = extractIssue;
 module.exports.getPage = getPage;
 module.exports.getPageCount = getPageCount;
-module.exports.getThumbnails = getThumbnails;

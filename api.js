@@ -13,7 +13,7 @@ var volume = {
 };
 var issue = {
     url: 'https://www.comicvine.gamespot.com/api/issues/' + apiKey + '&offset=0&filter=volume:',
-    fieldList: ['api_detail_url', 'cover_date', 'id' , 'image', 'issue_number', 'name'].join(','),
+    fieldList: ['api_detail_url', 'cover_date', 'id' , 'image', 'issue_number', 'name', 'volume'].join(','),
     fieldListDetailed: ['character_credits', 'description', 'location_credits', 'person_credits'].join(',')
 };
 
