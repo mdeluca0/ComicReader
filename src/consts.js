@@ -1,7 +1,7 @@
 var path = require('path');
 
 module.exports.comicDirectory = 'C:/Comics';
-module.exports.thumbDirectory = path.join(__dirname, 'public', 'images', 'thumbs').replace(/\\/g, '/');
+module.exports.thumbDirectory = path.join(__dirname, '..', 'public', 'images', 'thumbs').replace(/\\/g, '/');
 module.exports.apiKey = '391531cd4d7943ad91be002c53f74dca5f461d9b';
 module.exports.dbUrl = 'mongodb://localhost:27017/main';
 

@@ -24,9 +24,6 @@ function getVolume(volumeId, cb) {
         return cb('volumeId not supplied');
     }
 
-    var aggregation = [];
-    aggregation.push({$match: {'id': volumeId}});
-
     mongo.connect(url, function (err, client) {
         if (err) {
             return cb(err);
@@ -34,7 +31,7 @@ function getVolume(volumeId, cb) {
 
         var db = client.db('main');
 
-        db.collection('volumes').aggregate(aggregation, function (err, res) {
+        db.collection('volumes').find({'id': volumeId}).toArray(function (err, res) {
             client.close();
             if (err) {
                 return cb(err);
@@ -49,10 +46,6 @@ function getVolume(volumeId, cb) {
 }
 
 function getVolumeByNameAndYear(name, year, cb) {
-    var aggregation = [];
-    aggregation.push({$match: {'name': name}});
-    aggregation.push({$match: {'start_year': year}});
-
     mongo.connect(url, function (err, client) {
         if (err) {
             return cb(err);
@@ -60,7 +53,7 @@ function getVolumeByNameAndYear(name, year, cb) {
 
         var db = client.db('main');
 
-        db.collection('volumes').aggregate(aggregation, function (err, res) {
+        db.collection('volumes').find({'name': name, 'start_year': year}).toArray(function (err, res) {
             client.close();
             if (err) {
                 return cb(err);
@@ -93,8 +86,6 @@ function getIssue(issueId, cb) {
     if (!issueId) {
         return cb('issueId not supplied');
     }
-    var aggregation = [];
-    aggregation.push({$match:  {'id': issueId}});
 
     mongo.connect(url, function (err, client) {
         if (err) {
@@ -103,7 +94,7 @@ function getIssue(issueId, cb) {
 
         var db = client.db('main');
 
-        db.collection('issues').aggregate(aggregation, function (err, res) {
+        db.collection('issues').find({'id': issueId}).toArray(function (err, res) {
             client.close();
             if (err) {
                 return cb(err);
@@ -121,9 +112,6 @@ function getIssuesByVolume(volumeId, cb) {
     if (!volumeId) {
         return cb('volumeId not supplied');
     }
-    var aggregation = [];
-    aggregation.push({$match: {'volume.id': volumeId}});
-    aggregation.push({$sort: {'issue_number': 1}});
 
     mongo.connect(url, function (err, client) {
         if (err) {
@@ -132,7 +120,7 @@ function getIssuesByVolume(volumeId, cb) {
 
         var db = client.db('main');
 
-        db.collection('issues').aggregate(aggregation, function (err, res) {
+        db.collection('issues').find({'volume.id': volumeId}).sort({'issue_number': 1}).toArray(function (err, res) {
             client.close();
             if (err) {
                 return cb(err);
@@ -178,9 +166,6 @@ function upsertIssue(document) {
 }
 
 function getUndetailedIssues(cb) {
-    var aggregation = [];
-    aggregation.push({$match:  {'detailed': {'$not': /[Y]/}}});
-
     mongo.connect(url, function (err, client) {
         if (err) {
             return cb(err);
@@ -188,7 +173,7 @@ function getUndetailedIssues(cb) {
 
         var db = client.db('main');
 
-        db.collection('issues').aggregate(aggregation, function (err, res) {
+        db.collection('issues').find({'detailed': {'$not': /[Y]/}}).toArray(function (err, res) {
             client.close();
             if (err) {
                 return cb(err);

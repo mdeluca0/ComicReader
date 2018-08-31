@@ -1,9 +1,9 @@
 var express = require('express');
 var router = express.Router();
 
-var db = require('../db');
-var archive = require('../archive');
-var monitor = require('../monitor');
+var db = require('../src/db');
+var archive = require('../src/archive');
+var monitor = require('../src/monitor');
 
 // Tests
 //require('../tests/test').test();
