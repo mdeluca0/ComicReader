@@ -44,11 +44,18 @@ setInterval(function () {
                 return err;
             }
             issue.detailed = 'Y';
-            db.upsertIssue(Object.assign(issue, details));
+            db.upsertIssue(Object.assign(issue, details), function(err, res) {
+                if (err) {
+                    return err;
+                }
+            });
             console.log('Updated...' + issue.volume.name + ' - ' + issue.name);
         });
     } else {
         db.getUndetailedIssues(function(err, res) {
+            if (err) {
+                return err;
+            }
             for (var i = 0; i < res.length; i++) {
                 requestQueue.push(res[i]);
             }
@@ -57,6 +64,7 @@ setInterval(function () {
 }, 1000);
 
 //TODO: get details on demand
+//TODO: queue files with missing covers on file change to retry
 
 // Scans the book directory for new volumes or issues added so that we can populate their metadata.
 function refresh() {
@@ -74,14 +82,18 @@ function refresh() {
                 if (err) {
                     return err;
                 }
-                dbItem = dbItem.shift();
-                db.getIssuesByVolume(dbItem.id, function(err, issues) {
-                    if (err) {
-                        return err;
-                    }
-                    dbItem.issues = issues;
-                    processVolume(dirItem, dbItem);
-                });
+                if (dbItem.length) {
+                    dbItem = dbItem.shift();
+                    db.getIssuesByVolume(dbItem.id, function (err, issues) {
+                        if (err) {
+                            return err;
+                        }
+                        dbItem.issues = issues;
+                        processVolume(dirItem, dbItem);
+                    });
+                } else {
+                    processVolume(dirItem, null);
+                }
             });
         });
     });
@@ -89,7 +101,7 @@ function refresh() {
 
 function processVolume(dirVolume, dbVolume) {
     // New volume found in the directory which is why dbVolume is null. Going to attempt to find it's metadata.
-    if (typeof(dbVolume) === 'undefined') {
+    if (dbVolume == null) {
         api.getVolume(dirVolume.volume, dirVolume.start_year, function(err, volume) {
             if (err) {
                 return err;
@@ -103,10 +115,18 @@ function processVolume(dirVolume, dbVolume) {
 
                 processIssues(dirVolume, volume, function(issues) {
                     for (var i = 0; i < issues.length; i++) {
-                        db.upsertIssue(issues[i]);
+                        db.upsertIssue(issues[i], function(err, res) {
+                            if (err) {
+                                return err;
+                            }
+                        });
                     }
                     delete volume.issues;
-                    db.upsertVolume(volume);
+                    db.upsertVolume(volume, function(err, res) {
+                        if (err) {
+                            return err;
+                        }
+                    });
                     console.log('Finished processing "' + volume.name + '"');
                 });
             });
@@ -114,9 +134,17 @@ function processVolume(dirVolume, dbVolume) {
     } else {
         processIssues(dirVolume, dbVolume, function(issues) {
             for (var i = 0; i < issues.length; i++) {
-                db.upsertIssue(issues[i]);
+                db.upsertIssue(issues[i], function(err, res) {
+                    if (err) {
+                        return err;
+                    }
+                });
             }
-            db.upsertVolume(dbVolume);
+            db.upsertVolume(dbVolume, function(err, res) {
+                if (err) {
+                    return err;
+                }
+            });
             console.log('Finished processing "' + dbVolume.name + '"');
         });
     }
@@ -129,8 +157,8 @@ function processIssues(directoryVolume, dbVolume, cb) {
         var match = false;
 
         for (var j = 0; j < directoryVolume.issues.length; j++) {
-            var curDbIssue = dbVolume.name + ' - ' + consts.convertToThreeDigits(dbVolume.issues[i].issue_number);
-            var curDirIssue = consts.replaceEscapedCharacters(directoryVolume.issues[j].replace(/\.[^/.]+$/, ''));
+            var curDbIssue = dbVolume.name + ' - ' + consts.convertToThreeDigits(dbVolume.issues[i].issue_number.toString());
+            var curDirIssue = consts.replaceEscapedCharacters(directoryVolume.issues[j].toString().replace(/\.[^/.]+$/, ''));
 
             if (curDbIssue === curDirIssue) {
                 match = true;

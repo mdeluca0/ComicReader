@@ -6,11 +6,11 @@ var archive = require('../src/archive');
 var monitor = require('../src/monitor');
 
 // Tests
-//require('../tests/test').test();
+//require('../tests/test');
 
 
 router.get('/volumes', function(req, res) {
-    db.getVolumes(null, function(err, volumes) {
+    db.getVolumes(function(err, volumes) {
         if (err) {
             return err;
         }
@@ -60,12 +60,11 @@ router.get('/issues/:issueId', function(req, res) {
     });
 });
 
-router.get('/volumes/:volumeId/issues/:issueId/:pageNo', function(req, res) {
-    var volumeId = req.params.volumeId;
+router.get('issues/:issueId/:pageNo', function(req, res) {
     var issueId = req.params.issueId;
     var pageNo = req.params.pageNo;
 
-    db.getIssue(volumeId, issueId, function(err, issue) {
+    db.getIssue(issueId, function(err, issue) {
         if (err) {
             return err;
         }

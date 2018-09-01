@@ -3,10 +3,8 @@ var admZip = require('adm-zip'); //Batch archive rebuild: FOR %i IN (*.*) DO E:\
 var toArray = require('stream-to-array');
 var consts = require('./consts');
 
+//takes an issues from the db and attempts to extract the issue
 function extractIssue(file, cb) {
-    //takes an issues from the db and attempts to extract the issue
-    //on success it returns err = 0 and the extracted issue
-    //on fail it return err = 1 and empty array
     var ext = file.substr(file.lastIndexOf('.') + 1);
     file = consts.comicDirectory + '/' + file;
 

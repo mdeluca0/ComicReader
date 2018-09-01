@@ -88,8 +88,10 @@ function requestIssues(volumeId, cb) {
         if (err) {
             return cb(err);
         }
-        // sort issues by issue number
-        res.issue.sort(function(a, b) { return a.issue_number - b.issue_number });
+        // set issue numbers to int for sorting
+        for (var i = 0; i < res.issue.length; i++) {
+            res.issue[i].issue_number = parseInt(res.issue[i].issue_number);
+        }
         return cb(null, res.issue);
     });
 }
