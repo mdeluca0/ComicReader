@@ -10,7 +10,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class VolumesComponent implements OnInit {
   volumes:any = [];
 
-  constructor(public rest:RestService, private route: ActivatedRoute, private router: Router) { }
+  constructor(public rest: RestService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
     this.getVolumes();

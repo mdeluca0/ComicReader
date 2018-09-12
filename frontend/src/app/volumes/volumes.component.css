@@ -1,0 +1,20 @@
+.volume-grid-tile {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.volume-image {
+  width: 100%;
+}
+.volume-name {
+  display: block;
+  font-family: sans-serif;
+  font-weight: bold;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.volume-date {
+  display: block;
+  font-family: sans-serif;
+}

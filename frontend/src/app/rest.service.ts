@@ -18,12 +18,14 @@ export class RestService {
   }
 
   getVolumes(): Observable<any> {
-    return this.http.get(endpoint + 'volumes').pipe(
-      map(this.extractData));
+    return this.http.get(endpoint + 'volumes').pipe(map(this.extractData));
   }
 
   getVolume(id): Observable<any> {
-    return this.http.get(endpoint + 'volumes/' + id).pipe(
-      map(this.extractData));
+    return this.http.get(endpoint + 'volumes/' + id).pipe(map(this.extractData));
+  }
+
+  getIssuesByVolume(id): Observable<any> {
+    return this.http.get(endpoint + 'volumes/' + id + '/issues').pipe(map(this.extractData));
   }
 }

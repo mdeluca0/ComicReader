@@ -38,18 +38,26 @@ var requestQueue = [];
 setInterval(function () {
     if (requestQueue.length) {
         var issue = requestQueue.shift();
+
         console.log('Requesting...' + issue.volume.name + ' - ' + issue.name);
-        api.requestDetailedIssue(issue.api_detail_url, function (err, details) {
-            if (err) {
-                return err;
-            }
-            issue.detailed = 'Y';
-            upsertIssue(Object.assign(issue, details), function(err, res) {
-                if (err) {
-                    return err;
+
+        api.requestDetailedIssue(issue.api_detail_url, function (detErr, details) {
+            getIssueCoverAndCount(issue, function(covErr, cover, page_count) {
+                if (detErr || covErr) {
+                    return;
                 }
+
+                details.detailed = 'Y';
+                details.cover = cover;
+                details.page_count = page_count;
+
+                upsertIssue(Object.assign(issue, details), function(err, res) {
+                    if (err) {
+                        return err;
+                    }
+                });
+                console.log('Updated...' + issue.volume.name + ' - ' + issue.name);
             });
-            console.log('Updated...' + issue.volume.name + ' - ' + issue.name);
         });
     } else {
         getUndetailedIssues(function(err, res) {
@@ -122,7 +130,7 @@ function processVolume(dirVolume, dbVolume) {
                             }
                         });
                     }
-                    delete volume.issues;
+                    //delete volume.issues;
                     volume.description = volume.description.replace(/<h4>Collected Editions.*/, '');
                     volume.description = volume.description.replace(/<(?:.|\\n)*?>/g, '');
                     upsertVolume(volume, function(err, res) {
@@ -154,8 +162,6 @@ function processVolume(dirVolume, dbVolume) {
 }
 
 function processIssues(directoryVolume, dbVolume, cb) {
-    var results = [];
-
     for (var i = 0; i < dbVolume.issues.length; i++) {
         var match = false;
 
@@ -173,50 +179,31 @@ function processIssues(directoryVolume, dbVolume, cb) {
             dbVolume.issues[i].active = 'Y';
             dbVolume.issues[i].date_added = consts.getToday();
             dbVolume.issues[i].file_path = directoryVolume.folder + '/' + directoryVolume.issues[j];
-
-            console.log('Started processing issue: ' + dbVolume.issues[i].file_path);
-
-            processIssue(dbVolume.issues[i], function (issue) {
-                results.push(issue);
-                console.log('Finished processing issue: ' + issue.file_path);
-                if (results.length === dbVolume.issues.length) {
-                    return cb(results);
-                }
-            });
         } else {
             dbVolume.issues[i].active = 'N';
-
-            results.push(dbVolume.issues[i]);
-
-            if (results.length === dbVolume.issues.length) {
-                return cb(results);
-            }
         }
     }
+    return cb(dbVolume.issues);
 }
 
-function processIssue(dbIssue, cb) {
-    if (typeof(dbIssue.page_count) === 'undefined' || typeof(dbIssue.cover) === 'undefined') {
-        archive.extractIssue(dbIssue.file_path, function (err, handler, entries, ext) {
+function getIssueCoverAndCount(issue, cb) {
+    archive.extractIssue(issue.file_path, function (err, handler, entries, ext) {
+        if (err) {
+            return cb(err);
+        }
+        archive.getPageCount(entries, function (err, count) {
             if (err) {
-                return cb(dbIssue);
+                return cb(err);
             }
-            archive.getPageCount(entries, function (pcErr, count) {
-                var imagePath = consts.thumbDirectory + '/' + dbIssue.file_path.split('/')[0];
-                api.requestCover(dbIssue.image.super_url, imagePath, function(covErr, path) {
-                    if (!pcErr) {
-                        dbIssue.page_count = count;
-                    }
-                    if (!covErr) {
-                        dbIssue.cover = path;
-                    }
-                    return cb(dbIssue);
-                });
+            var imagePath = consts.thumbDirectory + '/' + issue.file_path.split('/')[0];
+            api.requestCover(issue.image.super_url, imagePath, function(err, path) {
+                if (err) {
+                    return cb(err);
+                }
+                return cb(null, path, count);
             });
         });
-    } else {
-        return cb(dbIssue);
-    }
+    });
 }
 
 function getVolumeByNameAndYear(name, year, cb) {

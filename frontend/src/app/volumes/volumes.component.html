@@ -1,5 +1,9 @@
-<mat-grid-list cols="6" rowHeight="1:1.5">
-  <mat-grid-tile *ngFor="let volume of volumes">
-    <img src="../../../assets/thumbs/{{volume.cover}}" style="height:100%"/>
+<mat-grid-list cols="6" rowHeight="1:1.7">
+  <mat-grid-tile *ngFor="let volume of volumes" title={{volume.name}} routerLink="/volumes/{{volume.id}}">
+    <div class="volume-grid-tile">
+      <img class="volume-image" src="../../../assets/thumbs/{{volume.cover}}"/>
+      <span class="volume-name">{{volume.name}}</span>
+      <span class="volume-date">{{volume.start_year}}</span>
+    </div>
   </mat-grid-tile>
 </mat-grid-list>
