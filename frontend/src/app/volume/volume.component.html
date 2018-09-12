@@ -1,0 +1,21 @@
+<div class="volume-header">
+  <img class="volume-cover" src="../../../assets/thumbs/{{volume.cover}}"/>
+  <div class="volume-details">
+    <p class="volume-name">{{volume.name}}</p>
+    <p class="volume-year">{{volume.start_year}}</p>
+    <p class="volume-publisher">{{volume.publisher.name}}</p>
+    <p class="volume-description">{{volume.description}}</p>
+  </div>
+</div>
+
+<p class="issue-count">{{volume.count_of_issues}} Issues</p>
+
+<mat-grid-list class="issue-grid" cols="5" rowHeight="1:1.7" gutterSize="10px">
+  <mat-grid-tile *ngFor="let issue of issues" title="{{issue.name}}" routerLink="/issues/{{issue.id}}">
+    <div class="issue-grid-tile">
+      <img class="issue-image" src="../../../assets/thumbs/{{issue.cover}}"/>
+      <span class="issue-name">#{{issue.issue_number}} - {{issue.name}}</span>
+      <span class="issue-date">{{issue.cover_date}}</span>
+    </div>
+  </mat-grid-tile>
+</mat-grid-list>

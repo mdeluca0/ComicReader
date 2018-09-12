@@ -1,0 +1,47 @@
+.volume-cover {
+  height: auto;
+  width: 25%;
+  display: inline-block;
+  vertical-align: top;
+}
+.volume-details {
+  display: inline-block;
+  margin: 0 10% 0 5%;
+  width: 60%;
+  text-align: left;
+  font-family: sans-serif;
+  font-size: 1.2vw;
+}
+.volume-name {
+  font-size: 2vw;
+}
+
+.issue-count {
+  font-weight: bold;
+  font-size: 2.5vw;
+  font-family: sans-serif;
+}
+
+.issue-grid-tile {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.issue-image {
+  width: 100%;
+  height: 85%;
+}
+.issue-name {
+  display: block;
+  font-family: sans-serif;
+  font-weight: bold;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 1.25vw;
+}
+.issue-date {
+  display: block;
+  font-family: sans-serif;
+  font-size: 1.1vw;
+}
