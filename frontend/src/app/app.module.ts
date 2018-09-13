@@ -4,14 +4,14 @@ import { RouterModule, Routes } from '@angular/router';
 import { HttpClientModule } from "@angular/common/http";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import {
-  MatGridListModule,
-  MatListModule,
-  MatExpansionModule
+  MatCardModule,
+  MatListModule
 } from "@angular/material";
 
 import { AppComponent } from './app.component';
 import { VolumesComponent } from './volumes/volumes.component';
 import { VolumeComponent } from './volume/volume.component';
+import { IssueComponent } from './issue/issue.component';
 
 const appRoutes: Routes = [
   {
@@ -21,6 +21,10 @@ const appRoutes: Routes = [
   {
     path: 'volumes/:id',
     component: VolumeComponent
+  },
+  {
+    path: 'issues/:id',
+    component: IssueComponent
   },
   {
     path: '',
@@ -33,16 +37,16 @@ const appRoutes: Routes = [
   declarations: [
     AppComponent,
     VolumesComponent,
-    VolumeComponent
+    VolumeComponent,
+    IssueComponent
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
     BrowserModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    MatGridListModule,
-    MatListModule,
-    MatExpansionModule
+    MatCardModule,
+    MatListModule
   ],
   providers: [],
   bootstrap: [

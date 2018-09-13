@@ -50,6 +50,7 @@ setInterval(function () {
                 details.detailed = 'Y';
                 details.cover = cover;
                 details.page_count = page_count;
+                issue.description = issue.description.replace(/<(?:.|\\n)*?>/g, '');
 
                 upsertIssue(Object.assign(issue, details), function(err, res) {
                     if (err) {
@@ -264,7 +265,7 @@ function upsertIssue(document, cb) {
 function getUndetailedIssues(cb) {
     var params = {
         collection: 'issues',
-        query: {'detailed': {'$not': /[Y]/}}
+        query: {'active': 'Y', 'detailed': {'$not': /[Y]/}}
     };
     db.find(params, function(err, res) {
         if (err) {

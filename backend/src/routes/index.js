@@ -10,7 +10,7 @@ router.get('/volumes', function(req, res) {
     };
     db.find(params, function(err, volumes) {
         if (err) {
-            return cb(err);
+            return err;
         }
         res.send(volumes);
     });
@@ -23,7 +23,7 @@ router.get('/volumes/:volumeId', function(req, res) {
     };
     db.find(params, function(err, volume) {
         if (err) {
-            return cb(err);
+            return err;
         }
         res.send(volume);
     });
@@ -32,12 +32,12 @@ router.get('/volumes/:volumeId', function(req, res) {
 router.get('/volumes/:volumeId/issues', function(req, res) {
     var params = {
         collection: 'issues',
-        query: {'volume.id': req.params.volumeId},
+        query: {'active': 'Y', 'volume.id': req.params.volumeId},
         sort: {'issue_number': 1}
     };
     db.find(params, function(err, issues) {
         if (err) {
-            return cb(err);
+            return err;
         }
         res.send(issues);
     });
@@ -50,7 +50,7 @@ router.get('/issues', function(req, res) {
     };
     db.find(params, function(err, issues) {
         if (err) {
-            return cb(err);
+            return err;
         }
         res.send(issues);
     });
@@ -63,7 +63,7 @@ router.get('/issues/:issueId', function(req, res) {
     };
     db.find(params, function(err, issue) {
         if (err) {
-            return cb(err);
+            return err;
         }
         res.send(issue);
     });

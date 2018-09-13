@@ -5,6 +5,10 @@ const consts = require('./consts');
 
 //takes an issues from the db and attempts to extract the issue
 function extractIssue(file, cb) {
+    if (typeof(file) === 'undefined') {
+        return cb(1, "File is undefined");
+    }
+
     var ext = file.substr(file.lastIndexOf('.') + 1);
     file = consts.comicDirectory + '/' + file;
 

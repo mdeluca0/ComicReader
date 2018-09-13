@@ -28,4 +28,8 @@ export class RestService {
   getIssuesByVolume(id): Observable<any> {
     return this.http.get(endpoint + 'volumes/' + id + '/issues').pipe(map(this.extractData));
   }
+
+  getIssue(id): Observable<any> {
+    return this.http.get(endpoint + 'issues/' + id).pipe(map(this.extractData));
+  }
 }
