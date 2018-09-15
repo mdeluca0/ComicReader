@@ -1,10 +1,10 @@
 <div class="issue-container">
-  <img class="issue-cover" src="../../../assets/thumbs/{{issue.cover}}"/>
+  <img class="issue-cover" src="../../../assets/thumbs/{{issue.cover}}" routerLink="/reader/{{issue.id}}"/>
   <div class="issue-details">
     <h1>{{issue.volume.name}}</h1>
     <div>{{'#' + issue.issue_number + ' - ' + issue.name}}<br/>{{issue.cover_date}}</div>
     <p>{{'Written By: ' + issue.writer}}<br/>{{'Illustrated By: ' + issue.artist}}</p>
     <p>{{issue.page_count + ' pages'}}</p>
-    <p>{{issue.description}}</p>
+    <app-description-text [text]="issue.description"></app-description-text>
   </div>
 </div>

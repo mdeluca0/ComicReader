@@ -3,7 +3,7 @@ const admZip = require('adm-zip');
 const toArray = require('stream-to-array');
 const consts = require('./consts');
 
-//takes an issues from the db and attempts to extract the issue
+//takes an issue from the db and attempts to extract the issue
 function extractIssue(file, cb) {
     if (typeof(file) === 'undefined') {
         return cb(1, "File is undefined");
@@ -46,7 +46,7 @@ function extractCbr(file, cb) {
                 }
             }
 
-            // sort rar images into correct order because sometimes they aren't
+            // sort images into correct order because sometimes they aren't
             entries.sort(function (a, b) {
                 if (a.name < b.name) { return -1; }
                 if (a.name > b.name) { return 1; }
@@ -76,7 +76,7 @@ function extractCbz(file, cb) {
         }
     }
 
-    // sort rar images into correct order because sometimes they aren't
+    // sort images into correct order because sometimes they aren't
     entries.sort(function(a, b) {
         if (a.name < b.name) { return -1; }
         if (a.name > b.name) { return 1; }
@@ -90,6 +90,8 @@ function getPage(handler, entries, ext, pageNo, cb) {
     //takes an issue from the db and a page no
     //calls extract issue
     //returns base 64 encoded page from archive
+    pageNo = parseInt(pageNo);
+
     if (ext === 'cbr') {
         getCbrPage(handler, entries, pageNo, function (err, page) {
             if (err) {

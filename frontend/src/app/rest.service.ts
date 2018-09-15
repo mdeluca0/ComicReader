@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { DomSanitizer } from "@angular/platform-browser"
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -10,7 +11,7 @@ const endpoint = 'http://localhost:8000/';
 })
 export class RestService {
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private sanitizer: DomSanitizer) {}
 
   private extractData(res: Response) {
     let body = res;
@@ -31,5 +32,9 @@ export class RestService {
 
   getIssue(id): Observable<any> {
     return this.http.get(endpoint + 'issues/' + id).pipe(map(this.extractData));
+  }
+
+  getPage(id, pageNo): Observable<any> {
+    return this.http.get(endpoint + 'issues/' + id.toString() + '/' + pageNo.toString()).pipe(map(this.extractData));
   }
 }

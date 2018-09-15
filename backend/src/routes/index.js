@@ -69,24 +69,29 @@ router.get('/issues/:issueId', function(req, res) {
     });
 });
 
-router.get('issues/:issueId/:pageNo', function(req, res) {
+router.get('/issues/:issueId/:pageNo', function(req, res) {
     var params = {
         collection: 'issues',
         query: {'id': req.params.issueId}
     };
+    var pageNo = req.params.pageNo;
+
     db.find(params, function(err, issue) {
         if (err) {
             return err;
         }
-        archive.extractIssue(issue.issues.file_path, function (err, handler, entries, ext) {
+        archive.extractIssue(issue[0].file_path, function (err, handler, entries, ext) {
             if (err) {
                 return err;
             }
-            archive.getPage(handler, entries, ext, req.params.pageNo, function (err, base64Img) {
+            archive.getPage(handler, entries, ext, pageNo, function (err, base64Img) {
                 if (err) {
                     return err;
                 }
-                res.send(base64Img);
+                res.send({
+                    pageNo: pageNo,
+                    image: base64Img
+                });
             });
         });
     });

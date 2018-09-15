@@ -4,7 +4,7 @@
     <h1 class="volume-name">{{volume.name}}</h1>
     <div class="volume-year">{{volume.start_year}}</div>
     <div class="volume-publisher">{{volume.publisher.name}}</div>
-    <p>{{volume.description}}</p>
+    <app-description-text [text]="volume.description"></app-description-text>
   </div>
 </div>
 

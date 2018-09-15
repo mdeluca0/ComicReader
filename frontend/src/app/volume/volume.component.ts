@@ -24,5 +24,4 @@ export class VolumeComponent implements OnInit {
       this.issues = data;
     });
   }
-
 }

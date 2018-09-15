@@ -4,14 +4,15 @@ import { RouterModule, Routes } from '@angular/router';
 import { HttpClientModule } from "@angular/common/http";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import {
-  MatCardModule,
-  MatListModule
+  MatCardModule
 } from "@angular/material";
 
 import { AppComponent } from './app.component';
 import { VolumesComponent } from './volumes/volumes.component';
 import { VolumeComponent } from './volume/volume.component';
 import { IssueComponent } from './issue/issue.component';
+import { DescriptionTextComponent } from './description-text/description-text.component';
+import { ReaderComponent } from './reader/reader.component';
 
 const appRoutes: Routes = [
   {
@@ -27,6 +28,10 @@ const appRoutes: Routes = [
     component: IssueComponent
   },
   {
+    path: 'reader/:id',
+    component: ReaderComponent
+  },
+  {
     path: '',
     redirectTo: '/volumes',
     pathMatch: 'full'
@@ -38,15 +43,16 @@ const appRoutes: Routes = [
     AppComponent,
     VolumesComponent,
     VolumeComponent,
-    IssueComponent
+    IssueComponent,
+    DescriptionTextComponent,
+    ReaderComponent
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
     BrowserModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    MatCardModule,
-    MatListModule
+    MatCardModule
   ],
   providers: [],
   bootstrap: [
