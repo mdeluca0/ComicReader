@@ -3,15 +3,30 @@ const router = express.Router();
 const db = require('../db');
 const archive = require('../archive');
 
+const volumePageSize = 50;
+const issuePageSize = 50;
+
 router.get('/volumes', function(req, res) {
+    var offset = 0;
+    if (req.query.offset) {
+        offset = parseInt(req.query.offset);
+    }
+
     var params = {
         collection: 'volumes',
         sort: {'name': 1}
     };
+
     db.find(params, function(err, volumes) {
         if (err) {
             return err;
         }
+
+        volumes = {
+            offset: offset,
+            volumes: volumes.slice(offset, offset+volumePageSize)
+        };
+
         res.send(volumes);
     });
 });
@@ -30,6 +45,11 @@ router.get('/volumes/:volumeId', function(req, res) {
 });
 
 router.get('/volumes/:volumeId/issues', function(req, res) {
+    var offset = 0;
+    if (req.query.offset) {
+        offset = parseInt(req.query.offset);
+    }
+
     var params = {
         collection: 'issues',
         query: {'active': 'Y', 'volume.id': req.params.volumeId},
@@ -39,11 +59,22 @@ router.get('/volumes/:volumeId/issues', function(req, res) {
         if (err) {
             return err;
         }
+
+        issues = {
+            offset: offset,
+            issues: issues.slice(offset, offset+issuePageSize)
+        };
+
         res.send(issues);
     });
 });
 
 router.get('/issues', function(req, res) {
+    var offset = 0;
+    if (req.query.offset) {
+        offset = parseInt(req.query.offset);
+    }
+
     var params = {
         collection: 'issues',
         sort: {'issue_number': 1}
@@ -52,6 +83,12 @@ router.get('/issues', function(req, res) {
         if (err) {
             return err;
         }
+
+        issues = {
+            offset: offset,
+            issues: issues.slice(offset, offset+issuePageSize)
+        };
+
         res.send(issues);
     });
 });

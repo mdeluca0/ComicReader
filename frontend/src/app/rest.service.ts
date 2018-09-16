@@ -19,22 +19,27 @@ export class RestService {
   }
 
   getVolumes(): Observable<any> {
-    return this.http.get(endpoint + 'volumes').pipe(map(this.extractData));
+    return this.http.get(endpoint + 'volumes')
+      .pipe(map(this.extractData));
   }
 
   getVolume(id): Observable<any> {
-    return this.http.get(endpoint + 'volumes/' + id).pipe(map(this.extractData));
+    return this.http.get(endpoint + 'volumes/' + <string>id)
+      .pipe(map(this.extractData));
   }
 
-  getIssuesByVolume(id): Observable<any> {
-    return this.http.get(endpoint + 'volumes/' + id + '/issues').pipe(map(this.extractData));
+  getIssuesByVolume(id, offset): Observable<any> {
+    return this.http.get(endpoint + 'volumes/' + <string>id + '/issues' + '?offset=' + <string>offset)
+      .pipe(map(this.extractData));
   }
 
   getIssue(id): Observable<any> {
-    return this.http.get(endpoint + 'issues/' + id).pipe(map(this.extractData));
+    return this.http.get(endpoint + 'issues/' + <string>id)
+      .pipe(map(this.extractData));
   }
 
   getPage(id, pageNo): Observable<any> {
-    return this.http.get(endpoint + 'issues/' + id.toString() + '/' + pageNo.toString()).pipe(map(this.extractData));
+    return this.http.get(endpoint + 'issues/' + <string>id + '/' + <string>pageNo)
+      .pipe(map(this.extractData));
   }
 }

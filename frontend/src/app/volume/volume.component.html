@@ -3,14 +3,14 @@
   <div class="volume-details">
     <h1 class="volume-name">{{volume.name}}</h1>
     <div class="volume-year">{{volume.start_year}}</div>
-    <div class="volume-publisher">{{volume.publisher.name}}</div>
+    <div class="volume-publisher">{{volume.publisher}}</div>
     <app-description-text [text]="volume.description"></app-description-text>
   </div>
 </div>
 
 <p class="issue-count">{{volume.count_of_issues}} Issues</p>
 
-<div class="issue-card-container">
+<div class="issue-card-container" (window:scroll)="onScroll($event)">
   <mat-card *ngFor="let issue of issues" class="issue-card" title="{{issue.name}}" routerLink="/issues/{{issue.id}}">
     <img class="mat-card-image" src="../../../assets/thumbs/{{issue.cover}}">
     <mat-card-content>

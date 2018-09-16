@@ -18,9 +18,8 @@ export class VolumesComponent implements OnInit {
 
   getVolumes() {
     this.volumes = [];
-    this.rest.getVolumes().subscribe((data: {}) => {
-      console.log(data);
-      this.volumes = data;
+    this.rest.getVolumes().subscribe((data: {volumes}) => {
+      this.volumes = data.volumes;
     });
   }
 }

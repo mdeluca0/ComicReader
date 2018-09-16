@@ -9,19 +9,42 @@ import { ActivatedRoute, Router } from '@angular/router';
 })
 export class VolumeComponent implements OnInit {
 
-  volume:any;
+  volume:any = {};
   issues:any = [];
+
+  offset:number = 0;
+  finished:boolean = false;
+  requesting:boolean = false;
 
   constructor(public rest:RestService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
     this.rest.getVolume(this.route.snapshot.params['id']).subscribe((data: {}) => {
-      console.log(data);
       this.volume = data[0];
+      this.volume.publisher = this.volume.publisher.name;
+      this.getIssues();
     });
-    this.rest.getIssuesByVolume(this.route.snapshot.params['id']).subscribe((data: {}) => {
-      console.log(data);
-      this.issues = data;
-    });
+  }
+
+  getIssues() {
+    if (!this.requesting) {
+      this.requesting = true;
+      this.rest.getIssuesByVolume(this.route.snapshot.params['id'], this.offset).subscribe((data: { issues }) => {
+        if (data.issues.length === 0) {
+          this.finished = true;
+        }
+        this.offset += data.issues.length;
+        for (let i = 0; i < data.issues.length; i++) {
+          this.issues.push(data.issues[i]);
+        }
+        this.requesting = false;
+      });
+    }
+  }
+
+  onScroll($event) {
+    if (!this.finished && window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+      this.getIssues();
+    }
   }
 }
