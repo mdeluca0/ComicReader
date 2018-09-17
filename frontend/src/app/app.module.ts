@@ -4,7 +4,13 @@ import { RouterModule, Routes } from '@angular/router';
 import { HttpClientModule } from "@angular/common/http";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import {
-  MatCardModule
+  MatCardModule,
+  MatToolbarModule,
+  MatIconModule,
+  MatButtonModule,
+  MatProgressSpinnerModule,
+  MatSliderModule,
+  MatSlideToggleModule
 } from "@angular/material";
 
 import { AppComponent } from './app.component';
@@ -52,7 +58,13 @@ const appRoutes: Routes = [
     BrowserModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    MatCardModule
+    MatCardModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatSliderModule,
+    MatSlideToggleModule
   ],
   providers: [],
   bootstrap: [

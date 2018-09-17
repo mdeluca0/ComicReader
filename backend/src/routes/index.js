@@ -23,7 +23,6 @@ router.get('/volumes', function(req, res) {
         }
 
         volumes = {
-            offset: offset,
             volumes: volumes.slice(offset, offset+volumePageSize)
         };
 
@@ -61,7 +60,6 @@ router.get('/volumes/:volumeId/issues', function(req, res) {
         }
 
         issues = {
-            offset: offset,
             issues: issues.slice(offset, offset+issuePageSize)
         };
 
@@ -85,7 +83,6 @@ router.get('/issues', function(req, res) {
         }
 
         issues = {
-            offset: offset,
             issues: issues.slice(offset, offset+issuePageSize)
         };
 

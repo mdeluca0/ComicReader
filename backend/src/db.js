@@ -2,7 +2,7 @@ const mongo = require('mongodb').MongoClient;
 const url = require('./consts').dbUrl;
 
 function find(options, cb) {
-    mongo.connect(url, function (err, client) {
+    mongo.connect(url, {useNewUrlParser: true}, function (err, client) {
         if (err) {
             return cb(err);
         }
@@ -35,7 +35,7 @@ function find(options, cb) {
 }
 
 function replace(options, cb) {
-    mongo.connect(url, function(err, client) {
+    mongo.connect(url, {useNewUrlParser: true}, function(err, client) {
         if (err) {
             return cb(err);
         }

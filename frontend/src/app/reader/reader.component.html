@@ -1,3 +1,14 @@
+<mat-toolbar>
+  <mat-toolbar-row color="primary">
+    <button mat-button>
+      <mat-icon (click)="prevPage()">arrow_back</mat-icon>
+    </button>
+    <button mat-button>
+      <mat-icon (click)="nextPage()">arrow_forward</mat-icon>
+    </button>
+    <mat-slider></mat-slider>
+  </mat-toolbar-row>
+</mat-toolbar>
 <div class="page-container" (click)="nextPage()">
   <img class="page-image active" src="{{curPageImg}}"/>
 </div>

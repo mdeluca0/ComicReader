@@ -2,16 +2,22 @@
   width: 85%;
   margin: 0 auto;
 }
-.issue-cover {
+.issue-left {
   height: auto;
   width: 25%;
   display: inline-block;
   vertical-align: top;
 }
-.issue-details {
+.issue-right {
   display: inline-block;
   margin: 0 10% 0 5%;
   width: 60%;
   text-align: left;
-  font-family: sans-serif;
+}
+
+.issue-cover {
+  width: 100%;
+}
+.read-button {
+  width: 100%;
 }

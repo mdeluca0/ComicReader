@@ -50,7 +50,7 @@ setInterval(function () {
                 details.detailed = 'Y';
                 details.cover = cover;
                 details.page_count = page_count;
-                issue.description = issue.description.replace(/<(?:.|\\n)*?>/g, '');
+                details.description = sanitizeHtml(details.description);
 
                 upsertIssue(Object.assign(issue, details), function(err, res) {
                     if (err) {
@@ -99,22 +99,30 @@ function refresh() {
                             return err;
                         }
                         dbItem.issues = issues;
-                        processVolume(dirItem, dbItem);
+                        processVolume(dirItem, dbItem, function(err, res) {
+                            if (err) {
+                                return err;
+                            }
+                        });
                     });
                 } else {
-                    processVolume(dirItem, null);
+                    processVolume(dirItem, null, function(err, res) {
+                        if (err) {
+                            return err;
+                        }
+                    });
                 }
             });
         });
     });
 }
 
-function processVolume(dirVolume, dbVolume) {
+function processVolume(dirVolume, dbVolume, cb) {
     // New volume found in the directory which is why dbVolume is null. Going to attempt to find it's metadata.
     if (dbVolume == null) {
         api.getVolume(dirVolume.volume, dirVolume.start_year, function(err, volume) {
             if (err) {
-                return err;
+                return cb(err);
             }
             api.requestCover(volume.image.super_url, consts.thumbDirectory + '/' + dirVolume.folder, function (err, path) {
                 if (!err) {
@@ -123,20 +131,25 @@ function processVolume(dirVolume, dbVolume) {
                     volume.cover = '';
                 }
 
-                processIssues(dirVolume, volume, function(issues) {
+                processIssues(dirVolume, volume, function(err, issues) {
+                    if (err) {
+                        return cb(err);
+                    }
                     for (let i = 0; i < issues.length; i++) {
                         upsertIssue(issues[i], function(err, res) {
                             if (err) {
-                                return err;
+                                return cb(err);
                             }
                         });
                     }
-                    //delete volume.issues;
+
+                    delete volume.issues;
                     volume.description = volume.description.replace(/<h4>Collected Editions.*/, '');
-                    volume.description = volume.description.replace(/<(?:.|\\n)*?>/g, '');
+                    volume.description = sanitizeHtml(volume.description);
+
                     upsertVolume(volume, function(err, res) {
                         if (err) {
-                            return err;
+                            return cb(err);
                         }
                     });
                     console.log('Finished processing "' + volume.name + '"');
@@ -144,17 +157,23 @@ function processVolume(dirVolume, dbVolume) {
             });
         });
     } else {
-        processIssues(dirVolume, dbVolume, function(issues) {
+        processIssues(dirVolume, dbVolume, function(err, issues) {
+            if (err) {
+                return cb(err);
+            }
             for (let i = 0; i < issues.length; i++) {
                 upsertIssue(issues[i], function(err, res) {
                     if (err) {
-                        return err;
+                        return cb(err);
                     }
                 });
             }
+
+            delete dbVolume.issues;
+
             upsertVolume(dbVolume, function(err, res) {
                 if (err) {
-                    return err;
+                    return cb(err);
                 }
             });
             console.log('Finished processing "' + dbVolume.name + '"');
@@ -184,7 +203,11 @@ function processIssues(directoryVolume, dbVolume, cb) {
             dbVolume.issues[i].active = 'N';
         }
     }
-    return cb(dbVolume.issues);
+    return cb(null, dbVolume.issues);
+}
+
+function sanitizeHtml(html) {
+    return html.replace(/<(?:.|\\n)*?>/g, '');
 }
 
 function getIssueCoverAndCount(issue, cb) {

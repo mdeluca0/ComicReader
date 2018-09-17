@@ -9,14 +9,16 @@ import {RestService} from "../rest.service";
 })
 export class IssueComponent implements OnInit {
 
-  issue:any = [];
+  issue:any = null;
+  volume:any = null;
 
   constructor(public rest:RestService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
     this.rest.getIssue(this.route.snapshot.params['id']).subscribe((data: {}) => {
-      console.log(data);
       this.issue = data[0];
+
+      this.volume = this.issue.volume;
 
       this.issue.writer = "";
       this.issue.artist = "";

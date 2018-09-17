@@ -8,8 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrls: ['./volume.component.css']
 })
 export class VolumeComponent implements OnInit {
-
-  volume:any = {};
+  volume:any = null;
   issues:any = [];
 
   offset:number = 0;
@@ -21,7 +20,7 @@ export class VolumeComponent implements OnInit {
   ngOnInit() {
     this.rest.getVolume(this.route.snapshot.params['id']).subscribe((data: {}) => {
       this.volume = data[0];
-      this.volume.publisher = this.volume.publisher.name;
+      this.volume.publisher = this.volume.publisher.name
       this.getIssues();
     });
   }
@@ -42,7 +41,7 @@ export class VolumeComponent implements OnInit {
     }
   }
 
-  onScroll($event) {
+  onScroll() {
     if (!this.finished && window.innerHeight + window.scrollY >= document.body.offsetHeight) {
       this.getIssues();
     }

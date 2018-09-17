@@ -18,8 +18,8 @@ export class RestService {
     return body || { };
   }
 
-  getVolumes(): Observable<any> {
-    return this.http.get(endpoint + 'volumes')
+  getVolumes(offset = 0): Observable<any> {
+    return this.http.get(endpoint + 'volumes' + '?offset=' + offset.toString())
       .pipe(map(this.extractData));
   }
 
@@ -28,8 +28,8 @@ export class RestService {
       .pipe(map(this.extractData));
   }
 
-  getIssuesByVolume(id, offset): Observable<any> {
-    return this.http.get(endpoint + 'volumes/' + <string>id + '/issues' + '?offset=' + <string>offset)
+  getIssuesByVolume(id, offset = 0): Observable<any> {
+    return this.http.get(endpoint + 'volumes/' + <string>id + '/issues' + '?offset=' + offset.toString())
       .pipe(map(this.extractData));
   }
 

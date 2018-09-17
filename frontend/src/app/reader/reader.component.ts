@@ -59,14 +59,14 @@ export class ReaderComponent implements OnInit {
   }
 
   nextPage() {
-    if (typeof(this.pages[this.curPageNum]) !== 'undefined') {
+    if (this.curPageNum < this.pages.length-1) {
       this.curPageNum += 1;
       this.curPageImg = this.pages[this.curPageNum];
     }
   }
 
   prevPage() {
-    if (typeof(this.pages[this.curPageNum]) !== 'undefined') {
+    if (this.curPageNum > 0) {
       this.curPageNum -= 1;
       this.curPageImg = this.pages[this.curPageNum];
     }

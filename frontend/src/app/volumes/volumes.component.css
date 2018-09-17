@@ -15,7 +15,7 @@
   color: #fafafa;
 }
 .mat-card-image {
-  min-height: 287px;
+  height: 275px;
 }
 mat-card-content {
   overflow: hidden;
@@ -24,7 +24,6 @@ mat-card-content {
   font-size: 14px;
   font-weight: bold;
   text-align: left;
-  font-family: sans-serif;
   position: relative;
   width: 165px;
   left: -15px;

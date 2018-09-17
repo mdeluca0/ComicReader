@@ -159,7 +159,11 @@ function requestCover(url, path, cb) {
             var folder = path.split('/').pop();
             var filename = url.split('/').pop().replace(/[^0-9a-z.]/gi, '');
 
-            fs.writeFile(path + '/' + filename, new Buffer(body));
+            fs.writeFile(path + '/' + filename, new Buffer(body), function(err, res){
+                if (err) {
+                    return cb(err);
+                }
+            });
 
             return cb(null, folder + '/' + filename);
         } else {
