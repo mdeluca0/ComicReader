@@ -1,10 +1,10 @@
-<div class="page-loader" *ngIf="curPageImg == null">
+<div class="page-loader" *ngIf="pages[curPageNum] == null">
   <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
   <h3>Loading Page...</h3>
 </div>
 
-<div class="page-container" *ngIf="curPageImg != null">
-  <img class="page-image" [ngStyle]="{'width': zoomPercent}" src="{{curPageImg}}"/>
+<div class="page-container" *ngIf="pages[curPageNum] != null">
+  <img class="page-image" [ngStyle]="{'width': zoomPercent}" src="{{pages[curPageNum]}}"/>
   <div class="left-section" title="Previous Page" (click)="prevPage()"></div>
   <div class="right-section" title="Next Page" (click)="nextPage()"></div>
 </div>

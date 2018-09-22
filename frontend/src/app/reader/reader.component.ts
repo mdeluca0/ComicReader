@@ -1,6 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { RestService } from '../rest.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
@@ -23,10 +23,11 @@ export class ReaderComponent implements OnInit {
   nextIssue:any = null;
   prevIssue:any = null;
   pages:any = null;
-  curPageImg:any = null;
   curPageNum:any = 0;
   zoomPercent:string = '50%';
   toolbarState:string = 'hide';
+  pageForwardLoad:number = 1;
+  pageBackwardLoad:number = 1;
 
   constructor(public rest:RestService,
               private route: ActivatedRoute) { }
@@ -39,7 +40,6 @@ export class ReaderComponent implements OnInit {
         this.nextIssue = null;
         this.prevIssue = null;
         this.pages = [];
-        this.curPageImg = null;
         this.curPageNum = 0;
         this.toolbarState = 'hide';
 
@@ -49,20 +49,16 @@ export class ReaderComponent implements OnInit {
           this.nextIssue = this.issue.nextIssue;
           this.prevIssue = this.issue.prevIssue;
           this.pages = new Array<number>(this.issue.page_count);
-
-          for (let i = 0; i < this.issue.page_count; i++) {
-            this.rest.getPage(this.issue.id, i).subscribe((data: {pageNo, image}) => {
-              this.pages[parseInt(data.pageNo)] = 'data:image/jpg;base64,' + data.image;
-
-              if (parseInt(data.pageNo) === this.curPageNum) {
-                this.curPageImg = this.pages[this.curPageNum];
-              }
-            });
-          }
+          this.goToPage(this.curPageNum);
         });
       }
     );
+  }
 
+  getPage(pageNo) {
+    this.rest.getPage(this.issue.id, pageNo).subscribe((data: {pageNo, image}) => {
+      this.pages[parseInt(data.pageNo)] = 'data:image/jpg;base64,' + data.image;
+    });
   }
 
   goToPage(pageNo:number) {
@@ -73,7 +69,21 @@ export class ReaderComponent implements OnInit {
     }
 
     this.curPageNum = pageNo;
-    this.curPageImg = this.pages[this.curPageNum];
+
+    if (this.pages[pageNo] == null) {
+      this.getPage(pageNo);
+    }
+
+    for (let i = this.curPageNum+1; i <= this.curPageNum+this.pageForwardLoad; i++) {
+      if (i < this.pages.length && this.pages[i] == null) {
+        this.getPage(i);
+      }
+    }
+    for (let i = this.curPageNum-1; i >= this.curPageNum-this.pageBackwardLoad; i--) {
+      if (i > 0 && this.pages[i] == null) {
+        this.getPage(i);
+      }
+    }
 
     window.scrollTo(null, 0);
   }
