@@ -11,6 +11,8 @@ export class VolumeComponent implements OnInit {
   volume:any = null;
   issues:any = [];
 
+  breadcrumbs:any = [];
+
   offset:number = 0;
   finished:boolean = false;
   requesting:boolean = false;
@@ -20,7 +22,13 @@ export class VolumeComponent implements OnInit {
   ngOnInit() {
     this.rest.getVolume(this.route.snapshot.params['id']).subscribe((data: {}) => {
       this.volume = data[0];
-      this.volume.publisher = this.volume.publisher.name
+      this.volume.publisher = this.volume.publisher.name;
+
+      this.breadcrumbs.push(
+        {icon: 'home', link: '/'},
+        {name: this.volume.name}
+      );
+
       this.getIssues();
     });
   }

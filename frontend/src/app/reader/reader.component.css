@@ -1,7 +1,59 @@
-.page-container {
+.page-loader {
   text-align: center;
 }
+
+mat-toolbar {
+  background-color: #e0e0e0;
+  position: fixed;
+  bottom: 0;
+  opacity: 0;
+}
+mat-toolbar button {
+  margin: 0 5px;
+}
+mat-toolbar mat-icon {
+  vertical-align: middle;
+}
+mat-toolbar-row {
+  justify-content: space-between;
+}
+mat-toolbar-row .button-grp {
+  justify-content: center;
+}
+.reader-breadcrumbs {
+  font-size: 12px;
+  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 125px;
+  color: #757575;
+}
+mat-toolbar .reader-breadcrumb:hover {
+  color: #212121;
+}
+
+.page-container {
+  text-align: center;
+  position: relative;
+}
 .page-image {
-  width: 50%;
   height: auto;
+}
+
+.left-section {
+  cursor: pointer;
+  width: 33%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.right-section {
+  cursor: pointer;
+  width: 33%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 66%;
 }

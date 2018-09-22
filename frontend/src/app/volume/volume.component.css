@@ -14,7 +14,9 @@
   width: 60%;
   text-align: left;
 }
-
+.volume-details h1 {
+  margin-top: 0;
+}
 
 .issue-count {
   font-weight: bold;

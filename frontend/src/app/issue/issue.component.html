@@ -1,13 +1,27 @@
+<app-main-menu [breadcrumbs]="breadcrumbs"></app-main-menu>
+
 <mat-progress-spinner *ngIf="issue == null && volume == null" mode="indeterminate"></mat-progress-spinner>
 
 <div class="issue-container" *ngIf="issue != null && volume != null">
   <div class="issue-left">
-    <img class="issue-cover" style="width:100%" src="../../../assets/thumbs/{{issue.cover}}"/>
-    <button class="read-button" mat-raised-button color="warn" routerLink="/reader/{{issue.id}}">Read Now</button>
+    <img class="issue-cover" src="../../../assets/thumbs/{{issue.cover}}" routerLink="/reader/{{issue.id}}"/>
   </div>
 
   <div class="issue-right">
-    <h1>{{volume.name}}</h1>
+    <div class="issue-header">
+      <h1>{{volume.name}}</h1>
+      <span class="fill-remaining-space"></span>
+      <button mat-raised-button color="warn" routerLink="/reader/{{issue.id}}">
+        Read Now
+      </button>
+      <button mat-raised-button title="Previous Issue" disabled="{{prevIssue.id == null}}" routerLink="/issues/{{prevIssue.id}}">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <button mat-raised-button title="Next Issue" disabled="{{nextIssue.id == null}}" routerLink="/issues/{{nextIssue.id}}">
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+
     <div>{{'#' + issue.issue_number + ' - ' + issue.name}}<br/>{{issue.cover_date}}</div>
     <p>{{'Written By: ' + issue.writer}}<br/>{{'Illustrated By: ' + issue.artist}}</p>
     <p>{{issue.page_count + ' pages'}}</p>

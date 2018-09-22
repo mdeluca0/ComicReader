@@ -14,10 +14,18 @@
   width: 60%;
   text-align: left;
 }
+.issue-right h1 {
+  margin-top: 0;
+}
 
 .issue-cover {
   width: 100%;
+  cursor: pointer;
 }
-.read-button {
-  width: 100%;
+.issue-header {
+  display: flex;
+}
+.issue-header button{
+  margin-left: 5px;
+  height: 35px;
 }

@@ -1,14 +1,51 @@
-<mat-toolbar>
-  <mat-toolbar-row color="primary">
-    <button mat-button>
-      <mat-icon (click)="prevPage()">arrow_back</mat-icon>
+<div class="page-loader" *ngIf="curPageImg == null">
+  <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+  <h3>Loading Page...</h3>
+</div>
+
+<div class="page-container" *ngIf="curPageImg != null">
+  <img class="page-image" [ngStyle]="{'width': zoomPercent}" src="{{curPageImg}}"/>
+  <div class="left-section" title="Previous Page" (click)="prevPage()"></div>
+  <div class="right-section" title="Next Page" (click)="nextPage()"></div>
+</div>
+
+<mat-toolbar *ngIf="issue != null" [@toolbarState]="toolbarState">
+  <mat-toolbar-row (mouseenter)="toggleToolbar()" (mouseleave)="toggleToolbar()">
+    <div class="reader-breadcrumbs">
+      <div class="reader-breadcrumb" routerLink="/volumes/{{volume.id}}">{{volume.name}}</div>
+      <div class="reader-breadcrumb" routerLink="/issues/{{issue.id}}">#{{issue.issue_number}} - {{issue.name}}</div>
+    </div>
+
+    <div>
+      <mat-icon>find_in_page</mat-icon>
+      <mat-slider class="page-slider" (input)="onPageChange($event)" min="1" max="{{issue.page_count}}"
+                value="{{curPageNum+1}}" tickInterval="1" thumbLabel></mat-slider>
+    </div>
+
+    <div class="button-grp">
+      <button mat-raised-button title="Previous Issue" disabled="{{prevIssue.id == null}}" routerLink="/reader/{{prevIssue.id}}">
+        <mat-icon>skip_previous</mat-icon>
+      </button>
+      <button mat-raised-button title="Previous Page" disabled="{{curPageNum === 0}}" (click)="prevPage()">
+        <mat-icon>fast_rewind</mat-icon>
+      </button>
+      <button mat-raised-button title="Next Page" disabled="{{curPageNum === pages.length-1}}" (click)="nextPage()">
+        <mat-icon>fast_forward</mat-icon>
+      </button>
+      <button mat-raised-button title="Next Issue" disabled="{{nextIssue.id == null}}" routerLink="/reader/{{nextIssue.id}}">
+        <mat-icon>skip_next</mat-icon>
+      </button>
+    </div>
+
+    <div>
+      <mat-icon>zoom_out</mat-icon>
+      <mat-slider class="zoom-slider" (input)="onZoomChange($event)" min="1" max="100" value="50"
+                  thumbLabel [displayWith]="formatZoomLabel"></mat-slider>
+      <mat-icon>zoom_in</mat-icon>
+    </div>
+
+    <button mat-raised-button title="Close Issue" class="close-button" color="warn" routerLink="/issues/{{issue.id}}">
+      <mat-icon>clear</mat-icon>
     </button>
-    <button mat-button>
-      <mat-icon (click)="nextPage()">arrow_forward</mat-icon>
-    </button>
-    <mat-slider></mat-slider>
   </mat-toolbar-row>
 </mat-toolbar>
-<div class="page-container" (click)="nextPage()">
-  <img class="page-image active" src="{{curPageImg}}"/>
-</div>

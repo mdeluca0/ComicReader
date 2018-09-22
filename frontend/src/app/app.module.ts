@@ -10,7 +10,8 @@ import {
   MatButtonModule,
   MatProgressSpinnerModule,
   MatSliderModule,
-  MatSlideToggleModule
+  MatSlideToggleModule,
+  MatMenuModule
 } from "@angular/material";
 
 import { AppComponent } from './app.component';
@@ -19,6 +20,7 @@ import { VolumeComponent } from './volume/volume.component';
 import { IssueComponent } from './issue/issue.component';
 import { DescriptionTextComponent } from './description-text/description-text.component';
 import { ReaderComponent } from './reader/reader.component';
+import { MainMenuComponent } from './main-menu/main-menu.component';
 
 const appRoutes: Routes = [
   {
@@ -51,7 +53,8 @@ const appRoutes: Routes = [
     VolumeComponent,
     IssueComponent,
     DescriptionTextComponent,
-    ReaderComponent
+    ReaderComponent,
+    MainMenuComponent
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
@@ -64,7 +67,8 @@ const appRoutes: Routes = [
     MatButtonModule,
     MatProgressSpinnerModule,
     MatSliderModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    MatMenuModule
   ],
   providers: [],
   bootstrap: [

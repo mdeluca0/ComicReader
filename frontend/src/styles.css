@@ -10,3 +10,7 @@ body {
 mat-progress-spinner {
   margin: 25px auto;
 }
+
+.fill-remaining-space {
+  flex-grow: 1;
+}

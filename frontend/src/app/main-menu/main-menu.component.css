@@ -1,0 +1,21 @@
+mat-toolbar {
+  width: 85%;
+  margin: 0 auto 10px;
+  padding: 0;
+}
+.breadcrumb {
+  font-size: 15px;
+  margin-right: 20px;
+  color: #757575;
+  cursor: default;
+}
+mat-icon.breadcrumb {
+  font-size: 30px;
+  width: 30px;
+  height: 30px;
+  vertical-align: middle;
+}
+.breadcrumb:hover.active {
+  color: inherit;
+  cursor: pointer;
+}

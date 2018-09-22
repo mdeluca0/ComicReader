@@ -99,7 +99,44 @@ router.get('/issues/:issueId', function(req, res) {
         if (err) {
             return err;
         }
-        res.send(issue);
+
+        issue[0].nextIssue = {};
+        issue[0].prevIssue = {};
+
+        if (!issue.length) {
+            res.send(issue);
+            return;
+        }
+
+        const nextIssueNum = issue[0].issue_number + 1;
+        const prevIssueNum = issue[0].issue_number - 1;
+        params.query = {$or: [
+            {'volume.id': issue[0].volume.id, issue_number: nextIssueNum},
+            {'volume.id': issue[0].volume.id, issue_number: prevIssueNum}
+        ]};
+
+        db.find(params, function(err, issues) {
+            if (err) {
+                res.send(issue);
+                return err;
+            }
+
+            for (let i = 0; i < issues.length; i++) {
+                let issueInfo = {
+                    id: issues[i].id,
+                    name: issues[i].name,
+                    issue_number: issues[i].issue_number
+                };
+                if (issues[i].issue_number === nextIssueNum) {
+                    issue[0].nextIssue = issueInfo;
+                } else if (issues[i].issue_number === prevIssueNum) {
+                    issue[0].prevIssue = issueInfo;
+                }
+            }
+
+            res.send(issue);
+        });
+
     });
 });
 
