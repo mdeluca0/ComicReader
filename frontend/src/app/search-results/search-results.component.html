@@ -1,3 +1,8 @@
-<p>
-  search-results works!
-</p>
+<app-main-menu [breadcrumbs]="breadcrumbs"></app-main-menu>
+
+<h1>Search Results for "{{search}}"</h1>
+<h3>Volumes</h3>
+<app-volume-card *ngFor="let volume of volumes" [volume]="volume"></app-volume-card>
+
+<h3>Issues</h3>
+<app-issue-card *ngFor="let issue of issues" [issue]="issue"></app-issue-card>

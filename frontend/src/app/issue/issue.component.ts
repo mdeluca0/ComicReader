@@ -32,6 +32,7 @@ export class IssueComponent implements OnInit {
           this.prevIssue = this.issue.prevIssue;
           this.volume = this.issue.volume;
 
+          //TODO: break out sub array filtering to it's own method
           this.issue.writer = "";
           this.issue.artist = "";
           for (let i = 0; i < this.issue.person_credits.person.length; i++) {
@@ -61,5 +62,4 @@ export class IssueComponent implements OnInit {
       }
     );
   }
-
 }

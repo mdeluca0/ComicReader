@@ -205,7 +205,11 @@ router.get('/results', function(req, res) {
     });
 
     Promise.all([volumesPromise, issuesPromise]).then(function(results) {
-        res.send(results);
+        var resultsMerge = {};
+        results.forEach(function(promise) {
+           Object.assign(resultsMerge, promise);
+        });
+        res.send(resultsMerge);
     });
 });
 
