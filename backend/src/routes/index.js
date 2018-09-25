@@ -168,4 +168,45 @@ router.get('/issues/:issueId/:pageNo', function(req, res) {
     });
 });
 
+router.get('/results', function(req, res) {
+    var searchQuery = "";
+    if (req.query.search_query) {
+        searchQuery = req.query.search_query.toString();
+    } else {
+        //TODO: send reject
+    }
+
+    var volumesPromise = new Promise(function(resolve, reject) {
+        var params = {
+            collection: 'volumes',
+            query: { $text: { $search: searchQuery } }
+        };
+        db.find(params, function(err, volumes) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({volumes: volumes});
+            }
+        });
+    });
+
+    var issuesPromise = new Promise(function(resolve, reject) {
+        var params = {
+            collection: 'issues',
+            query: { $text: { $search: searchQuery } }
+        };
+        db.find(params, function(err, issues) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({issues: issues});
+            }
+        });
+    });
+
+    Promise.all([volumesPromise, issuesPromise]).then(function(results) {
+        res.send(results);
+    });
+});
+
 module.exports = router;

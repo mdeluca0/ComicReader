@@ -1,8 +1,35 @@
 const mongo = require('mongodb').MongoClient;
 const url = require('./consts').dbUrl;
+var client = null;
+
+function connect(cb) {
+    if (client == null) {
+        mongo.connect(url, {useNewUrlParser: true}, function (err, c) {
+            if (err) {
+                return cb(err);
+            }
+
+            client = c;
+            client.on('close', function() {
+                client = null;
+            });
+
+            setIndices();
+
+            return cb(null, client);
+        });
+    } else {
+        return cb(null, client);
+    }
+}
+
+function setIndices() {
+    client.db('main').collection('volumes').createIndex({name: 'text'});
+    client.db('main').collection('issues').createIndex({name: 'text'});
+}
 
 function find(options, cb) {
-    mongo.connect(url, {useNewUrlParser: true}, function (err, client) {
+    connect(function (err, client) {
         if (err) {
             return cb(err);
         }
@@ -24,7 +51,6 @@ function find(options, cb) {
         }
 
         q.toArray(function (err, res) {
-            client.close();
             if (err) {
                 return cb(err);
             } else {
@@ -35,7 +61,7 @@ function find(options, cb) {
 }
 
 function replace(options, cb) {
-    mongo.connect(url, {useNewUrlParser: true}, function(err, client) {
+    connect(function(err, client) {
         if (err) {
             return cb(err);
         }
@@ -43,7 +69,6 @@ function replace(options, cb) {
         var db = client.db('main');
 
         db.collection(options.collection).replaceOne(options.identifier, options.document, {upsert: true}, function(err, res) {
-            client.close();
             if (err) {
                 return cb(err);
             }

@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-main-menu',
@@ -8,7 +9,13 @@ import { Component, Input } from '@angular/core';
 export class MainMenuComponent {
 
   @Input('breadcrumbs') breadcrumbs:Array<{}>;
+  searchValue:string = "";
 
-  constructor() { }
+  constructor(private router: Router) { }
 
+  submitSearch() {
+    if (this.searchValue.length > 0) {
+      this.router.navigate(['/results'], { queryParams: { search_query: this.searchValue }});
+    }
+  }
 }

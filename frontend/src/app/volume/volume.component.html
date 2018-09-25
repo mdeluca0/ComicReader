@@ -15,11 +15,6 @@
 <p *ngIf="volume != null" class="issue-count">{{volume.count_of_issues}} Issues</p>
 
 <div class="issue-card-container" (window:scroll)="onScroll()">
-  <mat-card *ngFor="let issue of issues" class="issue-card" title="{{issue.name}}" routerLink="/issues/{{issue.id}}">
-    <img class="mat-card-image" src="../../../assets/thumbs/{{issue.cover}}">
-    <mat-card-content>
-      <span>#{{issue.issue_number}} - {{issue.name}}</span>
-    </mat-card-content>
-  </mat-card>
+  <app-issue-card *ngFor="let issue of issues" [issue]="issue"></app-issue-card>
   <mat-progress-spinner *ngIf="requesting" mode="indeterminate"></mat-progress-spinner>
 </div>

@@ -42,4 +42,9 @@ export class RestService {
     return this.http.get(endpoint + 'issues/' + <string>id + '/' + <string>pageNo)
       .pipe(map(this.extractData));
   }
+
+  getSearch(query): Observable<any> {
+    return this.http.get(endpoint + 'results/' + '?search_query=' + query.toString())
+      .pipe(map(this.extractData));
+  }
 }

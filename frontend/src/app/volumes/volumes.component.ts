@@ -10,6 +10,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class VolumesComponent implements OnInit {
   volumes:any = [];
 
+  breadcrumbs:any = [];
+
   offset:number = 0;
   finished:boolean = false;
   requesting:boolean = false;
@@ -17,6 +19,10 @@ export class VolumesComponent implements OnInit {
   constructor(public rest: RestService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
+    this.breadcrumbs.push(
+      {icon: 'home', link: '/'}
+    );
+
     this.getVolumes();
   }
 

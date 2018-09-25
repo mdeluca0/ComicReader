@@ -1,11 +1,6 @@
+<app-main-menu [breadcrumbs]="breadcrumbs"></app-main-menu>
+
 <div class="volume-card-container" (window:scroll)="onScroll()">
-  <mat-card *ngFor="let volume of volumes" class="volume-card" title="{{volume.name}}" routerLink="/volumes/{{volume.id}}">
-    <img class="mat-card-image" src="../../../assets/thumbs/{{volume.cover}}">
-    <mat-card-content>
-      <span>{{volume.name}}</span>
-      <br/>
-      <span>{{volume.start_year}}</span>
-    </mat-card-content>
-  </mat-card>
+  <app-volume-card *ngFor="let volume of volumes" [volume]="volume"></app-volume-card>
   <mat-progress-spinner *ngIf="requesting" mode="indeterminate"></mat-progress-spinner>
 </div>

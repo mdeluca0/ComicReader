@@ -68,6 +68,10 @@ export class ReaderComponent implements OnInit {
       pageNo = 0;
     }
 
+    if (this.curPageNum != pageNo) {
+      window.scrollTo(null, 0);
+    }
+
     this.curPageNum = pageNo;
 
     if (this.pages[pageNo] == null) {
@@ -84,8 +88,6 @@ export class ReaderComponent implements OnInit {
         this.getPage(i);
       }
     }
-
-    window.scrollTo(null, 0);
   }
 
   nextPage() {

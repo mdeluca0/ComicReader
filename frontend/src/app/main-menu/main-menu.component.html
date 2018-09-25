@@ -1,11 +1,20 @@
 <mat-toolbar>
-  <div *ngFor="let item of breadcrumbs; last as isLast">
+  <div *ngFor="let item of breadcrumbs">
     <span mat-button *ngIf="item.name && item.link" routerLink="{{item.link}}" class="breadcrumb active">{{item.name}}</span>
     <mat-icon *ngIf="item.icon && item.link" routerLink="{{item.link}}" class="breadcrumb active">{{item.icon}}</mat-icon>
 
     <span mat-button *ngIf="item.name && !item.link" class="breadcrumb">{{item.name}}</span>
     <mat-icon *ngIf="item.icon && !item.link" class="breadcrumb">{{item.icon}}</mat-icon>
-
-    <!--<span *ngIf="!isLast" class="breadcrumb breadcrumb-divider">/</span>-->
   </div>
+
+  <span class="fill-remaining-space"></span>
+
+  <form (ngSubmit)="submitSearch()">
+    <mat-form-field class="search-bar">
+      <input matInput name="search" type="text" placeholder="Search" [(ngModel)]="searchValue">
+      <button mat-button *ngIf="searchValue" matSuffix mat-icon-button>
+        <mat-icon>search</mat-icon>
+      </button>
+    </mat-form-field>
+  </form>
 </mat-toolbar>

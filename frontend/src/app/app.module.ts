@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HttpClientModule } from "@angular/common/http";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {
   MatCardModule,
   MatToolbarModule,
@@ -11,7 +12,8 @@ import {
   MatProgressSpinnerModule,
   MatSliderModule,
   MatSlideToggleModule,
-  MatMenuModule
+  MatMenuModule,
+  MatInputModule
 } from "@angular/material";
 
 import { AppComponent } from './app.component';
@@ -21,6 +23,9 @@ import { IssueComponent } from './issue/issue.component';
 import { DescriptionTextComponent } from './description-text/description-text.component';
 import { ReaderComponent } from './reader/reader.component';
 import { MainMenuComponent } from './main-menu/main-menu.component';
+import { VolumeCardComponent } from './volume-card/volume-card.component';
+import { IssueCardComponent } from './issue-card/issue-card.component';
+import { SearchResultsComponent } from './search-results/search-results.component';
 
 const appRoutes: Routes = [
   {
@@ -40,6 +45,10 @@ const appRoutes: Routes = [
     component: ReaderComponent
   },
   {
+    path: 'results',
+    component: SearchResultsComponent
+  },
+  {
     path: '',
     redirectTo: '/volumes',
     pathMatch: 'full'
@@ -54,13 +63,17 @@ const appRoutes: Routes = [
     IssueComponent,
     DescriptionTextComponent,
     ReaderComponent,
-    MainMenuComponent
+    MainMenuComponent,
+    VolumeCardComponent,
+    IssueCardComponent,
+    SearchResultsComponent
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
     BrowserModule,
     HttpClientModule,
     BrowserAnimationsModule,
+    FormsModule,
     MatCardModule,
     MatToolbarModule,
     MatIconModule,
@@ -68,7 +81,8 @@ const appRoutes: Routes = [
     MatProgressSpinnerModule,
     MatSliderModule,
     MatSlideToggleModule,
-    MatMenuModule
+    MatMenuModule,
+    MatInputModule
   ],
   providers: [],
   bootstrap: [

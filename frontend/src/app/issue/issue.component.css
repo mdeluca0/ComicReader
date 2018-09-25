@@ -10,8 +10,8 @@
 }
 .issue-right {
   display: inline-block;
-  margin: 0 10% 0 5%;
-  width: 60%;
+  margin-left: 5%;
+  width: 70%;
   text-align: left;
 }
 .issue-right h1 {

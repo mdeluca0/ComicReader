@@ -28,31 +28,3 @@
   width: 85%;
   margin: 0 auto;
 }
-
-.issue-card {
-  display: inline-block;
-  width: 140px;
-  margin: 0 20px 20px 0;
-  padding: 24px 24px 0 24px;
-  vertical-align: top;
-  cursor: pointer;
-}
-.issue-card:hover {
-  background-color: #212121;
-  color: #fafafa;
-}
-.mat-card-image {
-  height: 275px;
-}
-mat-card-content {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 13px;
-  font-weight: bold;
-  text-align: left;
-  position: relative;
-  width: 165px;
-  left: -15px;
-  top: -10px;
-}
