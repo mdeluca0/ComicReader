@@ -1,6 +1,5 @@
 const fs = require('fs');
-
-const consts = require('./consts')
+const consts = require('./consts');
 
 function scan (cb) {
     fs.readdir(consts.comicDirectory, function (err, folders) {
@@ -18,7 +17,7 @@ function scan (cb) {
 
 function scanIssues (folders, directory, cb) {
     if (!folders.length) {
-        return cb(1, 'No folders found from the scan.');
+        return cb('No folders found from the scan.');
     }
 
     var folder = folders[directory.length];
@@ -67,8 +66,8 @@ function getIssueFile (issue, cb) {
         if (err) {
             return cb(err);
         }
-         for (var i = 0; i < issues.length; i++) {
-            var extension = issues[i].substr(issues[i].lastIndexOf('.') + 1);
+         for (let i = 0; i < issues.length; i++) {
+            let extension = issues[i].substr(issues[i].lastIndexOf('.') + 1);
 
             if (fileName === issues[i].replace(/\.[^/.]+$/, '')) {
                 return cb(null, issuePath + '/' + fileName + '.' + extension);

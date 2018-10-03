@@ -77,5 +77,23 @@ function replace(options, cb) {
     });
 }
 
+function update(options, cb) {
+    connect(function(err, client) {
+        if (err) {
+            return cb(err);
+        }
+
+        var db = client.db('main');
+
+        db.collection(options.collection).updateOne(options.query, {$set: options.update}, function(err, res) {
+            if (err) {
+                return cb(err);
+            }
+            return cb(null, res);
+        });
+    });
+}
+
 module.exports.find = find;
 module.exports.replace = replace;
+module.exports.update = update;

@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
 const index = require('./routes/index');
+require('./refresh');
 require('./monitor');
 
 //require('../tests/test').test();

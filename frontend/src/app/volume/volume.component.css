@@ -1,7 +1,3 @@
-.volume-header {
-  width: 85%;
-  margin: 0 auto;
-}
 .volume-cover {
   height: auto;
   width: 25%;
@@ -21,10 +17,4 @@
 .issue-count {
   font-weight: bold;
   font-size: 25px;
-  margin-left: 7.5%;
-}
-
-.issue-card-container {
-  width: 85%;
-  margin: 0 auto;
 }

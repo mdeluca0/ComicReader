@@ -19,6 +19,7 @@
     "request": "^2.88.0",
     "serve-favicon": "~2.4.5",
     "stream-to-array": "^2.3.0",
+    "uniqid": "^5.0.3",
     "unrar": "^0.1.7",
     "xml2js": "^0.4.19"
   }

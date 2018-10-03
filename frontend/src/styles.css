@@ -5,6 +5,10 @@ body {
   background-color: #f5f5f5;
   color: #212121;
   font-family: Roboto, Arial, sans-serif;
+
+  /*TODO: fix this for smaller displays*/
+  width: 85%;
+  margin: 0 auto;
 }
 
 mat-progress-spinner {

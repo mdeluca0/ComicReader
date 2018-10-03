@@ -5,6 +5,7 @@
 mat-toolbar {
   background-color: #e0e0e0;
   position: fixed;
+  left: 0;
   bottom: 0;
   opacity: 0;
 }

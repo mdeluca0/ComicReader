@@ -1,318 +1,152 @@
-const chokidar = require('chokidar');
-const fs = require('fs');
-const scanner = require('./scanner');
 const db = require('./db');
 const api = require('./api');
-const archive = require('./archive');
-const consts = require('./consts');
+const priorityQueue = require('./priorityqueue').PriorityQueue;
 
-var watcher = chokidar.watch(consts.comicDirectory, {ignored: /(^|[\/\\])\../, persistent: true});
-
-var scanThreshold;
-
-// Initial
-watcher.on('ready', function(path) {
-    scanThreshold = setTimeout(refresh, 3000);
-
-    // File added
-    watcher.on('add', function(path) {
-        clearTimeout(scanThreshold);
-        scanThreshold = setTimeout(refresh, 8000);
-    });
-
-    // File changed
-    watcher.on('change', function(path) {
-        clearTimeout(scanThreshold);
-        scanThreshold = setTimeout(refresh, 8000);
-    });
-
-    // File removed
-    watcher.on('unlink', function(path) {
-        clearTimeout(scanThreshold);
-        scanThreshold = setTimeout(refresh, 8000);
-    });
-});
-
-var requestQueue = [];
+var requestQueue = new priorityQueue();
+var populating = false;
 
 setInterval(function () {
-    if (requestQueue.length) {
-        var issue = requestQueue.shift();
+    if (!requestQueue.isEmpty()) {
+        let item = requestQueue.dequeue();
+        item = item.item;
 
-        console.log('Requesting...' + issue.volume.name + ' - ' + issue.name);
-
-        api.requestDetailedIssue(issue.api_detail_url, function (detErr, details) {
-            getIssueCoverAndCount(issue, function(covErr, cover, page_count) {
-                if (detErr || covErr) {
-                    return;
-                }
-
-                details.detailed = 'Y';
-                details.cover = cover;
-                details.page_count = page_count;
-                details.description = sanitizeHtml(details.description);
-
-                upsertIssue(Object.assign(issue, details), function(err, res) {
+        switch(item.type) {
+            case 'volume':
+                console.log('Requesting Volume: ' + item.id);
+                detailVolume(item.id, item.url, function(err) {
                     if (err) {
-                        return err;
+                        console.log(err);
+                    } else {
+                        console.log('Updated Volume: ' + item.id);
                     }
                 });
-                console.log('Updated...' + issue.volume.name + ' - ' + issue.name);
-            });
-        });
-    } else {
-        getUndetailedIssues(function(err, res) {
-            if (err) {
-                return err;
-            }
-            for (let i = 0; i < res.length; i++) {
-                requestQueue.push(res[i]);
-            }
-        });
+                break;
+            case 'issue':
+                console.log('Requesting Issue: ' + item.id);
+                detailIssue(item.id, item.url, function(err) {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        console.log('Updated Issue: ' + item.id);
+                    }
+                });
+                break;
+            case 'story_arc':
+                break;
+            default:
+                break;
+        }
+    } else if (!populating) {
+        populateRequestQueue();
     }
 }, 1000);
 
-//TODO: get details on demand
-//TODO: queue files with missing covers on file change to retry
+function populateRequestQueue() {
+    populating = true;
 
-// Scans the book directory for new volumes or issues added so that we can populate their metadata.
-function refresh() {
-    // Makes a directory for the thumbnails if it doesn't exist
-    //TODO: fix for recursive folder creation
-    if (!fs.existsSync(consts.thumbDirectory)) {
-        fs.mkdirSync(consts.thumbDirectory);
-    }
-
-    scanner.scan(function(err, directory) {
-        if (err) {
-            return err;
-        }
-        directory.forEach(function(dirItem) {
-            getVolumeByNameAndYear(dirItem.volume, dirItem.start_year, function(err, dbItem) {
-                if (err) {
-                    return err;
-                }
-                if (dbItem.length) {
-                    dbItem = dbItem.shift();
-                    getIssuesByVolume(dbItem.id, function (err, issues) {
-                        if (err) {
-                            return err;
-                        }
-                        dbItem.issues = issues;
-                        processVolume(dirItem, dbItem, function(err, res) {
-                            if (err) {
-                                return err;
-                            }
-                        });
-                    });
-                } else {
-                    processVolume(dirItem, null, function(err, res) {
-                        if (err) {
-                            return err;
-                        }
-                    });
-                }
-            });
-        });
-    });
-}
-
-function processVolume(dirVolume, dbVolume, cb) {
-    // New volume found in the directory which is why dbVolume is null. Going to attempt to find it's metadata.
-    if (dbVolume == null) {
-        api.getVolume(dirVolume.volume, dirVolume.start_year, function(err, volume) {
+    var volumesPromise = new Promise(function(resolve, reject) {
+        let params = {
+            collection: 'volumes',
+            query: {'detailed': {'$not': /[Y]/}}
+        };
+        db.find(params, function(err, volumes) {
             if (err) {
-                return cb(err);
-            }
-            api.requestCover(volume.image.super_url, consts.thumbDirectory + '/' + dirVolume.folder, function (err, path) {
-                if (!err) {
-                    volume.cover = path;
-                } else {
-                    volume.cover = '';
-                }
-
-                processIssues(dirVolume, volume, function(err, issues) {
-                    if (err) {
-                        return cb(err);
-                    }
-                    for (let i = 0; i < issues.length; i++) {
-                        upsertIssue(issues[i], function(err, res) {
-                            if (err) {
-                                return cb(err);
-                            }
-                        });
-                    }
-
-                    delete volume.issues;
-                    volume.description = volume.description.replace(/<h4>Collected Editions.*/, '');
-                    volume.description = sanitizeHtml(volume.description);
-
-                    upsertVolume(volume, function(err, res) {
-                        if (err) {
-                            return cb(err);
-                        }
-                    });
-                    console.log('Finished processing "' + volume.name + '"');
-                });
-            });
-        });
-    } else {
-        processIssues(dirVolume, dbVolume, function(err, issues) {
-            if (err) {
-                return cb(err);
-            }
-            for (let i = 0; i < issues.length; i++) {
-                upsertIssue(issues[i], function(err, res) {
-                    if (err) {
-                        return cb(err);
-                    }
-                });
-            }
-
-            delete dbVolume.issues;
-
-            upsertVolume(dbVolume, function(err, res) {
-                if (err) {
-                    return cb(err);
-                }
-            });
-            console.log('Finished processing "' + dbVolume.name + '"');
-        });
-    }
-}
-
-function processIssues(directoryVolume, dbVolume, cb) {
-    for (var i = 0; i < dbVolume.issues.length; i++) {
-        var match = false;
-
-        for (var j = 0; j < directoryVolume.issues.length; j++) {
-            var curDbIssue = dbVolume.name + ' - ' + consts.convertToThreeDigits(dbVolume.issues[i].issue_number.toString());
-            var curDirIssue = consts.replaceEscapedCharacters(directoryVolume.issues[j].toString().replace(/\.[^/.]+$/, ''));
-
-            if (curDbIssue === curDirIssue) {
-                match = true;
-                break;
-            }
-        }
-
-        if (match) {
-            dbVolume.issues[i].active = 'Y';
-            dbVolume.issues[i].date_added = consts.getToday();
-            dbVolume.issues[i].file_path = directoryVolume.folder + '/' + directoryVolume.issues[j];
-        } else {
-            dbVolume.issues[i].active = 'N';
-        }
-    }
-    return cb(null, dbVolume.issues);
-}
-
-function sanitizeHtml(html) {
-    return html.replace(/<(?:.|\\n)*?>/g, '');
-}
-
-function getIssueCoverAndCount(issue, cb) {
-    archive.extractIssue(issue.file_path, function (err, handler, entries, ext) {
-        if (err) {
-            return cb(err);
-        }
-        archive.getPageCount(entries, function (err, count) {
-            if (err) {
-                return cb(err);
-            }
-            var imagePath = consts.thumbDirectory + '/' + issue.file_path.split('/')[0];
-            api.requestCover(issue.image.super_url, imagePath, function(err, path) {
-                if (err) {
-                    return cb(err);
-                }
-                return cb(null, path, count);
-            });
-        });
-    });
-}
-
-function getVolumeByNameAndYear(name, year, cb) {
-    var params = {
-        collection: 'volumes',
-        query: {'name': name, 'start_year': year}
-    };
-    db.find(params, function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, res);
-    });
-}
-
-function getIssuesByVolume(volumeId, cb) {
-    var params = {
-        collection: 'issues',
-        query: {'volume.id': volumeId},
-        sort: {'issue_number': 1}
-    };
-    db.find(params, function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, res);
-    });
-}
-
-function upsertVolume(document, cb) {
-    var params = {
-        collection: 'volumes',
-        identifier: {id: document.id},
-        document: document
-    };
-    db.replace(params, function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, res);
-    });
-}
-
-function upsertIssue(document, cb) {
-    var params = {
-        collection: 'issues',
-        identifier: {id: document.id},
-        document: document
-    };
-    db.replace(params, function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, res);
-    });
-}
-
-function getUndetailedIssues(cb) {
-    var params = {
-        collection: 'issues',
-        query: {'active': 'Y', 'detailed': {'$not': /[Y]/}}
-    };
-    db.find(params, function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, res);
-    });
-}
-
-/*function getCorruptIssues(cb) {
-    mongo.connect(url, function (err, client) {
-        if (err) {
-            return cb(err);
-        }
-
-        var db = client.db('main');
-
-        db.collection('issues').find({'cover': {'$not': /[Y]/}}).toArray(function (err, res) {
-            client.close();
-            if (err) {
-                return cb(err);
+                reject(err);
             } else {
-                return cb(null, res);
+                resolve(volumes);
             }
         });
     });
-}*/
+
+    var issuesPromise = new Promise(function(resolve, reject) {
+        let params = {
+            collection: 'issues',
+            query: {'detailed': {'$not': /[Y]/}}
+        };
+        db.find(params, function(err, issues) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(issues);
+            }
+        });
+    });
+
+    //TODO: add story arc promise
+
+    Promise.all([volumesPromise, issuesPromise]).then(function(results) {
+        for (let i = 0; i < results[0].length; i++) {
+            requestQueue.enqueue({
+                type: 'volume',
+                id: results[0][i].id,
+                url: results[0][i].api_detail_url
+            }, 1);
+        }
+        for (let i = 0; i < results[1].length; i++) {
+            requestQueue.enqueue({
+                type: 'issue',
+                id: results[1][i].id,
+                url: results[1][i].api_detail_url
+            }, 3);
+        }
+        populating = false;
+    });
+}
+
+function detailVolume(id, url, cb) {
+    let params = {
+        url: url,
+        fieldList: ['characters', 'locations', 'people', 'publisher']
+    };
+    api.apiRequest(params, function(err, volume) {
+        if (err) {
+            return cb(err);
+        }
+
+        volume.detailed = 'Y';
+
+        let options = {
+            collection: 'volumes',
+            query: {id: id},
+            update: volume
+        };
+
+        db.update(options, function(err) {
+            if (err) {
+                return cb(err);
+            }
+            return cb(null);
+        });
+    });
+}
+
+function detailIssue(id, url, cb) {
+    let params = {
+        url: url,
+        fieldList: ['character_credits', 'story_arc_credits', 'location_credits', 'person_credits']
+    };
+    api.apiRequest(params, function(err, issue) {
+        if (err) {
+            return cb(err);
+        }
+
+        issue.detailed = 'Y';
+
+        let options = {
+            collection: 'issues',
+            query: {id: id},
+            update: issue
+        };
+        db.update(options, function(err) {
+            if (err) {
+                return cb(err);
+            }
+            return cb(null);
+        });
+    });
+}
+
+function detailStoryArc(id, url, cb) {
+
+}
+

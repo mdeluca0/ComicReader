@@ -1,9 +1,12 @@
 const path = require('path');
+const fs = require('fs');
 
 module.exports.comicDirectory = 'C:/Comics';
-module.exports.thumbDirectory = path.join(__dirname, '..', '..', 'frontend', 'assets', 'thumbs').replace(/\\/g, '/');
-module.exports.apiKey = '391531cd4d7943ad91be002c53f74dca5f461d9b';
 module.exports.dbUrl = 'mongodb://localhost:27017/main';
+module.exports.thumbDirectory = path.join(__dirname, '..', '..', 'frontend', 'assets', 'thumbs').replace(/\\/g, '/');
+module.exports.apiUrl = 'https://www.comicvine.gamespot.com/api/';
+module.exports.apiKey = '391531cd4d7943ad91be002c53f74dca5f461d9b';
+module.exports.userAgent = 'Mozilla/5.0';
 
 module.exports.convertToThreeDigits = function(number) {
     if (number.indexOf('.') !== -1) {
@@ -32,10 +35,10 @@ module.exports.replaceEscapedCharacters = function(s) {
 };
 
 module.exports.getToday = function() {
-    var today = new Date();
-    var dd = today.getDate();
-    var mm = today.getMonth() + 1;
-    var yyyy = today.getFullYear();
+    let today = new Date();
+    let dd = today.getDate();
+    let mm = today.getMonth() + 1;
+    let yyyy = today.getFullYear();
 
     if (dd < 10) {
         dd = '0' + dd;
@@ -46,4 +49,28 @@ module.exports.getToday = function() {
     }
 
     return yyyy + '-' + mm + '-' + dd;
+};
+
+module.exports.mkDirRecursive = function(path) {
+    let parts = path.split('/');
+    let curPath = '';
+    let length = parts.length;
+
+    for (let i = 0; i < length; i++) {
+        if (curPath !== '') {
+            curPath += '/';
+        }
+
+        let part = parts.shift();
+
+        curPath += part;
+
+        if (part.indexOf(':') !== -1) {
+            continue;
+        }
+
+        if (!fs.existsSync(curPath)) {
+            fs.mkdirSync(curPath);
+        }
+    }
 };

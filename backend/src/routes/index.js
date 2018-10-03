@@ -205,7 +205,7 @@ router.get('/results', function(req, res) {
     });
 
     Promise.all([volumesPromise, issuesPromise]).then(function(results) {
-        var resultsMerge = {};
+        let resultsMerge = {};
         results.forEach(function(promise) {
            Object.assign(resultsMerge, promise);
         });
