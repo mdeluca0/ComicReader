@@ -168,6 +168,20 @@ router.get('/issues/:issueId/:pageNo', function(req, res) {
     });
 });
 
+router.get('/issues/:issueId/page_count', function(req, res) {
+    /*archive.extractIssue(filePath, function (err, handler, entries, ext) {
+        if (err) {
+            return cb(err);
+        }
+        archive.getPageCount(entries, function (err, count) {
+            if (err) {
+                return cb(err);
+            }
+            return cb(null, count);
+        });
+    });*/
+});
+
 router.get('/results', function(req, res) {
     var searchQuery = "";
     if (req.query.search_query) {

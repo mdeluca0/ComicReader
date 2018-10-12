@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 
 const index = require('./routes/index');
 require('./refresh');
-require('./monitor');
+//require('./monitor');
 
 //require('../tests/test').test();
 

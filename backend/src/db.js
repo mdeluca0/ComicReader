@@ -94,6 +94,24 @@ function update(options, cb) {
     });
 }
 
+function remove(options, cb) {
+    connect(function(err, client) {
+        if (err) {
+            return cb(err);
+        }
+
+        var db = client.db('main');
+
+        db.collection(options.collection).deleteMany(options.query, function(err) {
+            if (err) {
+                return cb(err);
+            }
+            return cb(null);
+        });
+    });
+}
+
 module.exports.find = find;
 module.exports.replace = replace;
 module.exports.update = update;
+module.exports.remove = remove;

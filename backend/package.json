@@ -12,6 +12,7 @@
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "express": "^4.15.5",
+    "fast-array-diff": "^0.2.0",
     "jsonwebtoken": "^8.3.0",
     "mongodb": "^3.1.4",
     "morgan": "~1.9.0",
@@ -19,7 +20,6 @@
     "request": "^2.88.0",
     "serve-favicon": "~2.4.5",
     "stream-to-array": "^2.3.0",
-    "uniqid": "^5.0.3",
     "unrar": "^0.1.7",
     "xml2js": "^0.4.19"
   }

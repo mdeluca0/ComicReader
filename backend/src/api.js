@@ -72,6 +72,12 @@ function imageRequest(url, path, cb) {
             return cb(err);
         }
         if (res.statusCode === 200) {
+            let fileName = path.split('/').pop();
+
+            if (fs.existsSync(path)) {
+                return cb(null, fileName);
+            }
+
             let dir = path.split('/').slice(0, -1).join('/');
             consts.mkDirRecursive(dir);
 
@@ -79,8 +85,6 @@ function imageRequest(url, path, cb) {
                 if (err) {
                     return cb(err);
                 }
-
-                let fileName = path.split('/').pop();
 
                 return cb(null, fileName);
             });

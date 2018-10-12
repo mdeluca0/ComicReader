@@ -17,18 +17,18 @@ function scan (cb) {
 
 function scanIssues (folders, directory, cb) {
     if (!folders.length) {
-        return cb('No folders found from the scan.');
+        return cb(null, directory);
     }
 
-    var folder = folders[directory.length];
+    var folder = folders.shift();
 
     var startYear = folder.match(/\([0-9][0-9][0-9][0-9]\)/g);
 
     if (!startYear) {
-        return cb(1);
+        return cb("No year found");
     }
 
-    startYear = startYear[startYear.length-1].replace('(', '').replace(')', '');
+    startYear = startYear.pop().replace('(', '').replace(')', '');
 
     var title = folder.replace(/\.[^/.]+$/, '');
     title = folder.replace('(' + startYear + ')', '').trim();
@@ -49,11 +49,7 @@ function scanIssues (folders, directory, cb) {
             'issues': issuesCopy
         });
 
-        if (directory.length === folders.length) {
-            return cb(null, directory);
-        } else {
-            scanIssues(folders, directory, cb);
-        }
+        scanIssues(folders, directory, cb);
     });
 }
 

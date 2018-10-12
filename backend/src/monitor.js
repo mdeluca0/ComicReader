@@ -44,7 +44,9 @@ setInterval(function () {
 function populateRequestQueue() {
     populating = true;
 
-    var volumesPromise = new Promise(function(resolve, reject) {
+    let promises = [];
+
+    promises.push(new Promise(function(resolve, reject) {
         let params = {
             collection: 'volumes',
             query: {'detailed': {'$not': /[Y]/}}
@@ -56,9 +58,9 @@ function populateRequestQueue() {
                 resolve(volumes);
             }
         });
-    });
+    }));
 
-    var issuesPromise = new Promise(function(resolve, reject) {
+    promises.push(new Promise(function(resolve, reject) {
         let params = {
             collection: 'issues',
             query: {'detailed': {'$not': /[Y]/}}
@@ -70,11 +72,11 @@ function populateRequestQueue() {
                 resolve(issues);
             }
         });
-    });
+    }));
 
     //TODO: add story arc promise
 
-    Promise.all([volumesPromise, issuesPromise]).then(function(results) {
+    Promise.all(promises).then(function(results) {
         for (let i = 0; i < results[0].length; i++) {
             requestQueue.enqueue({
                 type: 'volume',

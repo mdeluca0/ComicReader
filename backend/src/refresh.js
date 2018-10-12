@@ -1,8 +1,8 @@
 const chokidar = require('chokidar');
+const fad = require('fast-array-diff');
 const scanner = require('./scanner');
 const db = require('./db');
 const api = require('./api');
-const archive = require('./archive');
 const consts = require('./consts');
 
 const watcher = chokidar.watch(consts.comicDirectory, {ignored: /(^|[\/\\])\../, persistent: true});
@@ -30,124 +30,137 @@ watcher.on('ready', function(path) {
 });
 
 function refresh() {
-    // Makes a directory for the thumbnails if it doesn't exist
-    consts.mkDirRecursive(consts.thumbDirectory);
-
     scanner.scan(function(err, directory) {
         if (err) {
-            console.log(err);
-            return;
+            return err;
         }
-        directory.forEach(function (dirItem) {
-            var getMetadataPromise = new Promise(function (resolve, reject) {
-                findVolumes({'name': dirItem.volume, 'start_year': dirItem.start_year}, function (err, dbItem) {
+        syncDirectory(directory, function(err, newDir) {
+            if (err) {
+                return err;
+            }
+            newDir.forEach(function(item) {
+                addVolume(item.volume, item.start_year, function(err, volume) {
+                    if (err) {
+                        return err;
+                    }
+                    addIssues(volume.id, volume.count_of_issues, function(err, issues) {
+                        if (err) {
+                            return err;
+                        }
+                    });
+                });
+            });
+        });
+    });
+}
+
+function syncDirectory(newDir, cb) {
+    let compareFolders = function(a, b) {
+        return a.folder === b.folder;
+    };
+
+    db.find({collection: 'directory'}, function(err, curDir) {
+        if (err) {
+            return cb(err);
+        }
+
+        let promises = [];
+
+        let diff = fad.diff(curDir, newDir, compareFolders);
+
+        for (let i = 0; i < diff.removed.length; i++) {
+            let params = {
+                collection: 'directory',
+                query: {folder: diff.removed[i].folder}
+            };
+            promises.push(new Promise(function (resolve, reject) {
+                db.remove(params, function (err) {
                     if (err) {
                         reject(err);
-                    }
-                    if (dbItem.length) {
-                        findIssues({'volume.id': dbItem[0].id}, function (err, issues) {
-                            if (err) {
-                                reject(err);
-                            } else {
-                                resolve({volume: dbItem[0], issues: issues});
-                            }
-                        });
                     } else {
-                        addVolume(dirItem.volume, dirItem.start_year, function (err, volume) {
-                            if (err) {
-                                reject(err);
-                            }
-                            addIssues(volume, function (err, issues) {
-                                if (err) {
-                                    reject(err);
-                                } else {
-                                    resolve({volume: volume, issues: issues});
-                                }
-                            });
-                        });
+                        resolve(null);
                     }
                 });
-            });
+            }));
+        }
+        for (let i = 0; i < diff.added.length; i++) {
+            let params = {
+                collection: 'directory',
+                identifier: {folder: diff.added[i].folder},
+                document: diff.added[i]
+            };
+            promises.push(new Promise(function (resolve, reject) {
+                db.replace(params, function (err) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(null);
+                    }
+                });
+            }));
+        }
 
-            getMetadataPromise.then(function(res) {
-                updateVolume(dirItem, res.volume, function(err) {
-                    if (err) {
-                        console.log(err);
-                    }
-                    console.log('Finished updating volume for ' + res.volume.name);
-                });
-                updateIssues(dirItem.issues, res, function(err) {
-                    if (err) {
-                        console.log(err);
-                    }
-                    console.log('Finished updating issues for ' + res.volume.name);
-                });
-            }).catch(function(err) {
-                console.log(err);
+        let same = fad.same(curDir, newDir, compareFolders);
+
+        for (let i = 0; i < same.length; i++) {
+            let curD = curDir.find(function (dir) { return dir.folder === same[i].folder });
+            let newD = newDir.find(function (dir) { return dir.folder === same[i].folder });
+
+            if (fad.same(curD.issues, newD.issues).length !== newD.issues.length) {
+                let params = {
+                    collection: 'directory',
+                    query: {folder: curD.folder},
+                    update: {issues: newD.issues}
+                };
+                promises.push(new Promise(function (resolve, reject) {
+                    db.update(params, function (err) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(null);
+                        }
+                    });
+                }));
+            }
+        }
+
+        Promise.all(promises).then(function() {
+            db.find({collection: 'directory'}, function(err, res) {
+                if (err) {
+                    return cb(err);
+                }
+                return cb(null, res);
             });
+        }).catch(function(err) {
+            return cb(err);
         });
     });
 }
 
 function addVolume(name, year, cb) {
-    requestVolume(name, year, function(err, volume) {
+    findVolumes({name: name, start_year: year}, function(err, res) {
         if (err) {
             return cb(err);
         }
 
-        volume.description = volume.description.replace(/<h4>Collected Editions.*/, '');
-        volume.description = sanitizeHtml(volume.description);
-        volume.cover = volume.image.super_url;
-        volume.detailed = 'N';
-        volume.active = 'N';
-
-        let volumeCoverPromise = new Promise(function(resolve, reject) {
-            let imageUrl = volume.cover;
-            let fileName = imageUrl.split('/').pop();
-            let path = consts.thumbDirectory + '/' + volume.name + ' (' + volume.start_year + ')/' + fileName;
-
-            api.imageRequest(imageUrl, path, function (err, imgPath) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(imgPath);
-                }
-            });
-        });
-
-        volumeCoverPromise.then(function(res) {
-            volume.cover = volume.name + ' (' + volume.start_year + ')/' + res;
-        }).catch(function(err) {
-            console.log(err);
-        }).then(function() {
-            upsertVolume(volume, function(err) {
-                if (err) {
-                    return cb(err);
-                }
-                return cb(null, volume);
-            });
-        });
-    });
-}
-
-function addIssues(volume, cb) {
-    requestIssues(volume.id, function(err, issues) {
-        if (err) {
-            return cb(err);
+        if (res.length) {
+            return cb(null, res[0]);
         }
 
-        let count = 0;
+        requestVolume(name, year, function(err, volume) {
+            if (err) {
+                return cb(err);
+            }
 
-        issues.forEach(function(issue) {
-            issue.description = sanitizeHtml(issue.description);
-            issue.cover = issue.image.super_url;
-            issue.detailed = 'N';
-            issue.active = 'N';
+            volume.description = volume.description.replace(/<h4>Collected Editions.*/, '');
+            volume.description = sanitizeHtml(volume.description);
+            volume.cover = volume.image.super_url;
+            volume.detailed = 'N';
 
-            let issueCoverPromise = new Promise(function (resolve, reject) {
-                let imageUrl = issue.image.super_url;
+            let volumeCoverPromise = new Promise(function(resolve, reject) {
+                let imageUrl = volume.image.super_url;
                 let fileName = imageUrl.split('/').pop();
-                let path = consts.thumbDirectory + '/' + volume.name + ' (' + volume.start_year + ')/' + fileName;
+                let path = consts.thumbDirectory + '/' + volume.id.toString() + '/' + fileName;
 
                 api.imageRequest(imageUrl, path, function (err, imgPath) {
                     if (err) {
@@ -158,21 +171,91 @@ function addIssues(volume, cb) {
                 });
             });
 
-            issueCoverPromise.then(function (res) {
-                issue.cover = volume.name + ' (' + volume.start_year + ')/' + res;
-            }).catch(function (err) {
+            volumeCoverPromise.then(function(res) {
+                volume.cover = res;
+            }).catch(function(err) {
                 console.log(err);
-            }).then(function () {
-                upsertIssue(issue, function (err) {
+            }).then(function() {
+                upsertVolume(volume, function(err) {
+                    if (err) {
+                        return cb(err);
+                    }
+                    return cb(null, volume);
+                });
+            });
+        });
+    });
+}
+
+function addIssues(volumeId, issueCount, cb) {
+    findIssues({'volume.id': volumeId}, function(err, curIssues) {
+        if (err) {
+            return cb(err);
+        }
+
+        if (issueCount != null && curIssues.length === parseInt(issueCount)) {
+            return cb(null, curIssues);
+        }
+
+        let requestPromise = new Promise(function(resolve, reject) {
+            requestIssues(volumeId, function(err, issues) {
+                if (err) {
+                    reject(err);
+                }
+
+                let count = 0;
+
+                issues.forEach(function(issue) {
+                    issue.description = sanitizeHtml(issue.description);
+                    issue.cover = issue.image.super_url;
+                    issue.detailed = 'N';
+
+                    let imageUrl = issue.image.super_url;
+                    let fileName = imageUrl.split('/').pop();
+                    let path = consts.thumbDirectory + '/' + volumeId.toString() + '/' +  fileName;
+
+                    api.imageRequest(imageUrl, path, function (err, imgPath) {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            issue.cover = imgPath;
+                        }
+
+                        count++;
+                        if (count === issues.length) {
+                            resolve(issues);
+                        }
+                    });
+                });
+            });
+        });
+
+        let compareIssues = function(a, b) {
+            return a.id === b.id;
+        };
+
+        requestPromise.then(function(newIssues) {
+            let diff = fad.diff(curIssues, newIssues, compareIssues);
+            let count = 0;
+
+            for (let i = 0; i < diff.added.length; i++) {
+                upsertIssue(diff.added[i], function(err) {
                     if (err) {
                         console.log(err);
                     }
                     count++;
-                    if (count === issues.length) {
-                        return cb(null, issues);
+                    if (count === diff.added.length) {
+                        findIssues({'volume.id': volumeId}, function(err, issues) {
+                            if (err) {
+                                return cb(err);
+                            }
+                            return cb(null, issues);
+                        });
                     }
                 });
-            });
+            }
+        }).catch(function(err) {
+            return cb(err);
         });
     });
 }
@@ -192,13 +275,15 @@ function requestVolume(name, year, cb) {
         volumes = volumes.volume;
 
         //find volume with matching name and year
-        for (let i = 0; i < volumes.length; i++) {
-            if (volumes[i].name === name && volumes[i].start_year === year) {
-                return cb(null, volumes[i]);
-            }
-        }
+        let volume = volumes.find(function(volume) {
+            return volume.name === name && volume.start_year === year
+        });
 
-        return cb('Volume with name and year not found');
+        if (volume) {
+            return cb(null, volume);
+        } else {
+            return cb('Volume with name and year not found');
+        }
     });
 }
 
@@ -221,74 +306,10 @@ function requestIssues(volumeId, cb) {
             issues[i].issue_number = parseInt(issues[i].issue_number);
         }
 
+        issues.sort(function(a, b) { return a.issue_number - b.issue_number });
+
         return cb(null, issues);
     });
-}
-
-function updateVolume(dirVolume, dbVolume, cb) {
-    let wasActive = dbVolume.active;
-
-    if (dirVolume.issues.length > 0) {
-        dbVolume.active = 'Y';
-    } else {
-        dbVolume.active = 'N';
-    }
-
-    if (wasActive !== dbVolume.active) {
-        upsertVolume(dbVolume, function(err) {
-            if (err) {
-                return cb(err);
-            }
-            return cb(null);
-        });
-    } else {
-        return cb(null);
-    }
-}
-
-function updateIssues(dirIssues, metadata, cb) {
-    let dbIssues = metadata.issues;
-
-    for (var i = 0; i < dirIssues.length; i++) {
-        let match = false;
-        for (var j = 0; j < dbIssues.length; j++) {
-            let curDirIssue = consts.replaceEscapedCharacters(dirIssues[i].toString().replace(/\.[^/.]+$/, ''));
-            let curDbIssue = dbIssues[j].volume.name + ' - ' + consts.convertToThreeDigits(dbIssues[j].issue_number.toString());
-            if (curDbIssue === curDirIssue) {
-                match = true;
-                break;
-            }
-        }
-
-        const index = j;
-
-        if (match) {
-            dbIssues[index].active = 'Y';
-            dbIssues[index].date_added = consts.getToday();
-            dbIssues[index].file_path = metadata.volume.name + ' (' + metadata.volume.start_year + ')/' + dirIssues[i];
-            getIssuePageCount(dbIssues[index].file_path, function(err, res) {
-                if (err) {
-                    dbIssues[index] = 'Unknown';
-                }
-                dbIssues[index].page_count = res;
-                upsertIssue(dbIssues[index], function(err) {
-                    if (err) {
-                        return cb(err);
-                    }
-                });
-            });
-        } else {
-            dbIssues[index].active = 'N';
-            dbIssues[index].date_added = '';
-            dbIssues[index].file_path = '';
-            upsertIssue(dbIssues[index], function(err) {
-                if (err) {
-                    return cb(err);
-                }
-            });
-        }
-    }
-    return cb(null);
 }
 
 function findVolumes(query, cb) {
@@ -346,21 +367,7 @@ function upsertIssue(document, cb) {
     });
 }
 
-function getIssuePageCount(filePath, cb) {
-    archive.extractIssue(filePath, function (err, handler, entries, ext) {
-        if (err) {
-            return cb(err);
-        }
-        archive.getPageCount(entries, function (err, count) {
-            if (err) {
-                return cb(err);
-            }
-            return cb(null, count);
-        });
-    });
-}
-
 function sanitizeHtml(html) {
     //return html.replace(/<(?:.|\\n)*?>/g, ''); //this is all tags
-    return html.replace(/<\/?(?!p)\w*\b[^>]*>/g, '');
+    return html.replace(/<\/?(?!p)\w*\b[^>]*>/g, ''); //all but <p> tags
 }
