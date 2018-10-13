@@ -1,49 +1,18 @@
 const db = require('./db');
 const api = require('./api');
-const priorityQueue = require('./priorityqueue').PriorityQueue;
+const promiseQueue = require('./promisequeue').PromiseQueue;
 
-var requestQueue = new priorityQueue();
-var populating = false;
+var requestQueue = new promiseQueue();
 
 setInterval(function () {
     if (!requestQueue.isEmpty()) {
-        let item = requestQueue.dequeue();
-        item = item.item;
-
-        switch(item.type) {
-            case 'volume':
-                console.log('Requesting Volume: ' + item.id);
-                detailVolume(item.id, item.url, function(err) {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        console.log('Updated Volume: ' + item.id);
-                    }
-                });
-                break;
-            case 'issue':
-                console.log('Requesting Issue: ' + item.id);
-                detailIssue(item.id, item.url, function(err) {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        console.log('Updated Issue: ' + item.id);
-                    }
-                });
-                break;
-            case 'story_arc':
-                break;
-            default:
-                break;
-        }
-    } else if (!populating) {
+        requestQueue.dequeue();
+    } else {
         populateRequestQueue();
     }
 }, 1000);
 
 function populateRequestQueue() {
-    populating = true;
-
     let promises = [];
 
     promises.push(new Promise(function(resolve, reject) {
@@ -74,24 +43,27 @@ function populateRequestQueue() {
         });
     }));
 
-    //TODO: add story arc promise
-
     Promise.all(promises).then(function(results) {
         for (let i = 0; i < results[0].length; i++) {
-            requestQueue.enqueue({
-                type: 'volume',
-                id: results[0][i].id,
-                url: results[0][i].api_detail_url
-            }, 1);
+            requestQueue.enqueue('volume-' + results[0][i].id, 1, function(resolve, reject) {
+                detailVolume(results[0][i].id, results[0][i].api_detail_url, function(err) {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve(null);
+                });
+            });
         }
         for (let i = 0; i < results[1].length; i++) {
-            requestQueue.enqueue({
-                type: 'issue',
-                id: results[1][i].id,
-                url: results[1][i].api_detail_url
-            }, 3);
+            requestQueue.enqueue('issue-' + results[1][i].id, 3, function(resolve, reject) {
+                detailIssue(results[1][i].id, results[1][i].api_detail_url, function(err) {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve(null);
+                });
+            });
         }
-        populating = false;
     });
 }
 
@@ -148,7 +120,40 @@ function detailIssue(id, url, cb) {
     });
 }
 
-function detailStoryArc(id, url, cb) {
+function requestStoryArc(arcId, cb) {
+    let params = {
+        url: consts.apiUrl + 'story_arc/' + arcId + '/',
+        fieldList: ['api_detail_url', 'id', 'deck', 'image', 'issues', 'name', 'publisher']
+    };
 
+    api.apiRequest(params, function(err, arc) {
+        if (err) {
+            return cb(err);
+        }
+        return cb(null, arc);
+    });
 }
 
+function findStoryArc(query, cb) {
+    let params = {
+        collection: 'story_arcs',
+        query: query
+    };
+    db.find(params, function(err, res) {
+        if (err) {
+            return cb(err);
+        }
+        return cb(null, res);
+    });
+}
+
+function addStoryArc(arcId, cb) {
+    findStoryArc({id: arcId}, function(err, res) {
+        if (err) {
+            return cb(err);
+        }
+        if (res.length) {
+            return cb(null, res[0]);
+        }
+    });
+}
