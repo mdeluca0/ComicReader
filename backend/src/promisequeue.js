@@ -32,14 +32,11 @@ class PromiseQueue {
     dequeue() {
         if (this.queue.length) {
             let item = this.queue.shift();
-            var that = this;
-            console.log('Started Processing: ' + item.id);
+            let that = this;
             return new Promise(item.func).then(function(){
                 delete that.removeId(item.id);
-                console.log('Finished Processing: ' + item.id);
             }).catch(function(err) {
                 delete that.removeId(item.id);
-                console.log('Finished Processing: ' + item.id);
                 return err;
             });
         }
