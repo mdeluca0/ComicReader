@@ -7,10 +7,10 @@ var requestQueue = new promiseQueue();
 setInterval(function () {
     if (!requestQueue.isEmpty()) {
         requestQueue.dequeue();
-    } else {
-        populateRequestQueue();
+        console.log('Updating item. ' + requestQueue.count() + ' items left in queue.');
     }
-}, 1000);
+    populateRequestQueue();
+}, 1500);
 
 function populateRequestQueue() {
     let promises = [];

@@ -39,7 +39,7 @@ function refresh() {
                 return err;
             }
             newDir.forEach(function(item) {
-                addVolume(item.volume, item.start_year, function(err, volume) {
+                addVolume(item.name, item.start_year, function(err, volume) {
                     if (err) {
                         return err;
                     }
@@ -55,82 +55,141 @@ function refresh() {
 }
 
 function syncDirectory(newDir, cb) {
-    let compareFolders = function(a, b) {
-        return a.folder === b.folder;
-    };
+    db.find({collection: 'directory', query: {parent: null}}, function(err, curVolumes) {
+        if (err) {
+            return cb(err);
+        }
 
-    db.find({collection: 'directory'}, function(err, curDir) {
+        let compareVolumes = function(a, b) {
+            return a.file === b.file;
+        };
+
+        let updates = Object.assign(
+            fad.diff(curVolumes, newDir, compareVolumes),
+            {same: fad.same(newDir, curVolumes, compareVolumes)}
+        );
+
+        let promises = [];
+
+        //Delete removed volumes
+        for (let i = 0; i < updates.removed.length; i++) {
+            let remove = {
+                collection: 'directory',
+                query: {$or: [{_id: updates.removed[i]._id}, {parent: updates.removed[i]._id}]}
+            };
+            promises.push(new Promise(function(resolve, reject) {
+                db.remove(remove, function (err, res) {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve(res);
+                });
+            }));
+        }
+
+        //Add new volumes
+        for (let i = 0; i < updates.added.length; i++) {
+            let issues = updates.added[i].issues;
+            let insert = {
+                collection: 'directory',
+                identifier: {file: updates.added[i].file},
+                document: {
+                    name: updates.added[i].name,
+                    start_year: updates.added[i].start_year,
+                    file: updates.added[i].file,
+                    parent: null
+                }
+            };
+            promises.push(new Promise(function(resolve, reject) {
+                db.replace(insert, function (err, id) {
+                    if (err) {
+                        reject(err);
+                    }
+                    syncIssues(issues, id, function (err) {
+                        if (err) {
+                            reject(err);
+                        }
+                        resolve(null);
+                    });
+                });
+            }));
+        }
+
+        //Update existing volumes
+        for (let i = 0; i < updates.same.length; i++) {
+            let issues = updates.same[i].issues;
+            promises.push(new Promise(function(resolve, reject) {
+                db.find({collection: 'directory', query: {file: updates.same[i].file}}, function(err, res) {
+                    if (err) {
+                        reject(err);
+                    }
+                    syncIssues(issues, res[0]._id.toString(), function (err) {
+                        if (err) {
+                            reject(err);
+                        }
+                        resolve(null);
+                    });
+                });
+            }));
+        }
+
+        Promise.all(promises).then(function() {
+             db.find({collection: 'directory', query: {parent: null}}, function(err, res) {
+                if (err) {
+                    return cb(err);
+                }
+                return cb(null, res);
+             });
+        });
+
+    });
+}
+
+function syncIssues(newIssues, volumeId, cb) {
+    db.find({collection: 'directory', query: {parent: volumeId}}, function(err, res) {
         if (err) {
             return cb(err);
         }
 
         let promises = [];
 
-        let diff = fad.diff(curDir, newDir, compareFolders);
+        let compareIssues = function(a, b) {
+            return a.file === b.file;
+        };
+        let diff = fad.diff(res, newIssues, compareIssues);
 
-        for (let i = 0; i < diff.removed.length; i++) {
-            let params = {
+        for (let j = 0; j < diff.added.length; j++) {
+            let insert = {
                 collection: 'directory',
-                query: {folder: diff.removed[i].folder}
+                identifier: {file: diff.added[j]},
+                document: {file: diff.added[j], parent: volumeId}
             };
-            promises.push(new Promise(function (resolve, reject) {
-                db.remove(params, function (err) {
+            promises.push(new Promise(function(resolve, reject) {
+                db.replace(insert, function (err, res) {
                     if (err) {
                         reject(err);
-                    } else {
-                        resolve(null);
                     }
+                    resolve(res);
                 });
             }));
         }
-        for (let i = 0; i < diff.added.length; i++) {
-            let params = {
+        for (let j = 0; j < diff.removed.length; j++) {
+            let remove = {
                 collection: 'directory',
-                identifier: {folder: diff.added[i].folder},
-                document: diff.added[i]
+                query: {_id: diff.removed[j]._id.toString()}
             };
-            promises.push(new Promise(function (resolve, reject) {
-                db.replace(params, function (err) {
+            promises.push(new Promise(function(resolve, reject) {
+                db.remove(remove, function (err, res) {
                     if (err) {
                         reject(err);
-                    } else {
-                        resolve(null);
                     }
+                    resolve(res);
                 });
             }));
-        }
-
-        let same = fad.same(curDir, newDir, compareFolders);
-
-        for (let i = 0; i < same.length; i++) {
-            let curD = curDir.find(function (dir) { return dir.folder === same[i].folder });
-            let newD = newDir.find(function (dir) { return dir.folder === same[i].folder });
-
-            if (fad.same(curD.issues, newD.issues).length !== newD.issues.length) {
-                let params = {
-                    collection: 'directory',
-                    query: {folder: curD.folder},
-                    update: {issues: newD.issues}
-                };
-                promises.push(new Promise(function (resolve, reject) {
-                    db.update(params, function (err) {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(null);
-                        }
-                    });
-                }));
-            }
         }
 
         Promise.all(promises).then(function() {
-            db.find({collection: 'directory'}, function(err, res) {
-                if (err) {
-                    return cb(err);
-                }
-                return cb(null, res);
-            });
+           return cb(null);
         }).catch(function(err) {
             return cb(err);
         });

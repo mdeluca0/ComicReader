@@ -44,6 +44,9 @@ class PromiseQueue {
     isEmpty() {
         return this.queue.length === 0;
     }
+    count() {
+        return this.queue.length;
+    }
     removeId(id) {
         delete this.map[id];
     }

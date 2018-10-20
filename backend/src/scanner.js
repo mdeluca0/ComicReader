@@ -1,7 +1,7 @@
 const fs = require('fs');
 const consts = require('./consts');
 
-function scan (cb) {
+function scan(cb) {
     fs.readdir(consts.comicDirectory, function (err, folders) {
         if (err) {
             return cb(err);
@@ -15,14 +15,14 @@ function scan (cb) {
     });
 }
 
-function scanIssues (folders, directory, cb) {
+function scanIssues(folders, directory, cb) {
     if (!folders.length) {
         return cb(null, directory);
     }
 
-    var folder = folders.shift();
+    let folder = folders.shift();
 
-    var startYear = folder.match(/\([0-9][0-9][0-9][0-9]\)/g);
+    let startYear = folder.match(/\([0-9][0-9][0-9][0-9]\)/g);
 
     if (!startYear) {
         return cb("No year found");
@@ -30,21 +30,21 @@ function scanIssues (folders, directory, cb) {
 
     startYear = startYear.pop().replace('(', '').replace(')', '');
 
-    var title = folder.replace(/\.[^/.]+$/, '');
+    let title = folder.replace(/\.[^/.]+$/, '');
     title = folder.replace('(' + startYear + ')', '').trim();
 
-    var path = consts.comicDirectory + '/' + folder;
+    let path = consts.comicDirectory + '/' + folder;
 
     fs.readdir(path, function (err, issues) {
         if (err) {
             return cb(err);
         }
 
-        var issuesCopy = issues.slice();
+        let issuesCopy = issues.slice();
 
         directory.push({
-            'folder': folder,
-            'volume': title,
+            'file': folder,
+            'name': title,
             'start_year': startYear,
             'issues': issuesCopy
         });
@@ -53,10 +53,10 @@ function scanIssues (folders, directory, cb) {
     });
 }
 
-function getIssueFile (issue, cb) {
-    var issueNumber = consts.convertToThreeDigits(issue.issue_number);
-    var issuePath = consts.comicDirectory + '/' + issue.volumeName + ' (' + issue.startYear + ')';
-    var fileName =  issue.volumeName + ' - ' + issueNumber;
+function getIssueFile(issue, cb) {
+    let issueNumber = consts.convertToThreeDigits(issue.issue_number);
+    let issuePath = consts.comicDirectory + '/' + issue.volumeName + ' (' + issue.startYear + ')';
+    let fileName =  issue.volumeName + ' - ' + issueNumber;
 
     fs.readdir(issuePath, function (err, issues) {
         if (err) {

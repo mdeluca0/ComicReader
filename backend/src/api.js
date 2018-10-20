@@ -35,7 +35,7 @@ function apiRequestHelper(options, offset, results, cb) {
         }
 
         // res.body is xml
-        results += res.body.match(/<results>(.*)<\/results>/g);
+        results += res.body.match(/<results>(.*)<\/results>/gs);
         results = results.replace('<results>', '').replace('</results>', '');
 
         //regex match number of page results and total results

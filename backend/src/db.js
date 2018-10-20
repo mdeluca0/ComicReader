@@ -1,4 +1,5 @@
 const mongo = require('mongodb').MongoClient;
+const ObjectId = require('mongodb').ObjectId;
 const url = require('./consts').dbUrl;
 var client = null;
 
@@ -24,8 +25,10 @@ function connect(cb) {
 }
 
 function setIndices() {
+    client.db('main').collection('directory').createIndex({name: 'text'});
     client.db('main').collection('volumes').createIndex({name: 'text'});
     client.db('main').collection('issues').createIndex({name: 'text'});
+    client.db('main').collection('story_arcs').createIndex({name: 'text'});
 }
 
 function find(options, cb) {
@@ -38,15 +41,24 @@ function find(options, cb) {
 
         var q = db.collection(options.collection);
 
+        options.query = options.query || {};
+        options.filter = options.filter || {};
+        options.sort = options.sort || {};
+
+        if (typeof(options.query._id) !== 'undefined') {
+            options.query._id = new ObjectId(options.query._id);
+        }
+
         // Find
-        if (typeof(options.query) !== 'undefined') {
-            q = q.find(options.query);
-        } else {
-            q = q.find();
+        q = q.find(options.query);
+
+        // Filter
+        if (options.filter !== {}) {
+            q = q.project(options.filter);
         }
 
         // Sort
-        if (typeof(options.sort) !== 'undefined') {
+        if (options.sort !== {}) {
             q = q.sort(options.sort);
         }
 
@@ -72,7 +84,7 @@ function replace(options, cb) {
             if (err) {
                 return cb(err);
             }
-            return cb(null, res);
+            return cb(null, res.upsertedId._id.toString());
         });
     });
 }
