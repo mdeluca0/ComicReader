@@ -38,6 +38,11 @@ export class RestService {
       .pipe(map(this.extractData));
   }
 
+  getPageCount(id): Observable<any> {
+    return this.http.get(endpoint + 'issues/' + <string>id + '/page_count')
+      .pipe(map(this.extractData));
+  }
+
   getPage(id, pageNo): Observable<any> {
     return this.http.get(endpoint + 'issues/' + <string>id + '/' + <string>pageNo)
       .pipe(map(this.extractData));

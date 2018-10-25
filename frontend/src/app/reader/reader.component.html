@@ -12,18 +12,18 @@
 <mat-toolbar *ngIf="issue != null" [@toolbarState]="toolbarState">
   <mat-toolbar-row (mouseenter)="toggleToolbar()" (mouseleave)="toggleToolbar()">
     <div class="reader-breadcrumbs">
-      <div class="reader-breadcrumb" routerLink="/volumes/{{volume.id}}">{{volume.name}}</div>
-      <div class="reader-breadcrumb" routerLink="/issues/{{issue.id}}">#{{issue.issue_number}} - {{issue.name}}</div>
+      <div class="reader-breadcrumb" routerLink="/volumes/{{volume._id}}">{{volume.name}}</div>
+      <div class="reader-breadcrumb" routerLink="/issues/{{issue._id}}">#{{issue.issue_number}} - {{issue.metadata.name}}</div>
     </div>
 
     <div>
       <mat-icon>find_in_page</mat-icon>
-      <mat-slider class="page-slider" (input)="onPageChange($event)" min="1" max="{{issue.page_count}}"
+      <mat-slider class="page-slider" (input)="onPageChange($event)" min="1" max="{{pages.length}}"
                 value="{{curPageNum+1}}" tickInterval="1" thumbLabel></mat-slider>
     </div>
 
     <div class="button-grp">
-      <button mat-raised-button title="Previous Issue" disabled="{{prevIssue.id == null}}" routerLink="/reader/{{prevIssue.id}}">
+      <button mat-raised-button title="Previous Issue" disabled="{{prevIssue._id == null}}" routerLink="/reader/{{prevIssue._id}}">
         <mat-icon>skip_previous</mat-icon>
       </button>
       <button mat-raised-button title="Previous Page" disabled="{{curPageNum === 0}}" (click)="prevPage()">
@@ -32,7 +32,7 @@
       <button mat-raised-button title="Next Page" disabled="{{curPageNum === pages.length-1}}" (click)="nextPage()">
         <mat-icon>fast_forward</mat-icon>
       </button>
-      <button mat-raised-button title="Next Issue" disabled="{{nextIssue.id == null}}" routerLink="/reader/{{nextIssue.id}}">
+      <button mat-raised-button title="Next Issue" disabled="{{nextIssue._id == null}}" routerLink="/reader/{{nextIssue._id}}">
         <mat-icon>skip_next</mat-icon>
       </button>
     </div>
@@ -44,7 +44,7 @@
       <mat-icon>zoom_in</mat-icon>
     </div>
 
-    <button mat-raised-button title="Close Issue" class="close-button" color="warn" routerLink="/issues/{{issue.id}}">
+    <button mat-raised-button title="Close Issue" class="close-button" color="warn" routerLink="/issues/{{issue._id}}">
       <mat-icon>clear</mat-icon>
     </button>
   </mat-toolbar-row>

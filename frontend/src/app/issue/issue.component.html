@@ -4,27 +4,27 @@
 
 <div class="issue-container" *ngIf="issue != null && volume != null">
   <div class="issue-left">
-    <img class="issue-cover" src="../../../assets/thumbs/{{issue.cover}}" routerLink="/reader/{{issue.id}}"/>
+    <img class="issue-cover" src="../../../assets/thumbs/{{issue.metadata.volume.id}}/{{issue.metadata.cover}}" routerLink="/reader/{{issue.id}}"/>
   </div>
 
   <div class="issue-right">
     <div class="issue-header">
       <h1>{{volume.name}}</h1>
       <span class="fill-remaining-space"></span>
-      <button mat-raised-button color="warn" routerLink="/reader/{{issue.id}}">
+      <button mat-raised-button color="warn" routerLink="/reader/{{issue._id}}">
         Read Now
       </button>
-      <button mat-raised-button title="Previous Issue" disabled="{{prevIssue.id == null}}" routerLink="/issues/{{prevIssue.id}}">
+      <button mat-raised-button title="Previous Issue" disabled="{{prevIssue._id == null}}" routerLink="/issues/{{prevIssue._id}}">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <button mat-raised-button title="Next Issue" disabled="{{nextIssue.id == null}}" routerLink="/issues/{{nextIssue.id}}">
+      <button mat-raised-button title="Next Issue" disabled="{{nextIssue._id == null}}" routerLink="/issues/{{nextIssue._id}}">
         <mat-icon>arrow_forward</mat-icon>
       </button>
     </div>
 
-    <div>{{'#' + issue.issue_number + ' - ' + issue.name}}<br/>{{issue.cover_date}}</div>
-    <p>{{'Written By: ' + issue.writer}}<br/>{{'Illustrated By: ' + issue.artist}}</p>
-    <p>{{issue.page_count + ' pages'}}</p>
-    <app-description-text [text]="issue.description"></app-description-text>
+    <div>{{'#' + issue.issue_number + ' - ' + issue.metadata.name}}<br/>{{issue.metadata.cover_date}}</div>
+    <p>{{'Written By: ' + issue.metadata.writer}}<br/>{{'Illustrated By: ' + issue.metadata.artist}}</p>
+    <p>{{pageCount + ' pages'}}</p>
+    <app-description-text [text]="issue.metadata.description"></app-description-text>
   </div>
 </div>

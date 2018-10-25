@@ -22,7 +22,6 @@ export class VolumeComponent implements OnInit {
   ngOnInit() {
     this.rest.getVolume(this.route.snapshot.params['id']).subscribe((data: {}) => {
       this.volume = data[0];
-      this.volume.publisher = this.volume.publisher.name;
 
       this.breadcrumbs.push(
         {icon: 'home', link: '/'},

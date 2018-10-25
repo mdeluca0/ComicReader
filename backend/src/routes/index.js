@@ -15,7 +15,7 @@ router.get('/volumes', function(req, res) {
 
     let query = {parent: null};
     let sort = {name: 1};
-    let filter = {name: 1, start_year: 1, cover: 1};
+    let filter = {id: 1, name: 1, start_year: 1, cover: 1};
 
     repo.findVolumes(query, sort, filter, function(err, volumes) {
         if (err) {
@@ -33,7 +33,7 @@ router.get('/volumes', function(req, res) {
 
 router.get('/volumes/:volumeId', function(req, res) {
     let query = {_id: db.convertId(req.params.volumeId)};
-    let filter = {description: 1, name: 1, start_year: 1, cover: 1, 'publisher.name': 1};
+    let filter = {id: 1, description: 1, name: 1, start_year: 1, cover: 1, 'publisher.name': 1};
 
     repo.findVolumes(query, {}, filter, function(err, volume) {
         if (err) {
@@ -52,7 +52,7 @@ router.get('/volumes/:volumeId/issues', function(req, res) {
 
     let query = {parent: db.convertId(req.params.volumeId)};
     let sort = {issue_number: 1};
-    let filter = {name: 1, issue_number: 1, cover: 1};
+    let filter = {id: 1, name: 1, issue_number: 1, cover: 1, 'volume.id': 1};
 
     repo.findIssues(query, sort, filter, function(err, issues) {
         if (err) {
@@ -75,7 +75,7 @@ router.get('/issues', function(req, res) {
 
     let query = {parent: {$ne: null}};
     let sort = {'volume.name': 1, issue_number: 1};
-    let filter = {name: 1, issue_number: 1, cover: 1};
+    let filter = {id: 1, name: 1, issue_number: 1, cover: 1, 'volume.id': 1};
 
     repo.findIssues(query, sort, filter, function(err, issues) {
         if (err) {

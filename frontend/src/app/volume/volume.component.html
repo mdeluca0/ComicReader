@@ -3,12 +3,12 @@
 <mat-progress-spinner *ngIf="volume == null" mode="indeterminate"></mat-progress-spinner>
 
 <div class="volume-header" *ngIf="volume != null">
-  <img class="volume-cover" src="../../../assets/thumbs/{{volume.cover}}"/>
+  <img class="volume-cover" src="../../../assets/thumbs/{{volume.metadata.id}}/{{volume.metadata.cover}}"/>
   <div class="volume-details">
     <h1 class="volume-name">{{volume.name}}</h1>
     <div class="volume-year">{{volume.start_year}}</div>
-    <div class="volume-publisher">{{volume.publisher}}</div>
-    <app-description-text [text]="volume.description"></app-description-text>
+    <div class="volume-publisher">{{volume.metadata.publisher.name}}</div>
+    <app-description-text [text]="volume.metadata.description"></app-description-text>
   </div>
 </div>
 

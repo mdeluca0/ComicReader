@@ -18,3 +18,7 @@ mat-progress-spinner {
 .fill-remaining-space {
   flex-grow: 1;
 }
+
+.blank-cover {
+  background-color: #adadad;
+}

@@ -2,3 +2,7 @@
   height: 58px;
   overflow: hidden;
 }
+
+button {
+  margin-bottom: 16px;
+}

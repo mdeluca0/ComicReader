@@ -1,4 +1,4 @@
-import {Component, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-issue-card',
@@ -7,7 +7,18 @@ import {Component, Input } from '@angular/core';
 })
 export class IssueCardComponent {
 
-  @Input('issue') issue:{};
+  @Input('issue') issue:{
+    _id:string,
+    issue_number:string,
+    metadata:{
+      name:string,
+      cover:string,
+      volume:{
+        name:string,
+        id:string
+      }
+    }
+  };
 
   constructor() { }
 }

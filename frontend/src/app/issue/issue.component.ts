@@ -13,6 +13,7 @@ export class IssueComponent implements OnInit {
   nextIssue:any = null;
   prevIssue:any = null;
   volume:any = null;
+  pageCount:any = null;
   breadcrumbs:any = [];
 
   constructor(public rest:RestService, private route: ActivatedRoute) { }
@@ -24,6 +25,7 @@ export class IssueComponent implements OnInit {
         this.nextIssue = null;
         this.prevIssue = null;
         this.volume = null;
+        this.pageCount = '';
         this.breadcrumbs = [];
 
         this.rest.getIssue(params['id']).subscribe((data: {}) => {
@@ -32,34 +34,31 @@ export class IssueComponent implements OnInit {
           this.prevIssue = this.issue.prevIssue;
           this.volume = this.issue.volume;
 
-          //TODO: break out sub array filtering to it's own method
-          this.issue.writer = "";
-          this.issue.artist = "";
-          for (let i = 0; i < this.issue.person_credits.person.length; i++) {
-            if (this.issue.person_credits.person[i].role.toLowerCase().includes('writer')) {
-              this.issue.writer += this.issue.person_credits.person[i].name + ', ';
-            }
-            if (this.issue.person_credits.person[i].role.toLowerCase().includes('artist') ||
-              this.issue.person_credits.person[i].role.toLowerCase().includes('penciler')) {
-              this.issue.artist += this.issue.person_credits.person[i].name + ', ';
-            }
-          }
-          this.issue.writer = this.issue.writer.slice(0, -2);
-          this.issue.artist = this.issue.artist.slice(0, -2);
+          this.rest.getPageCount(params['id']).subscribe((data: {}) => {
+            this.pageCount = data['page_count'];
+          });
+
+          this.issue.metadata.writer = IssueComponent.getPeopleByRole(this.issue.metadata.person_credits.person, 'writer');
+          this.issue.metadata.artist = IssueComponent.getPeopleByRole(this.issue.metadata.person_credits.person, 'artist|penciler');
 
           this.breadcrumbs = [
             {icon: 'home', link: '/'},
-            {name: this.volume.name, link: '/volumes/' + this.volume.id.toString()},
-            {name: '#' + this.issue.issue_number.toString() + ' - ' + this.issue.name}
+            {name: this.volume.name, link: '/volumes/' + this.volume._id.toString()},
+            {name: '#' + this.issue.issue_number.toString() + (' - ' + this.issue.metadata.name) || ''}
           ];
 
-          /*this.issue.characters = "";
-          for (let i = 0; i < this.issue.character_credits.character.length; i++) {
-            this.issue.characters += this.issue.character_credits.character[i].name + ', ';
-          }
-          this.issue.characters = this.issue.characters.slice(0, -2);*/
         });
       }
     );
+  }
+
+  static getPeopleByRole(people, role) {
+    let result = [];
+    for (let i = 0; i < people.length; i++) {
+      if (people[i].role.toLowerCase().match(role)) {
+        result.push(people[i].name);
+      }
+    }
+    return result.join(', ');
   }
 }

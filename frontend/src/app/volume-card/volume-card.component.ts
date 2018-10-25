@@ -7,7 +7,15 @@ import {Component, Input } from '@angular/core';
 })
 export class VolumeCardComponent {
 
-  @Input('volume') volume:{};
+  @Input('volume') volume:{
+    name:string,
+    start_year:string,
+    _id:string,
+    metadata: {
+      id:string,
+      cover:string
+    }
+  };
 
   constructor() { }
 

@@ -48,15 +48,17 @@ export class ReaderComponent implements OnInit {
           this.volume = this.issue.volume;
           this.nextIssue = this.issue.nextIssue;
           this.prevIssue = this.issue.prevIssue;
-          this.pages = new Array<number>(this.issue.page_count);
-          this.goToPage(this.curPageNum);
+          this.rest.getPageCount(params['id']).subscribe((data: {}) => {
+            this.pages = new Array<number>(parseInt(data['page_count']));
+            this.goToPage(this.curPageNum);
+          });
         });
       }
     );
   }
 
   getPage(pageNo) {
-    this.rest.getPage(this.issue.id, pageNo).subscribe((data: {pageNo, image}) => {
+    this.rest.getPage(this.issue._id, pageNo).subscribe((data: {pageNo, image}) => {
       this.pages[parseInt(data.pageNo)] = 'data:image/jpg;base64,' + data.image;
     });
   }
