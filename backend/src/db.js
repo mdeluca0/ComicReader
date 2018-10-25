@@ -31,6 +31,10 @@ function setIndices() {
     client.db('main').collection('story_arcs').createIndex({name: 'text'});
 }
 
+function convertId(id) {
+    return new ObjectId(id);
+}
+
 function find(options, cb) {
     connect(function (err, client) {
         if (err) {
@@ -44,10 +48,6 @@ function find(options, cb) {
         options.query = options.query || {};
         options.filter = options.filter || {};
         options.sort = options.sort || {};
-
-        if (typeof(options.query._id) !== 'undefined') {
-            options.query._id = new ObjectId(options.query._id);
-        }
 
         // Find
         q = q.find(options.query);
@@ -84,7 +84,11 @@ function replace(options, cb) {
             if (err) {
                 return cb(err);
             }
-            return cb(null, res.upsertedId._id.toString());
+            if (res.upsertedId !== null) {
+                return cb(null, res.upsertedId._id.toString());
+            } else {
+                return cb(null);
+            }
         });
     });
 }
@@ -123,7 +127,32 @@ function remove(options, cb) {
     });
 }
 
+function aggregate(options, cb) {
+    connect(function(err, client) {
+        if (err) {
+            return cb(err);
+        }
+
+        var db = client.db('main');
+
+        db.collection(options.collection).aggregate(options.aggregation, function(err, res) {
+            if (err) {
+                return cb(err);
+            }
+            res.toArray(function (err, res) {
+                if (err) {
+                    return cb(err);
+                } else {
+                    return cb(null, res);
+                }
+            });
+        });
+    });
+}
+
 module.exports.find = find;
 module.exports.replace = replace;
 module.exports.update = update;
 module.exports.remove = remove;
+module.exports.aggregate = aggregate;
+module.exports.convertId = convertId;

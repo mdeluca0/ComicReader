@@ -43,7 +43,7 @@ function refresh() {
                     if (err) {
                         return err;
                     }
-                    addIssues(volume.id, volume.count_of_issues, function(err, issues) {
+                    addIssues(volume.id, volume.start_year, volume.count_of_issues, function(err, issues) {
                         if (err) {
                             return err;
                         }
@@ -123,6 +123,9 @@ function syncDirectory(newDir, cb) {
                     if (err) {
                         reject(err);
                     }
+                    if (!res.length) {
+                        resolve(null);
+                    }
                     syncIssues(issues, res[0]._id.toString(), function (err) {
                         if (err) {
                             reject(err);
@@ -146,7 +149,7 @@ function syncDirectory(newDir, cb) {
 }
 
 function syncIssues(newIssues, volumeId, cb) {
-    db.find({collection: 'directory', query: {parent: volumeId}}, function(err, res) {
+    db.find({collection: 'directory', query: {parent: db.convertId(volumeId)}}, function(err, res) {
         if (err) {
             return cb(err);
         }
@@ -159,10 +162,15 @@ function syncIssues(newIssues, volumeId, cb) {
         let diff = fad.diff(res, newIssues, compareIssues);
 
         for (let j = 0; j < diff.added.length; j++) {
+            let document = {
+                file: diff.added[j],
+                issue_number: parseInt(diff.added[j].match(/[0-9][0-9][0-9]/g).pop()),
+                parent: db.convertId(volumeId)
+            };
             let insert = {
                 collection: 'directory',
-                identifier: {file: diff.added[j]},
-                document: {file: diff.added[j], parent: volumeId}
+                identifier: {file: document.file},
+                document: document
             };
             promises.push(new Promise(function(resolve, reject) {
                 db.replace(insert, function (err, res) {
@@ -246,7 +254,7 @@ function addVolume(name, year, cb) {
     });
 }
 
-function addIssues(volumeId, issueCount, cb) {
+function addIssues(volumeId, startYear, issueCount, cb) {
     findIssues({'volume.id': volumeId}, function(err, curIssues) {
         if (err) {
             return cb(err);
@@ -265,6 +273,7 @@ function addIssues(volumeId, issueCount, cb) {
                 let count = 0;
 
                 issues.forEach(function(issue) {
+                    issue.volume.start_year = startYear;
                     issue.description = sanitizeHtml(issue.description);
                     issue.cover = issue.image.super_url;
                     issue.detailed = 'N';
@@ -320,7 +329,7 @@ function addIssues(volumeId, issueCount, cb) {
 }
 
 function requestVolume(name, year, cb) {
-    var params = {
+    let params = {
         url: consts.apiUrl + 'volumes/',
         filter: 'name:' + consts.replaceEscapedCharacters(name).toLowerCase().replace(/[ ]/g, '_'),
         fieldList: ['api_detail_url', 'id', 'name', 'start_year', 'count_of_issues', 'description', 'image']
@@ -347,7 +356,7 @@ function requestVolume(name, year, cb) {
 }
 
 function requestIssues(volumeId, cb) {
-    var params = {
+    let params = {
         url: consts.apiUrl + 'issues/',
         filter: 'volume:' + volumeId.toString(),
         fieldList: ['api_detail_url', 'id', 'cover_date', 'image', 'issue_number', 'name', 'volume', 'description']

@@ -2,23 +2,24 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const archive = require('../archive');
+const repo = require('../repository');
 
 const volumePageSize = 50;
 const issuePageSize = 50;
 
 router.get('/volumes', function(req, res) {
-    var offset = 0;
+    let offset = 0;
     if (req.query.offset) {
         offset = parseInt(req.query.offset);
     }
 
-    var params = {
-        collection: 'volumes',
-        sort: {'name': 1}
-    };
+    let query = {parent: null};
+    let sort = {name: 1};
+    let filter = {name: 1, start_year: 1, cover: 1};
 
-    db.find(params, function(err, volumes) {
+    repo.findVolumes(query, sort, filter, function(err, volumes) {
         if (err) {
+            //TODO: send error response
             return err;
         }
 
@@ -31,12 +32,12 @@ router.get('/volumes', function(req, res) {
 });
 
 router.get('/volumes/:volumeId', function(req, res) {
-    var params = {
-        collection: 'volumes',
-        query: {'id': req.params.volumeId}
-    };
-    db.find(params, function(err, volume) {
+    let query = {_id: db.convertId(req.params.volumeId)};
+    let filter = {description: 1, name: 1, start_year: 1, cover: 1, 'publisher.name': 1};
+
+    repo.findVolumes(query, {}, filter, function(err, volume) {
         if (err) {
+            //TODO: send error response
             return err;
         }
         res.send(volume);
@@ -44,19 +45,18 @@ router.get('/volumes/:volumeId', function(req, res) {
 });
 
 router.get('/volumes/:volumeId/issues', function(req, res) {
-    var offset = 0;
+    let offset = 0;
     if (req.query.offset) {
         offset = parseInt(req.query.offset);
     }
 
-    var params = {
-        collection: 'issues',
-        query: {'active': 'Y', 'volume.id': req.params.volumeId},
-        sort: {'issue_number': 1}
-    };
-    db.find(params, function(err, issues) {
+    let query = {parent: db.convertId(req.params.volumeId)};
+    let sort = {issue_number: 1};
+    let filter = {name: 1, issue_number: 1, cover: 1};
+
+    repo.findIssues(query, sort, filter, function(err, issues) {
         if (err) {
-            return err;
+            //TODO: send error
         }
 
         issues = {
@@ -68,18 +68,18 @@ router.get('/volumes/:volumeId/issues', function(req, res) {
 });
 
 router.get('/issues', function(req, res) {
-    var offset = 0;
+    let offset = 0;
     if (req.query.offset) {
         offset = parseInt(req.query.offset);
     }
 
-    var params = {
-        collection: 'issues',
-        sort: {'issue_number': 1}
-    };
-    db.find(params, function(err, issues) {
+    let query = {parent: {$ne: null}};
+    let sort = {'volume.name': 1, issue_number: 1};
+    let filter = {name: 1, issue_number: 1, cover: 1};
+
+    repo.findIssues(query, sort, filter, function(err, issues) {
         if (err) {
-            return err;
+            //TODO: send error response
         }
 
         issues = {
@@ -91,13 +91,11 @@ router.get('/issues', function(req, res) {
 });
 
 router.get('/issues/:issueId', function(req, res) {
-    var params = {
-        collection: 'issues',
-        query: {'id': req.params.issueId}
-    };
-    db.find(params, function(err, issue) {
+    let query = {_id: db.convertId(req.params.issueId)};
+
+    repo.findIssues(query, {}, {}, function(err, issue) {
         if (err) {
-            return err;
+            //TODO: send error response
         }
 
         issue[0].nextIssue = {};
@@ -110,12 +108,13 @@ router.get('/issues/:issueId', function(req, res) {
 
         const nextIssueNum = issue[0].issue_number + 1;
         const prevIssueNum = issue[0].issue_number - 1;
-        params.query = {$or: [
-            {'volume.id': issue[0].volume.id, issue_number: nextIssueNum},
-            {'volume.id': issue[0].volume.id, issue_number: prevIssueNum}
+        let query = {$or: [
+            {parent: issue[0].parent, issue_number: nextIssueNum},
+            {parent: issue[0].parent, issue_number: prevIssueNum}
         ]};
+        let filter = {name: 1, issue_number: 1, cover: 1};
 
-        db.find(params, function(err, issues) {
+        repo.findIssues(query, {}, filter, function(err, issues) {
             if (err) {
                 res.send(issue);
                 return err;
@@ -123,8 +122,8 @@ router.get('/issues/:issueId', function(req, res) {
 
             for (let i = 0; i < issues.length; i++) {
                 let issueInfo = {
-                    id: issues[i].id,
-                    name: issues[i].name,
+                    _id: issues[i]._id.toString(),
+                    name: issues[i].metadata.name || '',
                     issue_number: issues[i].issue_number
                 };
                 if (issues[i].issue_number === nextIssueNum) {
@@ -140,24 +139,76 @@ router.get('/issues/:issueId', function(req, res) {
     });
 });
 
-router.get('/issues/:issueId/:pageNo', function(req, res) {
-    var params = {
-        collection: 'issues',
-        query: {'id': req.params.issueId}
-    };
-    var pageNo = req.params.pageNo;
+router.get('/issues/:issueId/page_count', function(req, res) {
+    let query = {_id: db.convertId(req.params.issueId)}
 
-    db.find(params, function(err, issue) {
+    repo.findIssues(query, {}, {}, function(err, issue) {
         if (err) {
-            return err;
+            //todo: send error response
+            return;
         }
-        archive.extractIssue(issue[0].file_path, function (err, handler, entries, ext) {
+        if (!issue.length) {
+            //todo: send error response
+            return;
+        }
+
+        issue = issue.shift();
+
+        let path = issue.file;
+
+        if (issue.volume.file) {
+            path = issue.volume.file + '/' + path;
+        }
+
+        archive.extractIssue(path, function (err, handler, entries) {
             if (err) {
-                return err;
+                //todo: send error response
+                return;
+            }
+            archive.getPageCount(entries, function (err, count) {
+                if (err) {
+                    //todo: send error response
+                    return;
+                }
+                res.send({page_count: count});
+            });
+        });
+    });
+});
+
+router.get('/issues/:issueId/:pageNo', function(req, res) {
+    let query = {_id: db.convertId(req.params.issueId)}
+    let pageNo = req.params.pageNo;
+
+    if (isNaN(parseInt(pageNo))) {
+        //todo: send error response
+        return;
+    }
+
+    repo.findIssues(query, {}, {}, function(err, issue) {
+        if (err) {
+            //todo: send error response
+        }
+        if (!issue.length) {
+            //todo: send error response
+            return;
+        }
+
+        issue = issue.shift();
+
+        let path = issue.file;
+
+        if (issue.volume.file) {
+            path = issue.volume.file + '/' + path;
+        }
+
+        archive.extractIssue(path, function (err, handler, entries, ext) {
+            if (err) {
+                //todo: send error response
             }
             archive.getPage(handler, entries, ext, pageNo, function (err, base64Img) {
                 if (err) {
-                    return err;
+                    //todo: send error response
                 }
                 res.send({
                     pageNo: pageNo,
@@ -168,22 +219,8 @@ router.get('/issues/:issueId/:pageNo', function(req, res) {
     });
 });
 
-router.get('/issues/:issueId/page_count', function(req, res) {
-    /*archive.extractIssue(filePath, function (err, handler, entries, ext) {
-        if (err) {
-            return cb(err);
-        }
-        archive.getPageCount(entries, function (err, count) {
-            if (err) {
-                return cb(err);
-            }
-            return cb(null, count);
-        });
-    });*/
-});
-
 router.get('/results', function(req, res) {
-    var searchQuery = "";
+    /*var searchQuery = "";
     if (req.query.search_query) {
         searchQuery = req.query.search_query.toString();
     } else {
@@ -224,7 +261,7 @@ router.get('/results', function(req, res) {
            Object.assign(resultsMerge, promise);
         });
         res.send(resultsMerge);
-    });
+    });*/
 });
 
 module.exports = router;
