@@ -1,9 +1,11 @@
 const chokidar = require('chokidar');
 const fad = require('fast-array-diff');
 const scanner = require('./scanner');
-const db = require('./db');
-const api = require('./api');
 const consts = require('./consts');
+const directoryRepo = require('./repositories/directory-repository');
+const volumesRepo = require('./repositories/volumes-repository');
+const issuesRepo = require('./repositories/issues-repository');
+const apiRepo = require('./repositories/api-repository');
 
 const watcher = chokidar.watch(consts.comicDirectory, {ignored: /(^|[\/\\])\../, persistent: true});
 
@@ -55,7 +57,7 @@ function refresh() {
 }
 
 function syncDirectory(newDir, cb) {
-    db.find({collection: 'directory', query: {parent: null}}, function(err, curVolumes) {
+    directoryRepo.find({parent: null}, {name: 1, start_year: 1}, {}, function(err, curVolumes) {
         if (err) {
             return cb(err);
         }
@@ -72,13 +74,15 @@ function syncDirectory(newDir, cb) {
         let promises = [];
 
         //Delete removed volumes
-        for (let i = 0; i < updates.removed.length; i++) {
-            let remove = {
-                collection: 'directory',
-                query: {$or: [{_id: updates.removed[i]._id}, {parent: updates.removed[i]._id}]}
-            };
+        if (updates.removed.length) {
+            let removeQuery = [];
+            for (let i = 0; i < updates.removed.length; i++) {
+                removeQuery.push({_id: updates.removed[i]._id});
+                removeQuery.push({parent: updates.removed[i]._id});
+            }
+            removeQuery = {$or: removeQuery};
             promises.push(new Promise(function(resolve, reject) {
-                db.remove(remove, function (err, res) {
+                directoryRepo.remove(removeQuery, function (err, res) {
                     if (err) {
                         reject(err);
                     }
@@ -90,22 +94,19 @@ function syncDirectory(newDir, cb) {
         //Add new volumes
         for (let i = 0; i < updates.added.length; i++) {
             let issues = updates.added[i].issues;
-            let insert = {
-                collection: 'directory',
-                identifier: {file: updates.added[i].file},
-                document: {
-                    name: updates.added[i].name,
-                    start_year: updates.added[i].start_year,
-                    file: updates.added[i].file,
-                    parent: null
-                }
+            let query = {file: updates.added[i].file};
+            let document = {
+                name: updates.added[i].name,
+                start_year: updates.added[i].start_year,
+                file: updates.added[i].file,
+                parent: null
             };
             promises.push(new Promise(function(resolve, reject) {
-                db.replace(insert, function (err, id) {
+                directoryRepo.upsert(query, document, function (err, res) {
                     if (err) {
                         reject(err);
                     }
-                    syncIssues(issues, id, function (err) {
+                    syncIssues(issues, res.upsertedId._id, function (err) {
                         if (err) {
                             reject(err);
                         }
@@ -119,7 +120,7 @@ function syncDirectory(newDir, cb) {
         for (let i = 0; i < updates.same.length; i++) {
             let issues = updates.same[i].issues;
             promises.push(new Promise(function(resolve, reject) {
-                db.find({collection: 'directory', query: {file: updates.same[i].file}}, function(err, res) {
+                directoryRepo.find({file: updates.same[i].file}, {name: 1, start_year: 1}, {}, function(err, res) {
                     if (err) {
                         reject(err);
                     }
@@ -137,7 +138,7 @@ function syncDirectory(newDir, cb) {
         }
 
         Promise.all(promises).then(function() {
-             db.find({collection: 'directory', query: {parent: null}}, function(err, res) {
+             directoryRepo.find({parent: null}, {name: 1, start_year: 1}, {}, function(err, res) {
                 if (err) {
                     return cb(err);
                 }
@@ -149,7 +150,9 @@ function syncDirectory(newDir, cb) {
 }
 
 function syncIssues(newIssues, volumeId, cb) {
-    db.find({collection: 'directory', query: {parent: db.convertId(volumeId)}}, function(err, res) {
+    volumeId = consts.convertId(volumeId);
+
+    directoryRepo.find({parent: volumeId}, {}, {}, function(err, res) {
         if (err) {
             return cb(err);
         }
@@ -159,35 +162,35 @@ function syncIssues(newIssues, volumeId, cb) {
         let compareIssues = function(a, b) {
             return a.file === b.file;
         };
+
         let diff = fad.diff(res, newIssues, compareIssues);
 
-        for (let j = 0; j < diff.added.length; j++) {
-            let document = {
-                file: diff.added[j],
-                issue_number: parseInt(diff.added[j].match(/[0-9][0-9][0-9]/g).pop()),
-                parent: db.convertId(volumeId)
-            };
-            let insert = {
-                collection: 'directory',
-                identifier: {file: document.file},
-                document: document
-            };
-            promises.push(new Promise(function(resolve, reject) {
-                db.replace(insert, function (err, res) {
-                    if (err) {
-                        reject(err);
-                    }
-                    resolve(res);
-                });
-            }));
+        if (diff.added.length) {
+            for (let i = 0; i < diff.added.length; i++) {
+                let insert = {
+                    file: diff.added[i],
+                    issue_number: parseInt(diff.added[i].match(/[0-9][0-9][0-9]/g).pop()),
+                    parent: volumeId
+                };
+                promises.push(new Promise(function (resolve, reject) {
+                    directoryRepo.upsert({file: insert.file}, insert, function (err, res) {
+                        if (err) {
+                            reject(err);
+                        }
+                        resolve(res);
+                    });
+                }));
+            }
         }
-        for (let j = 0; j < diff.removed.length; j++) {
-            let remove = {
-                collection: 'directory',
-                query: {_id: diff.removed[j]._id.toString()}
-            };
+
+        if (diff.removed.length) {
+            let removeQuery = [];
+            for (let i = 0; i < diff.removed.length; i++) {
+                removeQuery.push({_id: diff.removed[i]._id.toString()});
+            }
+            removeQuery = {$or: removeQuery};
             promises.push(new Promise(function(resolve, reject) {
-                db.remove(remove, function (err, res) {
+                directoryRepo.remove(removeQuery, function (err, res) {
                     if (err) {
                         reject(err);
                     }
@@ -205,22 +208,20 @@ function syncIssues(newIssues, volumeId, cb) {
 }
 
 function addVolume(name, year, cb) {
-    findVolumes({name: name, start_year: year}, function(err, res) {
+    volumesRepo.find({name: name, start_year: year}, {}, {}, function(err, res) {
         if (err) {
             return cb(err);
-        }
-
-        if (res.length) {
+        } else if (res.length) {
             return cb(null, res[0]);
         }
 
-        requestVolume(name, year, function(err, volume) {
+        apiRepo.requestVolume(name, year, function(err, volume) {
             if (err) {
                 return cb(err);
             }
 
             volume.description = volume.description.replace(/<h4>Collected Editions.*/, '');
-            volume.description = sanitizeHtml(volume.description);
+            volume.description = consts.sanitizeHtml(volume.description);
             volume.cover = volume.image.super_url;
             volume.detailed = 'N';
 
@@ -229,7 +230,7 @@ function addVolume(name, year, cb) {
                 let fileName = imageUrl.split('/').pop();
                 let path = consts.thumbDirectory + '/' + volume.id.toString() + '/' + fileName;
 
-                api.imageRequest(imageUrl, path, function (err, imgPath) {
+                apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
                     if (err) {
                         reject(err);
                     } else {
@@ -241,9 +242,9 @@ function addVolume(name, year, cb) {
             volumeCoverPromise.then(function(res) {
                 volume.cover = res;
             }).catch(function(err) {
-                console.log(err);
+                //TODO: handle error
             }).then(function() {
-                upsertVolume(volume, function(err) {
+                volumesRepo.upsert({id: volume.id}, volume, function(err, res) {
                     if (err) {
                         return cb(err);
                     }
@@ -255,187 +256,54 @@ function addVolume(name, year, cb) {
 }
 
 function addIssues(volumeId, startYear, issueCount, cb) {
-    findIssues({'volume.id': volumeId}, function(err, curIssues) {
+    issuesRepo.find({'volume.id': volumeId}, {}, {}, function(err, curIssues) {
         if (err) {
             return cb(err);
-        }
-
-        if (issueCount != null && curIssues.length === parseInt(issueCount)) {
+        } else if (issueCount != null && curIssues.length === parseInt(issueCount)) {
             return cb(null, curIssues);
         }
 
-        let requestPromise = new Promise(function(resolve, reject) {
-            requestIssues(volumeId, function(err, issues) {
-                if (err) {
-                    reject(err);
-                }
+        apiRepo.requestIssues(volumeId, function(err, issues) {
+            if (err) {
+                return cb(err);
+            }
 
-                let count = 0;
+            let promises = [];
 
-                issues.forEach(function(issue) {
-                    issue.volume.start_year = startYear;
-                    issue.description = sanitizeHtml(issue.description);
-                    issue.cover = issue.image.super_url;
-                    issue.detailed = 'N';
+            issues.forEach(function(issue) {
+                issue.volume.start_year = startYear;
+                issue.description = consts.sanitizeHtml(issue.description);
+                issue.detailed = 'N';
 
-                    let imageUrl = issue.image.super_url;
-                    let fileName = imageUrl.split('/').pop();
-                    let path = consts.thumbDirectory + '/' + volumeId.toString() + '/' +  fileName;
+                let imageUrl = issue.image.super_url;
+                issue.cover = imageUrl.split('/').pop();
+                let path = consts.thumbDirectory + '/' + volumeId.toString() + '/' + issue.cover;
 
-                    api.imageRequest(imageUrl, path, function (err, imgPath) {
+
+                promises.push(new Promise(function(resolve, reject) {
+                    apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
                         if (err) {
-                            console.log(err);
-                        } else {
-                            issue.cover = imgPath;
+                            reject(err);
                         }
-
-                        count++;
-                        if (count === issues.length) {
-                            resolve(issues);
-                        }
+                        resolve(imgPath);
                     });
-                });
+                }));
+
+                promises.push(new Promise(function(resolve, reject) {
+                    issuesRepo.upsert({id: issue.id}, issue, function (err, res) {
+                        if (err) {
+                            reject(err);
+                        }
+                        resolve(res);
+                    });
+                }));
+            });
+
+            Promise.all(promises).then(function() {
+                return cb(null);
+            }).catch(function(err) {
+                return cb(err);
             });
         });
-
-        let compareIssues = function(a, b) {
-            return a.id === b.id;
-        };
-
-        requestPromise.then(function(newIssues) {
-            let diff = fad.diff(curIssues, newIssues, compareIssues);
-            let count = 0;
-
-            for (let i = 0; i < diff.added.length; i++) {
-                upsertIssue(diff.added[i], function(err) {
-                    if (err) {
-                        console.log(err);
-                    }
-                    count++;
-                    if (count === diff.added.length) {
-                        findIssues({'volume.id': volumeId}, function(err, issues) {
-                            if (err) {
-                                return cb(err);
-                            }
-                            return cb(null, issues);
-                        });
-                    }
-                });
-            }
-        }).catch(function(err) {
-            return cb(err);
-        });
     });
-}
-
-function requestVolume(name, year, cb) {
-    let params = {
-        url: consts.apiUrl + 'volumes/',
-        filter: 'name:' + consts.replaceEscapedCharacters(name).toLowerCase().replace(/[ ]/g, '_'),
-        fieldList: ['api_detail_url', 'id', 'name', 'start_year', 'count_of_issues', 'description', 'image']
-    };
-
-    api.apiRequest(params, function(err, volumes) {
-        if (err) {
-            return cb(err);
-        }
-
-        volumes = volumes.volume;
-
-        //find volume with matching name and year
-        let volume = volumes.find(function(volume) {
-            return volume.name === name && volume.start_year === year
-        });
-
-        if (volume) {
-            return cb(null, volume);
-        } else {
-            return cb('Volume with name and year not found');
-        }
-    });
-}
-
-function requestIssues(volumeId, cb) {
-    let params = {
-        url: consts.apiUrl + 'issues/',
-        filter: 'volume:' + volumeId.toString(),
-        fieldList: ['api_detail_url', 'id', 'cover_date', 'image', 'issue_number', 'name', 'volume', 'description']
-    };
-
-    api.apiRequest(params, function(err, issues) {
-        if (err) {
-            return cb(err);
-        }
-
-        issues = issues.issue;
-
-        //set issue numbers to integers so mongodb can sort them
-        for (let i = 0; i < issues.length; i++) {
-            issues[i].issue_number = parseInt(issues[i].issue_number);
-        }
-
-        issues.sort(function(a, b) { return a.issue_number - b.issue_number });
-
-        return cb(null, issues);
-    });
-}
-
-function findVolumes(query, cb) {
-    let params = {
-        collection: 'volumes',
-        query: query
-    };
-    db.find(params, function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, res);
-    });
-}
-
-function findIssues(query, cb) {
-    let params = {
-        collection: 'issues',
-        query: query,
-        sort: {'issue_number': 1}
-    };
-    db.find(params, function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, res);
-    });
-}
-
-function upsertVolume(document, cb) {
-    let params = {
-        collection: 'volumes',
-        identifier: {id: document.id},
-        document: document
-    };
-    db.replace(params, function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, res);
-    });
-}
-
-function upsertIssue(document, cb) {
-    let params = {
-        collection: 'issues',
-        identifier: {id: document.id},
-        document: document
-    };
-    db.replace(params, function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, res);
-    });
-}
-
-function sanitizeHtml(html) {
-    //return html.replace(/<(?:.|\\n)*?>/g, ''); //this is all tags
-    return html.replace(/<\/?(?!p)\w*\b[^>]*>/g, ''); //all but <p> tags
 }

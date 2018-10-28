@@ -1,6 +1,6 @@
 const mongo = require('mongodb').MongoClient;
-const ObjectId = require('mongodb').ObjectId;
 const url = require('./consts').dbUrl;
+
 var client = null;
 
 function connect(cb) {
@@ -31,19 +31,15 @@ function setIndices() {
     client.db('main').collection('story_arcs').createIndex({name: 'text'});
 }
 
-function convertId(id) {
-    return new ObjectId(id);
-}
-
 function find(options, cb) {
     connect(function (err, client) {
         if (err) {
             return cb(err);
         }
 
-        var db = client.db('main');
+        let db = client.db('main');
 
-        var q = db.collection(options.collection);
+        let q = db.collection(options.collection);
 
         options.query = options.query || {};
         options.filter = options.filter || {};
@@ -72,36 +68,15 @@ function find(options, cb) {
     });
 }
 
-function replace(options, cb) {
+function upsert(options, cb) {
     connect(function(err, client) {
         if (err) {
             return cb(err);
         }
 
-        var db = client.db('main');
+        let db = client.db('main');
 
-        db.collection(options.collection).replaceOne(options.identifier, options.document, {upsert: true}, function(err, res) {
-            if (err) {
-                return cb(err);
-            }
-            if (res.upsertedId !== null) {
-                return cb(null, res.upsertedId._id.toString());
-            } else {
-                return cb(null);
-            }
-        });
-    });
-}
-
-function update(options, cb) {
-    connect(function(err, client) {
-        if (err) {
-            return cb(err);
-        }
-
-        var db = client.db('main');
-
-        db.collection(options.collection).updateOne(options.query, {$set: options.update}, function(err, res) {
+        db.collection(options.collection).updateMany(options.query, {$set: options.document}, {upsert: true}, function(err, res) {
             if (err) {
                 return cb(err);
             }
@@ -116,13 +91,13 @@ function remove(options, cb) {
             return cb(err);
         }
 
-        var db = client.db('main');
+        let db = client.db('main');
 
         db.collection(options.collection).deleteMany(options.query, function(err) {
             if (err) {
                 return cb(err);
             }
-            return cb(null);
+            return cb(null, null);
         });
     });
 }
@@ -133,7 +108,7 @@ function aggregate(options, cb) {
             return cb(err);
         }
 
-        var db = client.db('main');
+        let db = client.db('main');
 
         db.collection(options.collection).aggregate(options.aggregation, function(err, res) {
             if (err) {
@@ -151,8 +126,6 @@ function aggregate(options, cb) {
 }
 
 module.exports.find = find;
-module.exports.replace = replace;
-module.exports.update = update;
+module.exports.upsert = upsert;
 module.exports.remove = remove;
 module.exports.aggregate = aggregate;
-module.exports.convertId = convertId;

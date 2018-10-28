@@ -62,7 +62,7 @@ function apiRequestHelper(options, offset, results, cb) {
 }
 
 function imageRequest(url, path, cb) {
-    var options = {
+    let options = {
         'url': url,
         'headers': {'user-agent': consts.userAgent},
         'encoding': null

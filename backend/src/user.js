@@ -72,7 +72,7 @@ function getUser(username, cb) {
 function upsertUser(user, cb) {
     var params = {
         collection: 'users',
-        identifier: {id: user.username},
+        query: {id: user.username},
         document: user
     };
 

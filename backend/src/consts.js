@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const ObjectId = require('mongodb').ObjectId;
 
 module.exports.comicDirectory = 'C:/Comics';
 module.exports.dbUrl = 'mongodb://localhost:27017/main';
@@ -9,6 +10,12 @@ module.exports.apiKey = '391531cd4d7943ad91be002c53f74dca5f461d9b';
 module.exports.userAgent = 'Mozilla/5.0';
 
 module.exports.convertToThreeDigits = function(number) {
+    number = number.toString();
+
+    if (number.split('.').shift().length > 3) {
+        return number;
+    }
+
     if (number.indexOf('.') !== -1) {
         var split = number.split('.');
         split[0] = ('000' + split[0]).substr(-3);
@@ -19,17 +26,19 @@ module.exports.convertToThreeDigits = function(number) {
 };
 
 module.exports.replaceEscapedCharacters = function(s) {
-    s = s.replace("&47;", '/');
-    s = s.replace("&92;", '\\');
-    s = s.replace("&58;", ':');
-    s = s.replace("&42;", '*');
-    s = s.replace("&63;", '?');
-    s = s.replace("&34;", '"');
-    s = s.replace("&60;", '<');
-    s = s.replace("&lt;", '<');
-    s = s.replace("&62;", '>');
-    s = s.replace("&gt;", '>');
-    s = s.replace("&124;", '|');
+    s = s.toString();
+
+    s = s.replace(/&47;/g, '/');
+    s = s.replace(/&92;/g, '\\');
+    s = s.replace(/&58;/g, ':');
+    s = s.replace(/&42;/g, '*');
+    s = s.replace(/&63;/g, '?');
+    s = s.replace(/&34;/g, '"');
+    s = s.replace(/&60;/g, '<');
+    s = s.replace(/&lt;/g, '<');
+    s = s.replace(/&62;/g, '>');
+    s = s.replace(/&gt;/g, '>');
+    s = s.replace(/&124;/g, '|');
 
     return s;
 };
@@ -73,4 +82,13 @@ module.exports.mkDirRecursive = function(path) {
             fs.mkdirSync(curPath);
         }
     }
+};
+
+module.exports.sanitizeHtml = function(html) {
+    //return html.replace(/<(?:.|\\n)*?>/g, ''); //this is all tags
+    return html.replace(/<\/?(?!p)\w*\b[^>]*>/g, ''); //all but <p> tags
+};
+
+module.exports.convertId = function(id) {
+    return new ObjectId(id.toString());
 };

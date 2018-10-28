@@ -1,6 +1,48 @@
-const db = require('./db');
+const db = require('../db');
 
-function findVolumes(query, sort, filter, cb) {
+function find(query, sort, filter, cb) {
+    let params = {
+        collection: 'directory',
+        query: query,
+        sort: sort,
+        filter: filter
+    };
+    db.find(params, function(err, res) {
+        if (err) {
+            return cb(err);
+        }
+        return cb(null, res);
+    });
+}
+
+function upsert(query, document, cb) {
+    let params = {
+        collection: 'directory',
+        query: query,
+        document: document
+    };
+    db.upsert(params, function(err, res) {
+        if (err) {
+            return cb(err);
+        }
+        return cb(null, res);
+    });
+}
+
+function remove(query, cb) {
+    let params = {
+        collection: 'directory',
+        query: query
+    };
+    db.remove(params, function (err, res) {
+        if (err) {
+            return cb(err);
+        }
+        return cb(null, res);
+    });
+}
+
+function findVolumesWithMeta(query, sort, filter, cb) {
     let agg = [];
     agg.push({$match: query});
     agg.push({
@@ -14,12 +56,12 @@ function findVolumes(query, sort, filter, cb) {
                 $match: {
                     $expr: {
                         $and: [
-                        {
-                            $eq: [
-                                "$name",
-                                "$$name"
-                            ]
-                        },
+                            {
+                                $eq: [
+                                    "$name",
+                                    "$$name"
+                                ]
+                            },
                             {
                                 $eq: [
                                     "$start_year",
@@ -67,7 +109,7 @@ function findVolumes(query, sort, filter, cb) {
     });
 }
 
-function findIssues(query, sort, filter, cb) {
+function findIssuesWithMeta(query, sort, filter, cb) {
     let agg = [];
     agg.push({$match: query});
     agg.push({
@@ -84,7 +126,7 @@ function findIssues(query, sort, filter, cb) {
             issue_number: 1,
             parent: 1,
             volume: { $arrayElemAt: [ "$volume", 0 ] }
-    }});
+        }});
     agg.push({
         $lookup: {
             from: "issues",
@@ -102,18 +144,18 @@ function findIssues(query, sort, filter, cb) {
                                 "$$name"
                             ]
                         },
-                        {
-                            $eq: [
-                                "$volume.start_year",
-                                "$$start_year"
-                            ]
-                        },
-                        {
-                            $eq: [
-                                "$issue_number",
-                                "$$issue_number"
-                            ]
-                        }]
+                            {
+                                $eq: [
+                                    "$volume.start_year",
+                                    "$$start_year"
+                                ]
+                            },
+                            {
+                                $eq: [
+                                    "$issue_number",
+                                    "$$issue_number"
+                                ]
+                            }]
                     }
                 }
             }],
@@ -156,5 +198,8 @@ function findIssues(query, sort, filter, cb) {
     });
 }
 
-module.exports.findVolumes = findVolumes;
-module.exports.findIssues = findIssues;
+module.exports.find = find;
+module.exports.upsert = upsert;
+module.exports.remove = remove;
+module.exports.findVolumesWithMeta = findVolumesWithMeta;
+module.exports.findIssuesWithMeta = findIssuesWithMeta;
