@@ -49,7 +49,7 @@ export class VolumeComponent implements OnInit {
   }
 
   onScroll() {
-    if (!this.finished && window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+    if (!this.finished && window.innerHeight + window.scrollY >= document.body.offsetHeight * 0.95) {
       this.getIssues();
     }
   }

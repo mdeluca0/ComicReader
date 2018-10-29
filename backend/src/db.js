@@ -76,12 +76,17 @@ function upsert(options, cb) {
 
         let db = client.db('main');
 
-        db.collection(options.collection).updateMany(options.query, {$set: options.document}, {upsert: true}, function(err, res) {
-            if (err) {
-                return cb(err);
+        db.collection(options.collection).updateMany(
+            options.query,
+            {$set: options.document},
+            {multi: true, upsert: true},
+            function(err, res) {
+                if (err) {
+                    return cb(err);
+                }
+                return cb(null, res);
             }
-            return cb(null, res);
-        });
+        );
     });
 }
 

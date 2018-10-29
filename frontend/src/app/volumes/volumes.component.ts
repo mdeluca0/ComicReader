@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { RestService } from '../rest.service';
-import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-volumes',
@@ -16,7 +15,7 @@ export class VolumesComponent implements OnInit {
   finished:boolean = false;
   requesting:boolean = false;
 
-  constructor(public rest: RestService, private route: ActivatedRoute, private router: Router) { }
+  constructor(public rest: RestService) { }
 
   ngOnInit() {
     this.breadcrumbs.push(
@@ -46,7 +45,7 @@ export class VolumesComponent implements OnInit {
   }
 
   onScroll() {
-    if (!this.finished && window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+    if (!this.finished && window.innerHeight + window.scrollY >= document.body.offsetHeight * 0.95) {
       this.getVolumes();
     }
   }

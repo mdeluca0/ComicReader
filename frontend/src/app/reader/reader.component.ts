@@ -1,6 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { RestService } from '../rest.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
@@ -30,7 +30,8 @@ export class ReaderComponent implements OnInit {
   pageBackwardLoad:number = 1;
 
   constructor(public rest:RestService,
-              private route: ActivatedRoute) { }
+              private route: ActivatedRoute,
+              private router: Router) { }
 
   ngOnInit() {
     this.route.params.subscribe(
@@ -65,9 +66,9 @@ export class ReaderComponent implements OnInit {
 
   goToPage(pageNo:number) {
     if (pageNo > this.pages.length-1) {
-      pageNo = this.pages.length-1;
+      this.router.navigate(['/reader/' + this.nextIssue._id]);
     } else if (pageNo < 0) {
-      pageNo = 0;
+      this.router.navigate(['/reader/' + this.prevIssue._id]);
     }
 
     if (this.curPageNum != pageNo) {

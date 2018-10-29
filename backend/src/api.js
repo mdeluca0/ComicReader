@@ -72,7 +72,7 @@ function imageRequest(url, path, cb) {
             return cb(err);
         }
         if (res.statusCode === 200) {
-            let fileName = path.split('/').pop();
+            let fileName = decodeURI(path.split('/').pop());
 
             if (fs.existsSync(path)) {
                 return cb(null, fileName);

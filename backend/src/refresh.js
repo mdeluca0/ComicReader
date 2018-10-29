@@ -32,6 +32,8 @@ watcher.on('ready', function(path) {
 });
 
 function refresh() {
+    console.log('Refresh started...');
+
     scanner.scan(function(err, directory) {
         if (err) {
             return err;
@@ -49,6 +51,7 @@ function refresh() {
                         if (err) {
                             return err;
                         }
+                        console.log('Refresh Finished!');
                     });
                 });
             });
@@ -152,7 +155,7 @@ function syncDirectory(newDir, cb) {
 function syncIssues(newIssues, volumeId, cb) {
     volumeId = consts.convertId(volumeId);
 
-    directoryRepo.find({parent: volumeId}, {}, {}, function(err, res) {
+    directoryRepo.find({parent: volumeId}, {issue_number: 1}, {}, function(err, res) {
         if (err) {
             return cb(err);
         }
@@ -160,7 +163,7 @@ function syncIssues(newIssues, volumeId, cb) {
         let promises = [];
 
         let compareIssues = function(a, b) {
-            return a.file === b.file;
+            return a.file === b;
         };
 
         let diff = fad.diff(res, newIssues, compareIssues);
@@ -256,7 +259,7 @@ function addVolume(name, year, cb) {
 }
 
 function addIssues(volumeId, startYear, issueCount, cb) {
-    issuesRepo.find({'volume.id': volumeId}, {}, {}, function(err, curIssues) {
+    issuesRepo.find({'volume.id': volumeId}, {issue_number: 1}, {}, function(err, curIssues) {
         if (err) {
             return cb(err);
         } else if (issueCount != null && curIssues.length === parseInt(issueCount)) {
@@ -270,15 +273,19 @@ function addIssues(volumeId, startYear, issueCount, cb) {
 
             let promises = [];
 
-            issues.forEach(function(issue) {
+            let compareIssues = function(a, b) {
+                return a.issue_number === b.issue_number;
+            };
+            let added = fad.diff(curIssues, issues, compareIssues).added;
+
+            added.forEach(function(issue) {
                 issue.volume.start_year = startYear;
                 issue.description = consts.sanitizeHtml(issue.description);
                 issue.detailed = 'N';
 
                 let imageUrl = issue.image.super_url;
-                issue.cover = imageUrl.split('/').pop();
+                issue.cover = decodeURI(imageUrl.split('/').pop());
                 let path = consts.thumbDirectory + '/' + volumeId.toString() + '/' + issue.cover;
-
 
                 promises.push(new Promise(function(resolve, reject) {
                     apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
