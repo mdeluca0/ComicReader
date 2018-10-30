@@ -105,8 +105,16 @@ function detailStoryArc(url, cb) {
         }
 
         storyArc.detailed = 'Y';
+        let imageUrl = storyArc.image.super_url;
+        let fileName = imageUrl.split('/').pop();
+        let path = consts.thumbDirectory + '/story_arcs/' + fileName;
 
-        return cb(null, storyArc);
+        requestImage(imageUrl, path, function (err, imgPath) {
+            if (!err) {
+                storyArc.cover = imgPath;
+            }
+            return cb(null, storyArc);
+        });
     });
 }
 

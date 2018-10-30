@@ -10,6 +10,7 @@ const apiRepo = require('./repositories/api-repository');
 const watcher = chokidar.watch(consts.comicDirectory, {ignored: /(^|[\/\\])\../, persistent: true});
 
 var scanThreshold = setTimeout(refresh, 3000);
+var refreshing = false;
 
 watcher.on('ready', function(path) {
     // File added
@@ -32,31 +33,43 @@ watcher.on('ready', function(path) {
 });
 
 function refresh() {
-    console.log('Refresh started...');
+    if (!refreshing) {
+        refreshing = true;
+        console.log('Refresh started...');
 
-    scanner.scan(function(err, directory) {
-        if (err) {
-            return err;
-        }
-        syncDirectory(directory, function(err, newDir) {
+        scanner.scan(function (err, directory) {
             if (err) {
+                console.log('Refresh Failed - ' + err);
+                refreshing = false;
                 return err;
             }
-            newDir.forEach(function(item) {
-                addVolume(item.name, item.start_year, function(err, volume) {
-                    if (err) {
-                        return err;
-                    }
-                    addIssues(volume.id, volume.start_year, volume.count_of_issues, function(err, issues) {
+            syncDirectory(directory, function (err, newDir) {
+                if (err) {
+                    console.log('Refresh Failed - ' + err);
+                    refreshing = false;
+                    return err;
+                }
+                newDir.forEach(function (item) {
+                    addVolume(item.name, item.start_year, function (err, volume) {
                         if (err) {
+                            console.log('Refresh Failed - ' + err);
+                            refreshing = false;
                             return err;
                         }
-                        console.log('Refresh Finished!');
+                        addIssues(volume.id, volume.start_year, volume.count_of_issues, function (err, issues) {
+                            if (err) {
+                                console.log('Refresh Failed - ' + err);
+                                refreshing = false;
+                                return err;
+                            }
+                            console.log('Refresh Finished Successfully!');
+                            refreshing = false;
+                        });
                     });
                 });
             });
         });
-    });
+    }
 }
 
 function syncDirectory(newDir, cb) {
@@ -225,28 +238,17 @@ function addVolume(name, year, cb) {
 
             volume.description = volume.description.replace(/<h4>Collected Editions.*/, '');
             volume.description = consts.sanitizeHtml(volume.description);
-            volume.cover = volume.image.super_url;
             volume.detailed = 'N';
 
-            let volumeCoverPromise = new Promise(function(resolve, reject) {
-                let imageUrl = volume.image.super_url;
-                let fileName = imageUrl.split('/').pop();
-                let path = consts.thumbDirectory + '/' + volume.id.toString() + '/' + fileName;
+            let imageUrl = volume.image.super_url;
+            let fileName = imageUrl.split('/').pop();
+            let path = consts.thumbDirectory + '/' + volume.id.toString() + '/' + fileName;
 
-                apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(imgPath);
-                    }
-                });
-            });
+            apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
+                if (!err) {
+                    volume.cover = imgPath;
+                }
 
-            volumeCoverPromise.then(function(res) {
-                volume.cover = res;
-            }).catch(function(err) {
-                //TODO: handle error
-            }).then(function() {
                 volumesRepo.upsert({id: volume.id}, volume, function(err, res) {
                     if (err) {
                         return cb(err);
@@ -284,30 +286,27 @@ function addIssues(volumeId, startYear, issueCount, cb) {
                 issue.detailed = 'N';
 
                 let imageUrl = issue.image.super_url;
-                issue.cover = decodeURI(imageUrl.split('/').pop());
-                let path = consts.thumbDirectory + '/' + volumeId.toString() + '/' + issue.cover;
+                let fileName = imageUrl.split('/').pop();
+                let path = consts.thumbDirectory + '/' + volumeId.toString() + '/' + fileName;
 
                 promises.push(new Promise(function(resolve, reject) {
                     apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
-                        if (err) {
-                            reject(err);
+                        if (!err) {
+                            issue.cover = imgPath;
                         }
-                        resolve(imgPath);
-                    });
-                }));
 
-                promises.push(new Promise(function(resolve, reject) {
-                    issuesRepo.upsert({id: issue.id}, issue, function (err, res) {
-                        if (err) {
-                            reject(err);
-                        }
-                        resolve(res);
+                        issuesRepo.upsert({id: issue.id}, issue, function (err, res) {
+                            if (err) {
+                                reject(err);
+                            }
+                            resolve(res);
+                        });
                     });
                 }));
             });
 
             Promise.all(promises).then(function() {
-                return cb(null);
+                return cb(null, issues);
             }).catch(function(err) {
                 return cb(err);
             });
