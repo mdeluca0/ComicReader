@@ -144,18 +144,18 @@ function findIssuesWithMeta(query, sort, filter, cb) {
                                 "$$name"
                             ]
                         },
-                            {
-                                $eq: [
-                                    "$volume.start_year",
-                                    "$$start_year"
-                                ]
-                            },
-                            {
-                                $eq: [
-                                    "$issue_number",
-                                    "$$issue_number"
-                                ]
-                            }]
+                        {
+                            $eq: [
+                                "$volume.start_year",
+                                "$$start_year"
+                            ]
+                        },
+                        {
+                            $eq: [
+                                "$issue_number",
+                                "$$issue_number"
+                            ]
+                        }]
                     }
                 }
             }],

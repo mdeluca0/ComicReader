@@ -5,11 +5,7 @@ const pageSize = 50;
 
 module.exports = function(app){
     app.get('/volumes', function(req, res) {
-        let offset = 0;
-        if (req.query.offset) {
-            offset = parseInt(req.query.offset);
-        }
-
+        let offset = parseInt(req.query.offset) || 0;
         let query = {parent: null};
         let sort = {name: 1};
         let filter = {id: 1, name: 1, start_year: 1, cover: 1};
@@ -42,11 +38,7 @@ module.exports = function(app){
     });
 
     app.get('/volumes/:volumeId/issues', function(req, res) {
-        let offset = 0;
-        if (req.query.offset) {
-            offset = parseInt(req.query.offset);
-        }
-
+        let offset = parseInt(req.query.offset) || 0;
         let query = {parent: consts.convertId(req.params.volumeId)};
         let sort = {issue_number: 1};
         let filter = {id: 1, name: 1, issue_number: 1, cover: 1, 'volume.id': 1};

@@ -6,11 +6,7 @@ const pageSize = 50;
 
 module.exports = function(app) {
     app.get('/issues', function (req, res) {
-        let offset = 0;
-        if (req.query.offset) {
-            offset = parseInt(req.query.offset);
-        }
-
+        let offset = parseInt(req.query.offset) || 0;
         let query = {parent: {$ne: null}};
         let sort = {'volume.name': 1, issue_number: 1};
         let filter = {id: 1, name: 1, issue_number: 1, cover: 1, 'volume.id': 1};
@@ -57,7 +53,7 @@ module.exports = function(app) {
             directoryRepo.findIssuesWithMeta(query, {}, filter, function (err, issues) {
                 if (err) {
                     res.send(issue);
-                    return err;
+                    //TODO: send error response
                 }
 
                 for (let i = 0; i < issues.length; i++) {
