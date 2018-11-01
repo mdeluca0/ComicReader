@@ -1,10 +1,6 @@
-<mat-card class="volume-card" title="{{volume.name}}" routerLink="/volumes/{{volume._id}}">
-  <img *ngIf="volume.metadata.cover !== ''" class="mat-card-image"
-       src="../../../assets/thumbs/{{volume.metadata.id}}/{{volume.metadata.cover}}">
-  <img *ngIf="volume.metadata.cover === ''" class="mat-card-image blank-cover"/>
-  <mat-card-content>
-    <span>{{volume.name}}</span>
-    <br/>
-    <span>{{volume.start_year}}</span>
+<mat-card class="volume-card" title="{{name}}" routerLink="/volumes/{{_id}}">
+  <img *ngIf="cover.length" class="mat-card-image" src="../../../assets/thumbs/{{cover}}">
+  <img *ngIf="!cover.length" class="mat-card-image blank-cover"/>
+  <mat-card-content>{{name}}<br/>{{start_year}}
   </mat-card-content>
 </mat-card>

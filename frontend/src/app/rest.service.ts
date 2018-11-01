@@ -14,8 +14,7 @@ export class RestService {
   constructor(private http: HttpClient, private sanitizer: DomSanitizer) {}
 
   private extractData(res: Response) {
-    let body = res;
-    return body || { };
+    return res || { };
   }
 
   getVolumes(offset = 0): Observable<any> {
@@ -45,6 +44,16 @@ export class RestService {
 
   getPage(id, pageNo): Observable<any> {
     return this.http.get(endpoint + 'issues/' + <string>id + '/' + <string>pageNo)
+      .pipe(map(this.extractData));
+  }
+
+  getStoryArc(id): Observable<any> {
+    return this.http.get(endpoint + 'story_arcs/' + <string>id)
+      .pipe(map(this.extractData));
+  }
+
+  getStoryArcIssues(id, offset = 0): Observable<any> {
+    return this.http.get(endpoint + 'story_arcs/' + <string>id + '/issues' + '?offset=' + offset.toString())
       .pipe(map(this.extractData));
   }
 

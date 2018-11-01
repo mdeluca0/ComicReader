@@ -1,8 +1,12 @@
 .description {
-  height: 58px;
+  height: 42px;
   overflow: hidden;
 }
 
-button {
+.description p {
+  margin-top: 0;
+}
+
+.expand-text-button {
   margin-bottom: 16px;
 }

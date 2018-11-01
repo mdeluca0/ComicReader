@@ -1,7 +1,7 @@
-<mat-card class="issue-card" title="{{issue.metadata.name}}" routerLink="/issues/{{issue._id}}">
-  <img *ngIf="issue.metadata.cover !== ''" class="mat-card-image" src="../../../assets/thumbs/{{issue.metadata.volume.id}}/{{issue.metadata.cover}}">
-  <img *ngIf="issue.metadata.cover === ''" class="mat-card-image blank-cover"/>
+<mat-card class="issue-card" title="{{name}}" routerLink="/issues/{{_id}}">
+  <img *ngIf="cover.length" class="mat-card-image" src="../../../assets/thumbs/{{cover}}">
+  <img *ngIf="!cover.length" class="mat-card-image blank-cover"/>
   <mat-card-content>
-    <span>#{{issue.issue_number}}</span><span *ngIf="issue.metadata.name !== ''"> - {{issue.metadata.name}}</span>
+    <span>#{{issue_number}}</span><span *ngIf="name.length">{{' - ' + name}}</span>
   </mat-card-content>
 </mat-card>

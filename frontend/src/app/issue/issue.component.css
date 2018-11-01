@@ -25,3 +25,11 @@
   margin-left: 5px;
   height: 35px;
 }
+
+.story-arc-link {
+  font-weight: bold;
+  cursor: pointer;
+}
+.story-arc-link:hover {
+  text-decoration: underline;
+}

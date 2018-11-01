@@ -1,2 +1,4 @@
-<div class="description" [@state]="state" [innerHtml]="text"></div>
-<button mat-raised-button (click)="toggle()">Show {{state == 'collapsed' ? 'More' : 'Less'}}</button>
+<p class="description" [@state]="state" [innerHtml]="text"></p>
+<button class="expand-text-button" mat-raised-button (click)="toggle()">
+  Show {{state == 'collapsed' ? 'More' : 'Less'}}
+</button>

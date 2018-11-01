@@ -29,7 +29,7 @@ function upsert(query, document, cb) {
     });
 }
 
-function findIssues(query, cb) {
+function findIssues(query, sort, cb) {
     let agg = [];
     agg.push({$match: query});
     agg.push({
@@ -92,6 +92,7 @@ function findIssues(query, cb) {
             'issue_number': 1,
             'name': 1,
             'cover': 1,
+            'cover_date': 1,
             'volume': {$arrayElemAt: ["$volume", 0]}
         }
     });
@@ -131,6 +132,7 @@ function findIssues(query, cb) {
             'issue_number': 1,
             'name': 1,
             'cover': 1,
+            'cover_date': 1,
             'volume': 1,
             'volumeFile': {$arrayElemAt: ["$volumeFile", 0]}
         }
@@ -149,7 +151,9 @@ function findIssues(query, cb) {
             'issue_number': 1,
             'name': 1,
             'cover': 1,
+            'cover_date': 1,
             'volume.id': 1,
+            'volume.name': 1,
             'file':
                 { $arrayElemAt: [
                     { $filter: {
@@ -160,6 +164,9 @@ function findIssues(query, cb) {
                 }
         }
     });
+    if (sort && Object.keys(sort).length > 0) {
+        agg.push({$sort: sort});
+    }
 
     db.aggregate({collection: 'story_arcs', aggregation: agg}, function(err, res) {
         if (err) {

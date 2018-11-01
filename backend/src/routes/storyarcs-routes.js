@@ -1,4 +1,3 @@
-const consts = require('../consts');
 const storyarcsRepo = require('../repositories/storyarcs-repository');
 
 const pageSize = 50;
@@ -25,7 +24,7 @@ module.exports = function(app){
     });
 
     app.get('/story_arcs/:storyArcId', function(req, res) {
-        let query = {_id: consts.convertId(req.params.storyArcId)};
+        let query = {id: req.params.storyArcId};
         let filter = {id: 1, cover: 1, name: 1, deck: 1, 'publisher.name': 1};
 
         storyarcsRepo.find(query, {}, filter, function(err, storyArc) {
@@ -39,9 +38,10 @@ module.exports = function(app){
 
     app.get('/story_arcs/:storyArcId/issues', function(req, res) {
         let offset = parseInt(req.query.offset) || 0;
-        let query = {_id: consts.convertId(req.params.storyArcId)};
+        let query = {id: req.params.storyArcId};
+        let sort = {cover_date: 1};
 
-        storyarcsRepo.findIssues(query, function(err, issues) {
+        storyarcsRepo.findIssues(query, sort, function(err, issues) {
             if (err) {
                 //TODO: send error response
                 return err;

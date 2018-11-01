@@ -1,6 +1,11 @@
 <app-main-menu [breadcrumbs]="breadcrumbs"></app-main-menu>
 
 <div class="volume-card-container" (window:scroll)="onScroll()">
-  <app-volume-card *ngFor="let volume of volumes" [volume]="volume"></app-volume-card>
+  <app-volume-card *ngFor="let volume of volumes"
+    [_id]="volume._id"
+    [name]="volume.name"
+    [start_year]="volume.start_year"
+    [cover]="(volume.metadata.id + '/' + volume.metadata.cover) || ''">
+  </app-volume-card>
   <mat-progress-spinner *ngIf="requesting" mode="indeterminate"></mat-progress-spinner>
 </div>

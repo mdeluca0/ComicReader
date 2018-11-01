@@ -6,19 +6,10 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./issue-card.component.css']
 })
 export class IssueCardComponent {
-
-  @Input('issue') issue:{
-    _id:string,
-    issue_number:string,
-    metadata:{
-      name:string,
-      cover:string,
-      volume:{
-        name:string,
-        id:string
-      }
-    }
-  };
+  @Input('_id') _id:string;
+  @Input('issue_number') issue_number:string;
+  @Input('name') name:string;
+  @Input('cover') cover:string;
 
   constructor() { }
 }

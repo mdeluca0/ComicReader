@@ -6,16 +6,10 @@ import {Component, Input } from '@angular/core';
   styleUrls: ['./volume-card.component.css']
 })
 export class VolumeCardComponent {
-
-  @Input('volume') volume:{
-    name:string,
-    start_year:string,
-    _id:string,
-    metadata: {
-      id:string,
-      cover:string
-    }
-  };
+  @Input('_id') _id:string;
+  @Input('name') name:string;
+  @Input('start_year') start_year:string;
+  @Input('cover') cover:string;
 
   constructor() { }
 

@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HttpClientModule } from "@angular/common/http";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   MatCardModule,
   MatToolbarModule,
@@ -26,6 +26,7 @@ import { MainMenuComponent } from './main-menu/main-menu.component';
 import { VolumeCardComponent } from './volume-card/volume-card.component';
 import { IssueCardComponent } from './issue-card/issue-card.component';
 import { SearchResultsComponent } from './search-results/search-results.component';
+import { StoryArcComponent } from './story-arc/story-arc.component';
 
 const appRoutes: Routes = [
   {
@@ -43,6 +44,10 @@ const appRoutes: Routes = [
   {
     path: 'reader/:id',
     component: ReaderComponent
+  },
+  {
+    path: 'story-arc/:id',
+    component: StoryArcComponent
   },
   {
     path: 'results',
@@ -66,7 +71,8 @@ const appRoutes: Routes = [
     MainMenuComponent,
     VolumeCardComponent,
     IssueCardComponent,
-    SearchResultsComponent
+    SearchResultsComponent,
+    StoryArcComponent
   ],
   imports: [
     RouterModule.forRoot(appRoutes),

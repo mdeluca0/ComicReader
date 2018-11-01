@@ -13,7 +13,15 @@ export class IssueComponent implements OnInit {
   nextIssue:any = null;
   prevIssue:any = null;
   volume:any = null;
+  name:string = "";
+  coverDate:string = "";
+  description:string = "";
+  cover:string = "";
   pageCount:any = null;
+  storyArcId:string = "";
+  storyArcName:string = "";
+  writer:string = "";
+  artist:string = "";
   breadcrumbs:any = [];
 
   constructor(public rest:RestService, private route: ActivatedRoute) { }
@@ -25,8 +33,6 @@ export class IssueComponent implements OnInit {
         this.nextIssue = null;
         this.prevIssue = null;
         this.volume = null;
-        this.pageCount = '';
-        this.breadcrumbs = [];
 
         this.rest.getIssue(params['id']).subscribe((data: {}) => {
           this.issue = data[0];
@@ -38,8 +44,31 @@ export class IssueComponent implements OnInit {
             this.pageCount = data['page_count'];
           });
 
-          this.issue.metadata.writer = IssueComponent.getPeopleByRole(this.issue.metadata.person_credits.person, 'writer');
-          this.issue.metadata.artist = IssueComponent.getPeopleByRole(this.issue.metadata.person_credits.person, 'artist|penciler');
+          if (this.issue.metadata.volume.id && this.issue.metadata.cover) {
+            this.cover = this.issue.metadata.volume.id + '/' + this.issue.metadata.cover;
+          }
+
+          if (this.issue.metadata.name) {
+            this.name = this.issue.metadata.name;
+          }
+
+          if (this.issue.metadata.cover_date) {
+            this.coverDate = this.issue.metadata.cover_date;
+          }
+
+          if (this.issue.metadata.description) {
+            this.description = this.issue.metadata.description;
+          }
+
+          if (this.issue.metadata.story_arc_credits.story_arc) {
+            this.storyArcId = this.issue.metadata.story_arc_credits.story_arc.id || null;
+            this.storyArcName = this.issue.metadata.story_arc_credits.story_arc.name || null;
+          }
+
+          if (this.issue.metadata.person_credits) {
+            this.writer = IssueComponent.getPeopleByRole(this.issue.metadata.person_credits.person, 'writer');
+            this.artist = IssueComponent.getPeopleByRole(this.issue.metadata.person_credits.person, 'artist|penciler');
+          }
 
           this.breadcrumbs = [
             {icon: 'home', link: '/'},
