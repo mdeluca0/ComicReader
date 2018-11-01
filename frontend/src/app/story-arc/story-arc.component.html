@@ -1,0 +1,24 @@
+<app-main-menu [breadcrumbs]="breadcrumbs"></app-main-menu>
+
+<mat-progress-spinner *ngIf="storyArc === null" mode="indeterminate"></mat-progress-spinner>
+
+<div class="story-arc-header" *ngIf="storyArc != null">
+  <img class="story-arc-cover" src="../../../assets/thumbs/story_arcs/{{cover}}"/>
+  <div class="story-arc-details">
+    <h1>{{name}}</h1>
+    <p>{{publisher}}</p>
+    <app-description-text [text]="deck"></app-description-text>
+  </div>
+</div>
+
+<p *ngIf="storyArc != null" class="issue-count">Issues</p>
+
+<div class="issue-card-container" (window:scroll)="onScroll()">
+  <app-issue-card *ngFor="let issue of issues"
+                  [_id]="issue.file._id"
+                  [issue_number]="issue.issue_number"
+                  [name]="issue.name || issue.volume.name"
+                  [cover]="(issue.volume.id + '/' + issue.cover) || ''">
+  </app-issue-card>
+  <mat-progress-spinner *ngIf="requesting" mode="indeterminate"></mat-progress-spinner>
+</div>
