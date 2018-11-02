@@ -27,6 +27,7 @@ import { VolumeCardComponent } from './volume-card/volume-card.component';
 import { IssueCardComponent } from './issue-card/issue-card.component';
 import { SearchResultsComponent } from './search-results/search-results.component';
 import { StoryArcComponent } from './story-arc/story-arc.component';
+import { StoryArcCardComponent } from './story-arc-card/story-arc-card.component';
 
 const appRoutes: Routes = [
   {
@@ -72,7 +73,8 @@ const appRoutes: Routes = [
     VolumeCardComponent,
     IssueCardComponent,
     SearchResultsComponent,
-    StoryArcComponent
+    StoryArcComponent,
+    StoryArcCardComponent
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
