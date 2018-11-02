@@ -15,7 +15,7 @@
 
 <div class="issue-card-container" (window:scroll)="onScroll()">
   <app-issue-card *ngFor="let issue of issues"
-                  [_id]="issue.file._id"
+                  [_id]="issue.issueFile._id"
                   [issue_number]="issue.issue_number"
                   [name]="issue.name || issue.volume.name"
                   [cover]="(issue.volume.id + '/' + issue.cover) || ''">

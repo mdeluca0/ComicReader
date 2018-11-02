@@ -1,6 +1,7 @@
 const consts = require('../consts');
 const archive = require('../archive');
 const directoryRepo = require('../repositories/directory-repository');
+const issuesRepo = require('../repositories/issues-repository');
 
 const pageSize = 50;
 
@@ -20,6 +21,23 @@ module.exports = function(app) {
                 issues: issues.slice(offset, offset + pageSize)
             };
 
+            res.send(issues);
+        });
+    });
+
+    app.get('/issues/search', function(req, res) {
+        if (!req.query.search) {
+            res.send({});
+        }
+
+        let query = {$text: {$search: req.query.search}};
+        let sort = {'volume.name': 1, issue_number: 1};
+        let filter = {name: 1, issue_number: 1, cover: 1, 'volume.id': 1, 'volume.name': 1};
+
+        issuesRepo.search(query, sort, filter, function(err, issues) {
+            if (err) {
+                //TODO: send error
+            }
             res.send(issues);
         });
     });

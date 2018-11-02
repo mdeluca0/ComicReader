@@ -29,14 +29,31 @@ function upsert(query, document, cb) {
     });
 }
 
-function findIssues(query, sort, cb) {
+function search(query, sort, filter, cb) {
     let agg = [];
     agg.push({$match: query});
-    agg.push({
-        $project: {
-            id: 1
+    if (sort && Object.keys(sort).length > 0) {
+        agg.push({$sort: sort});
+    }
+    if (filter && Object.keys(filter).length > 0) {
+        agg.push({
+            $project: Object.assign({
+                volumeFile: 1
+            }, filter)
+        });
+    }
+
+    db.aggregate({collection: 'story_arcs', aggregation: agg}, function(err, res) {
+        if (err) {
+            return cb(err);
         }
+        return cb(null, res);
     });
+}
+
+function findIssues(query, sort, filter, cb) {
+    let agg = [];
+    agg.push({$match: query});
     agg.push({
         $lookup: {
             from: "issues",
@@ -64,35 +81,16 @@ function findIssues(query, sort, cb) {
                 start_year: "$volume.start_year"
             },
             pipeline: [{
-                $match: {
-                    $expr: {
-                        $and: [
-                            {
-                                $eq: [
-                                    "$name",
-                                    "$$name"
-                                ]
-                            },
-                            {
-                                $eq: [
-                                    "$start_year",
-                                    "$$start_year"
-                                ]
-                            }
-                        ]
-                    }
-                }
+                $match: {$expr: {$and: [
+                    {$eq: ["$name", "$$name"]},
+                    {$eq: ["$start_year", "$$start_year"]}
+                ]}}
             }],
             as: "volume"
         }
     });
     agg.push({
-        $project: {
-            '_id': 1,
-            'issue_number': 1,
-            'name': 1,
-            'cover': 1,
-            'cover_date': 1,
+        $addFields: {
             'volume': {$arrayElemAt: ["$volume", 0]}
         }
     });
@@ -104,36 +102,16 @@ function findIssues(query, sort, cb) {
                 start_year: "$volume.start_year"
             },
             pipeline: [{
-                $match: {
-                    $expr: {
-                        $and: [
-                            {
-                                $eq: [
-                                    "$name",
-                                    "$$name"
-                                ]
-                            },
-                            {
-                                $eq: [
-                                    "$start_year",
-                                    "$$start_year"
-                                ]
-                            }
-                        ]
-                    }
-                }
+                $match: {$expr: {$and: [
+                    {$eq: ["$name", "$$name"]},
+                    {$eq: ["$start_year", "$$start_year"]}
+                ]}}
             }],
             as: "volumeFile"
         }
     });
     agg.push({
-        $project: {
-            '_id': 1,
-            'issue_number': 1,
-            'name': 1,
-            'cover': 1,
-            'cover_date': 1,
-            'volume': 1,
+        $addFields: {
             'volumeFile': {$arrayElemAt: ["$volumeFile", 0]}
         }
     });
@@ -146,15 +124,8 @@ function findIssues(query, sort, cb) {
         }
     });
     agg.push({
-        $project: {
-            '_id': 1,
-            'issue_number': 1,
-            'name': 1,
-            'cover': 1,
-            'cover_date': 1,
-            'volume.id': 1,
-            'volume.name': 1,
-            'file':
+        $addFields: {
+            'issueFile':
                 { $arrayElemAt: [
                     { $filter: {
                         input: "$issueFile",
@@ -167,6 +138,13 @@ function findIssues(query, sort, cb) {
     if (sort && Object.keys(sort).length > 0) {
         agg.push({$sort: sort});
     }
+    if (filter && Object.keys(filter).length > 0) {
+        agg.push({
+            $project: Object.assign({
+                issueFile: 1
+            }, filter)
+        });
+    }
 
     db.aggregate({collection: 'story_arcs', aggregation: agg}, function(err, res) {
         if (err) {
@@ -178,4 +156,5 @@ function findIssues(query, sort, cb) {
 
 module.exports.find = find;
 module.exports.upsert = upsert;
+module.exports.search = search;
 module.exports.findIssues = findIssues;

@@ -1,7 +1,19 @@
 <app-main-menu [breadcrumbs]="breadcrumbs"></app-main-menu>
 
 <h3>Volumes ({{volumes.length}} results)</h3>
-<!--<app-volume-card *ngFor="let volume of volumes" [volume]="volume"></app-volume-card>-->
+<app-volume-card *ngFor="let volume of volumes"
+  [_id]="volume.volumeFile._id"
+  [name]="volume.name"
+  [start_year]="volume.start_year"
+  [cover]="(volume.id + '/' + volume.cover) || ''">
+</app-volume-card>
 
 <h3>Issues ({{issues.length}} results)</h3>
-<!--<app-issue-card *ngFor="let issue of issues" [issue]="issue"></app-issue-card>-->
+<app-issue-card *ngFor="let issue of issues"
+  [_id]="issue.issueFile._id"
+  [issue_number]="issue.issue_number"
+  [name]="issue.name || issue.volume.name"
+  [cover]="(issue.volume.id + '/' + issue.cover) || ''">
+</app-issue-card>
+
+<h3>Story Arcs ({{storyArcs.length}} results)</h3>

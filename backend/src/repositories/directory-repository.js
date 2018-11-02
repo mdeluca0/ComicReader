@@ -53,33 +53,16 @@ function findVolumesWithMeta(query, sort, filter, cb) {
                 start_year: "$start_year"
             },
             pipeline: [{
-                $match: {
-                    $expr: {
-                        $and: [
-                            {
-                                $eq: [
-                                    "$name",
-                                    "$$name"
-                                ]
-                            },
-                            {
-                                $eq: [
-                                    "$start_year",
-                                    "$$start_year"
-                                ]
-                            }
-                        ]
-                    }
-                }
+                $match: {$expr: {$and: [
+                    {$eq: ["$name", "$$name"]},
+                    {$eq: ["$start_year", "$$start_year"]}
+                ]}}
             }],
             as: "metadata"
         }
     });
     agg.push({
-        $project: {
-            name: 1,
-            start_year: 1,
-            file: 1,
+        $addFields: {
             metadata: {$arrayElemAt: ["$metadata", 0]}
         }
     });
@@ -121,10 +104,7 @@ function findIssuesWithMeta(query, sort, filter, cb) {
         }
     });
     agg.push({
-        $project: {
-            file: 1,
-            issue_number: 1,
-            parent: 1,
+        $addFields: {
             volume: { $arrayElemAt: [ "$volume", 0 ] }
         }});
     agg.push({
@@ -136,38 +116,17 @@ function findIssuesWithMeta(query, sort, filter, cb) {
                 issue_number: "$issue_number"
             },
             pipeline: [{
-                $match: {
-                    $expr: {
-                        $and: [{
-                            $eq: [
-                                "$volume.name",
-                                "$$name"
-                            ]
-                        },
-                        {
-                            $eq: [
-                                "$volume.start_year",
-                                "$$start_year"
-                            ]
-                        },
-                        {
-                            $eq: [
-                                "$issue_number",
-                                "$$issue_number"
-                            ]
-                        }]
-                    }
-                }
+                $match: {$expr: {$and: [
+                    {$eq: ["$volume.name", "$$name"]},
+                    {$eq: ["$volume.start_year", "$$start_year"]},
+                    {$eq: ["$issue_number", "$$issue_number"]}]
+                }}
             }],
             as: "metadata"
         }
     });
     agg.push({
-        $project: {
-            file: 1,
-            issue_number: 1,
-            parent: 1,
-            volume: 1,
+        $addFields: {
             metadata: {$arrayElemAt: ["$metadata", 0]}
         }
     });

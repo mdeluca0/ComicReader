@@ -1,5 +1,6 @@
 const consts = require('../consts');
 const directoryRepo = require('../repositories/directory-repository');
+const volumesRepo = require('../repositories/volumes-repository');
 
 const pageSize = 50;
 
@@ -20,6 +21,23 @@ module.exports = function(app){
                 volumes: volumes.slice(offset, offset + pageSize)
             };
 
+            res.send(volumes);
+        });
+    });
+
+    app.get('/volumes/search', function(req, res) {
+        if (!req.query.search) {
+            res.send({});
+        }
+
+        let query = {$text: {$search: req.query.search}};
+        let sort = {name: 1};
+        let filter = {id: 1, name: 1, start_year: 1, cover: 1};
+
+        volumesRepo.search(query, sort, filter, function(err, volumes) {
+            if (err) {
+                //TODO: send error
+            }
             res.send(volumes);
         });
     });

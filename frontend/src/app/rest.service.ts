@@ -27,6 +27,11 @@ export class RestService {
       .pipe(map(this.extractData));
   }
 
+  volumesSearch(query): Observable<any> {
+    return this.http.get(endpoint + 'volumes/search?search=' + query.toString())
+      .pipe(map(this.extractData));
+  }
+
   getIssuesByVolume(id, offset = 0): Observable<any> {
     return this.http.get(endpoint + 'volumes/' + <string>id + '/issues' + '?offset=' + offset.toString())
       .pipe(map(this.extractData));
@@ -34,6 +39,11 @@ export class RestService {
 
   getIssue(id): Observable<any> {
     return this.http.get(endpoint + 'issues/' + <string>id)
+      .pipe(map(this.extractData));
+  }
+
+  issuesSearch(query): Observable<any> {
+    return this.http.get(endpoint + 'issues/search?search=' + query.toString())
       .pipe(map(this.extractData));
   }
 
@@ -57,8 +67,8 @@ export class RestService {
       .pipe(map(this.extractData));
   }
 
-  getSearch(query): Observable<any> {
-    return this.http.get(endpoint + 'results/' + '?search_query=' + query.toString())
+  storyArcSearch(query): Observable<any> {
+    return this.http.get(endpoint + 'story_arcs/search?search=' + query.toString())
       .pipe(map(this.extractData));
   }
 }

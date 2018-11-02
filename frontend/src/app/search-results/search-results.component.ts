@@ -11,6 +11,7 @@ export class SearchResultsComponent implements OnInit {
 
   volumes:any = [];
   issues:any = [];
+  storyArcs:any = [];
   breadcrumbs:any = [];
   search:string = "";
 
@@ -23,20 +24,20 @@ export class SearchResultsComponent implements OnInit {
 
     this.route.queryParams.subscribe(
       params => {
-        this.volumes = null;
-        this.issues = null;
-        this.search = params['search_query'].toString();
+        this.volumes = [];
+        this.issues = [];
+        this.storyArcs = [];
+        this.search = params['search'].toString();
 
-        this.rest.getSearch(params['search_query']).subscribe((data: {}) => {
-          if (data['volumes']) {
-            this.volumes = data['volumes'];
-          }
-          if (data['issues']) {
-            this.issues = data['issues'];
-          }
-        }
-      );
+        this.rest.volumesSearch(params['search']).subscribe((data: {}) => {
+          this.volumes = data;
+        });
+        this.rest.issuesSearch(params['search']).subscribe((data: {}) => {
+          this.issues = data;
+        });
+        this.rest.storyArcSearch(params['search']).subscribe((data: {}) => {
+          this.storyArcs = data;
+        });
     });
   }
-
 }

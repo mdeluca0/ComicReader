@@ -15,7 +15,7 @@ export class MainMenuComponent {
 
   submitSearch() {
     if (this.searchValue.length > 0) {
-      this.router.navigate(['/results'], { queryParams: { search_query: this.searchValue }});
+      this.router.navigate(['/results'], { queryParams: { search: this.searchValue }});
       this.searchValue = "";
     }
   }
