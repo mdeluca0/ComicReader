@@ -1,10 +1,10 @@
 <app-main-menu [breadcrumbs]="breadcrumbs"></app-main-menu>
 
-<mat-progress-spinner *ngIf="issue == null && volume == null" mode="indeterminate"></mat-progress-spinner>
+<mat-progress-spinner *ngIf="issue == null || volume == null" mode="indeterminate"></mat-progress-spinner>
 
 <div class="issue-container" *ngIf="issue != null && volume != null">
-  <div class="issue-left">
-    <img *ngIf="cover.length" class="issue-cover" src="../../../assets/thumbs/{{cover}}" routerLink="/reader/{{issue.id}}"/>
+  <div class="issue-left" *ngIf="issue.metadata != null">
+    <img class="issue-cover" *ngIf="issue.metadata.cover != null" src="../../../assets/thumbs/{{issue.metadata.cover}}" routerLink="/reader/{{issue._id}}"/>
   </div>
   <div class="issue-right">
     <div class="issue-header">
@@ -22,8 +22,8 @@
     </div>
 
     <p>{{'#' + issue.issue_number}}
-      <span *ngIf="name.length">{{' - ' + name}}</span>
-      <span *ngIf="coverDate.length"><br/>{{coverDate}}</span>
+      <span *ngIf="issue.metadata != null && issue.metadata.name.length">{{' - ' + issue.metadata.name}}</span>
+      <span *ngIf="issue.metadata != null"><br/>{{issue.metadata.cover_date}}</span>
     </p>
     <p *ngIf="storyArcId.length && storyArcId.length">
       This issue is a part of: <span class="story-arc-link" routerLink="/story-arc/{{storyArcId}}">{{storyArcName}}</span>
@@ -33,6 +33,6 @@
       <span *ngIf="artist.length"><br/>{{'Illustrated By: ' + artist}}</span>
     </p>
     <p>{{pageCount + ' pages'}}</p>
-    <app-description-text *ngIf="description.length" [text]="description"></app-description-text>
+    <app-description-text *ngIf="issue.metadata != null" [text]="issue.metadata.description"></app-description-text>
   </div>
 </div>

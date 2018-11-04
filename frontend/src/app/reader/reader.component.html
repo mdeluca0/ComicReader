@@ -13,7 +13,10 @@
   <mat-toolbar-row (mouseenter)="toggleToolbar()" (mouseleave)="toggleToolbar()">
     <div class="reader-breadcrumbs">
       <div class="reader-breadcrumb" routerLink="/volumes/{{volume._id}}">{{volume.name}}</div>
-      <div class="reader-breadcrumb" routerLink="/issues/{{issue._id}}">#{{issue.issue_number}} - {{issue.metadata.name}}</div>
+      <div class="reader-breadcrumb" routerLink="/issues/{{issue._id}}">
+        #{{issue.issue_number}}
+        <span *ngIf="issue.metadata != null">- {{issue.metadata.name}}</span>
+      </div>
     </div>
 
     <div>

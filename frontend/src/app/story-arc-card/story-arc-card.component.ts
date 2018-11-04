@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 
 @Component({
   selector: 'app-story-arc-card',
@@ -11,4 +11,8 @@ export class StoryArcCardComponent {
   @Input('cover') cover:string;
 
   constructor() { }
+
+  ngOnInit() {
+    this.cover = encodeURIComponent(this.cover);
+  }
 }

@@ -3,13 +3,12 @@
 <mat-progress-spinner *ngIf="volume == null" mode="indeterminate"></mat-progress-spinner>
 
 <div class="volume-header" *ngIf="volume != null">
-  <img class="volume-cover" *ngIf="cover.length" src="../../../assets/thumbs/{{cover}}"/>
-  <img class="volume-cover blank-cover" *ngIf="!cover.length"/>
+  <img class="volume-cover" *ngIf="volume.metadata != null" src="../../../assets/thumbs/{{volume.metadata.cover}}"/>
   <div class="volume-details">
-    <h1 class="volume-name">{{name}}</h1>
-    <div class="volume-year">{{start_year}}</div>
-    <div class="volume-publisher">{{publisher}}</div>
-    <app-description-text *ngIf="description.length" [text]="description"></app-description-text>
+    <h1 class="volume-name">{{volume.name}}</h1>
+    <div class="volume-year">{{volume.start_year}}</div>
+    <div class="volume-publisher" *ngIf="volume.metadata != null && volume.metadata.publisher != null">{{volume.metadata.publisher.name}}</div>
+    <app-description-text *ngIf="volume.metadata != null" [text]="volume.metadata.description"></app-description-text>
   </div>
 </div>
 
@@ -19,8 +18,8 @@
   <app-issue-card *ngFor="let issue of issues"
                   [_id]="issue._id"
                   [issue_number]="issue.issue_number"
-                  [name]="issue.metadata.name || issue.volume.name"
-                  [cover]="(issue.metadata.volume.id + '/' + issue.metadata.cover) || ''">
+                  [name]="issue.metadata != null ? issue.metadata.name : ''"
+                  [cover]="issue.metadata != null ? issue.metadata.cover : null">
   </app-issue-card>
   <mat-progress-spinner *ngIf="requesting" mode="indeterminate"></mat-progress-spinner>
 </div>

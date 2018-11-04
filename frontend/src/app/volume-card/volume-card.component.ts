@@ -1,4 +1,4 @@
-import {Component, Input } from '@angular/core';
+import {Component, Input, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-volume-card',
@@ -12,5 +12,9 @@ export class VolumeCardComponent {
   @Input('cover') cover:string;
 
   constructor() { }
+
+  ngOnInit() {
+    this.cover = encodeURIComponent(this.cover);
+  }
 
 }

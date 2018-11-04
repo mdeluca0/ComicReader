@@ -10,16 +10,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class VolumeComponent implements OnInit {
   volume:any = null;
   issues:any = [];
-
-  cover:string = "";
-  name:string = "";
-  start_year:string = "";
-  publisher:string = "";
-  description:string = "";
-  issueCount:string = "";
-
   breadcrumbs:any = [];
-
   offset:number = 0;
   finished:boolean = false;
   requesting:boolean = false;
@@ -29,13 +20,6 @@ export class VolumeComponent implements OnInit {
   ngOnInit() {
     this.rest.getVolume(this.route.snapshot.params['id']).subscribe((data: {}) => {
       this.volume = data[0];
-
-      this.cover = (this.volume.metadata.id + '/' + this.volume.metadata.cover) || '';
-      this.name = this.volume.name;
-      this.start_year = this.volume.start_year;
-      this.publisher = this.volume.metadata.publisher.name || '';
-      this.description = this.volume.metadata.description || '';
-      this.issueCount = this.volume.metadata.count_of_issues || '';
 
       this.breadcrumbs.push(
         {icon: 'home', link: '/'},

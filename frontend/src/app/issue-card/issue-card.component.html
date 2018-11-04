@@ -1,6 +1,6 @@
 <mat-card class="issue-card" title="{{name}}" routerLink="/issues/{{_id}}">
-  <img *ngIf="cover.length" class="mat-card-image" src="../../../assets/thumbs/{{cover}}">
-  <img *ngIf="!cover.length" class="mat-card-image blank-cover"/>
+  <img *ngIf="cover != null" class="mat-card-image" src="../../../assets/thumbs/{{cover}}">
+  <img *ngIf="cover == null" class="mat-card-image blank-cover"/>
   <mat-card-content>
     <span>#{{issue_number}}</span><span *ngIf="name.length">{{' - ' + name}}</span>
   </mat-card-content>

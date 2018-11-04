@@ -77,7 +77,7 @@ module.exports = function(app) {
                 for (let i = 0; i < issues.length; i++) {
                     let issueInfo = {
                         _id: issues[i]._id.toString(),
-                        name: issues[i].metadata.name || '',
+                        name: issues[i].metadata != null ? issues[i].metadata.name : issues[i].volume.name,
                         issue_number: issues[i].issue_number
                     };
                     if (issues[i].issue_number === nextIssueNum) {

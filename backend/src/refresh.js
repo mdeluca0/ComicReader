@@ -38,8 +38,6 @@ function refresh() {
         refreshing = true;
         console.log('Refresh started...');
 
-        let promises = [];
-
         scanner.scan(function (err, directory) {
             if (err) {
                 console.log('Refresh Failed - ' + err);
@@ -52,9 +50,14 @@ function refresh() {
                     refreshing = false;
                     return err;
                 }
-                newDir.forEach(function (item) {
-                    promises.push(new Promise(function(resolve, reject) {
-                        addVolume(item.name, item.start_year, function (err, volume) {
+
+                let promises = [];
+
+                for (let i = 0; i < newDir.length; i++) {
+                    let volumeName = newDir[i].name;
+                    let volumeYear = newDir[i].start_year;
+                    promises.push(new Promise(function (resolve, reject) {
+                        addVolume(volumeName, volumeYear, function (err, volume) {
                             if (err) {
                                 reject(err);
                             }
@@ -66,23 +69,23 @@ function refresh() {
                             });
                         });
                     }));
-                });
-            });
-        });
+                }
 
-        Promise.all(promises).then(function() {
-            checkCovers(function(err) {
-                if (err) {
+                Promise.all(promises).then(function() {
+                    checkCovers(function(err) {
+                        if (err) {
+                            console.log('Refresh Failed - ' + err);
+                            refreshing = false;
+                            return err;
+                        }
+                        console.log('Refresh Finished Successfully!');
+                        refreshing = false;
+                    });
+                }).catch(function(err){
                     console.log('Refresh Failed - ' + err);
                     refreshing = false;
-                    return err;
-                }
-                console.log('Refresh Finished Successfully!');
-                refreshing = false;
+                });
             });
-        }).catch(function(err){
-            console.log('Refresh Failed - ' + err);
-            refreshing = false;
         });
     }
 }
@@ -255,21 +258,11 @@ function addVolume(name, year, cb) {
             volume.description = consts.sanitizeHtml(volume.description);
             volume.detailed = 'N';
 
-            let imageUrl = volume.image.super_url;
-            let fileName = imageUrl.split('/').pop();
-            let path = consts.thumbDirectory + '/' + volume.id.toString() + '/' + fileName;
-
-            apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
-                if (!err) {
-                    volume.cover = imgPath;
+            volumesRepo.upsert({id: volume.id}, volume, function(err, res) {
+                if (err) {
+                    return cb(err);
                 }
-
-                volumesRepo.upsert({id: volume.id}, volume, function(err, res) {
-                    if (err) {
-                        return cb(err);
-                    }
-                    return cb(null, volume);
-                });
+                return cb(null, volume);
             });
         });
     });
@@ -295,30 +288,21 @@ function addIssues(volumeId, startYear, issueCount, cb) {
             };
             let added = fad.diff(curIssues, issues, compareIssues).added;
 
-            added.forEach(function(issue) {
+            for (let i = 0; i < added.length; i++) {
+                let issue = added[i];
                 issue.volume.start_year = startYear;
                 issue.description = consts.sanitizeHtml(issue.description);
                 issue.detailed = 'N';
 
-                let imageUrl = issue.image.super_url;
-                let fileName = imageUrl.split('/').pop();
-                let path = consts.thumbDirectory + '/' + volumeId.toString() + '/' + fileName;
-
                 promises.push(new Promise(function(resolve, reject) {
-                    apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
-                        if (!err) {
-                            issue.cover = imgPath;
+                    issuesRepo.upsert({id: issue.id}, issue, function (err, res) {
+                        if (err) {
+                            reject(err);
                         }
-
-                        issuesRepo.upsert({id: issue.id}, issue, function (err, res) {
-                            if (err) {
-                                reject(err);
-                            }
-                            resolve(res);
-                        });
+                        resolve(res);
                     });
                 }));
-            });
+            }
 
             Promise.all(promises).then(function() {
                 return cb(null, issues);

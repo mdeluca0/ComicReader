@@ -5,7 +5,7 @@
     [_id]="volume._id"
     [name]="volume.name"
     [start_year]="volume.start_year"
-    [cover]="(volume.metadata.id + '/' + volume.metadata.cover) || ''">
+    [cover]="volume.metadata != null ? volume.metadata.cover : null">
   </app-volume-card>
   <mat-progress-spinner *ngIf="requesting" mode="indeterminate"></mat-progress-spinner>
 </div>

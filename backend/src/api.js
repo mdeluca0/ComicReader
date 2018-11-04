@@ -72,21 +72,24 @@ function imageRequest(url, path, cb) {
             return cb(err);
         }
         if (res.statusCode === 200) {
-            let fileName = decodeURI(path.split('/').pop());
+            let dir = path.split('/');
+            let fileName = decodeURIComponent(dir.pop());
+            dir = dir.join('/');
 
-            if (fs.existsSync(path)) {
-                return cb(null, fileName);
+            let cover = dir.replace(consts.thumbDirectory + '/', '') + '/' + fileName;
+
+            if (fs.existsSync(dir + '/' + fileName)) {
+                return cb(null, cover);
             }
 
-            let dir = path.split('/').slice(0, -1).join('/');
             consts.mkDirRecursive(dir);
 
-            fs.writeFile(path, new Buffer(body), function(err){
+            fs.writeFile(dir + '/' + fileName, new Buffer(body), function(err){
                 if (err) {
                     return cb(err);
                 }
 
-                return cb(null, fileName);
+                return cb(null, cover);
             });
         } else {
             return cb('Image request failed with status code: ' + res.statusCode.toString());
