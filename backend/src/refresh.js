@@ -61,10 +61,12 @@ function refresh() {
                         addVolume(volumeName, volumeYear, function (err, volume) {
                             if (err) {
                                 reject(err);
+                                return;
                             }
                             addIssues(volume.id, volume.start_year, volume.count_of_issues, function (err, issues) {
                                 if (err) {
                                     reject(err);
+                                    return;
                                 }
                                 resolve(null);
                             });
@@ -121,6 +123,7 @@ function syncDirectory(newDir, cb) {
                 directoryRepo.remove(removeQuery, function (err, res) {
                     if (err) {
                         reject(err);
+                        return;
                     }
                     resolve(res);
                 });
@@ -141,12 +144,24 @@ function syncDirectory(newDir, cb) {
                 directoryRepo.upsert(query, document, function (err, res) {
                     if (err) {
                         reject(err);
+                        return;
                     }
-                    syncIssues(issues, res.upsertedId._id, function (err) {
+                    directoryRepo.find(query, {}, {}, function(err, res) {
                         if (err) {
                             reject(err);
+                            return;
                         }
-                        resolve(null);
+                        if (!res.length) {
+                            resolve(null);
+                            return;
+                        }
+                        syncIssues(issues, res[0]._id, function (err) {
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
+                            resolve(null);
+                        });
                     });
                 });
             }));
@@ -154,18 +169,22 @@ function syncDirectory(newDir, cb) {
 
         //Update existing volumes
         for (let i = 0; i < updates.same.length; i++) {
+            let file = updates.same[i].file;
             let issues = updates.same[i].issues;
             promises.push(new Promise(function(resolve, reject) {
-                directoryRepo.find({file: updates.same[i].file}, {name: 1, start_year: 1}, {}, function(err, res) {
+                directoryRepo.find({file: file}, {name: 1, start_year: 1}, {}, function(err, res) {
                     if (err) {
                         reject(err);
+                        return;
                     }
                     if (!res.length) {
                         resolve(null);
+                        return;
                     }
                     syncIssues(issues, res[0]._id.toString(), function (err) {
                         if (err) {
                             reject(err);
+                            return;
                         }
                         resolve(null);
                     });
@@ -220,6 +239,7 @@ function syncIssues(newIssues, volumeId, cb) {
                     directoryRepo.upsert({file: insert.file}, insert, function (err, res) {
                         if (err) {
                             reject(err);
+                            return;
                         }
                         resolve(res);
                     });
@@ -238,6 +258,7 @@ function syncIssues(newIssues, volumeId, cb) {
                 directoryRepo.remove(removeQuery, function (err, res) {
                     if (err) {
                         reject(err);
+                        return;
                     }
                     resolve(res);
                 });
@@ -309,6 +330,7 @@ function addIssues(volumeId, startYear, issueCount, cb) {
                     issuesRepo.upsert({id: issue.id}, issue, function (err, res) {
                         if (err) {
                             reject(err);
+                            return;
                         }
                         resolve(res);
                     });
@@ -331,6 +353,7 @@ function checkCovers(cb) {
         volumesRepo.find({cover: {$exists: false}}, {}, {}, function (err, volumes) {
             if (err) {
                 reject(err);
+                return;
             }
             resolve(volumes);
         });
@@ -340,6 +363,7 @@ function checkCovers(cb) {
         issuesRepo.find({cover: {$exists: false}}, {}, {}, function (err, issues) {
             if (err) {
                 reject(err);
+                return;
             }
             resolve(issues);
         });
@@ -349,6 +373,7 @@ function checkCovers(cb) {
         storyarcsRepo.find({cover: {$exists: false}, detailed: 'Y'}, {}, {}, function (err, storyArcs) {
             if (err) {
                 reject(err);
+                return;
             }
             resolve(storyArcs);
         });
@@ -370,10 +395,12 @@ function checkCovers(cb) {
                 apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
                     if (err) {
                         reject(err);
+                        return;
                     }
                     volumesRepo.upsert({id: id}, {cover: imgPath}, function (err, res) {
                         if (err) {
                             reject(err);
+                            return;
                         }
                         resolve(res);
                     });
@@ -392,10 +419,12 @@ function checkCovers(cb) {
                 apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
                     if (err) {
                         reject(err);
+                        return;
                     }
                     issuesRepo.upsert({id: id}, {cover: imgPath}, function (err, res) {
                         if (err) {
                             reject(err);
+                            return;
                         }
                         resolve(res);
                     });
@@ -413,10 +442,12 @@ function checkCovers(cb) {
                 apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
                     if (err) {
                         reject(err);
+                        return;
                     }
                     storyarcsRepo.upsert({id: id}, {cover: imgPath}, function (err, res) {
                         if (err) {
                             reject(err);
+                            return;
                         }
                         resolve(res);
                     });

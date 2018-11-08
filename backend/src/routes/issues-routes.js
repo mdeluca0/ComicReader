@@ -30,7 +30,7 @@ module.exports = function(app) {
         }
 
         let query = {$text: {$search: req.query.search}};
-        let sort = {'volume.name': 1, file: 1};
+        let sort = {'issueFile.file': 1};
         let filter = {name: 1, issue_number: 1, cover: 1, 'volume.id': 1, 'volume.name': 1};
 
         issuesRepo.search(query, sort, filter, function(err, issues) {

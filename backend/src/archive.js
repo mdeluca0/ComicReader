@@ -6,7 +6,7 @@ const config = require('./config');
 //takes an issue from the db and attempts to extract the issue
 function extractIssue(file, cb) {
     if (typeof(file) === 'undefined') {
-        return cb(1, "File is undefined");
+        return cb("File is undefined");
     }
 
     var ext = file.substr(file.lastIndexOf('.') + 1);
@@ -27,7 +27,7 @@ function extractIssue(file, cb) {
             return cb(null, handler, entries, ext);
         });
     } else {
-        return cb(1);
+        return cb('Extension is not cbr or cbz');
     }
 }
 
@@ -55,7 +55,7 @@ function extractCbr(file, cb) {
 
             return cb(null, archive, entries);
         } else {
-            return cb(1, null, []);
+            return cb('Cbr entries are undefined', null, []);
         }
     });
 }
@@ -65,7 +65,7 @@ function extractCbz(file, cb) {
         var zip = new admZip(file);
         var entries = zip.getEntries();
     } catch (e) {
-        return cb(1, null, []);
+        return cb(e.toString(), null, []);
     }
 
     // remove non-file elements from entries
@@ -153,7 +153,7 @@ function getPageCount(entries, cb) {
     if (entries.length) {
         return cb(null, entries.length);
     } else {
-        return cb(1);
+        return cb('Error getting page count');
     }
 }
 

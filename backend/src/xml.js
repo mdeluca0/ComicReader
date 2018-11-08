@@ -7,12 +7,12 @@ function xmlToJs(xml, cb) {
             return cb(err);
         }
 
-        if (res.results) {
+        if (res == null) {
+            return {};
+        } else if (res.results != null) {
             return cb(null, res.results);
-        } else if (res.response.results) {
-            return cb(null, res.response.results);
         } else {
-            return cb(1);
+            return cb('No xml result from ' + xml);
         }
     });
 }

@@ -20,12 +20,21 @@ function requestVolume(name, year, cb) {
         fieldList: ['api_detail_url', 'id', 'name', 'start_year', 'count_of_issues', 'description', 'image']
     };
 
-    api.apiRequest(params, function(err, volumes) {
+    api.apiRequest(params, function(err, res) {
         if (err) {
             return cb(err);
         }
 
-        volumes = volumes.volume;
+        if (res === {}) {
+            return cb('No metadata found for volume ' + name);
+        }
+
+        let volumes = res.volume;
+
+        // If there is only one volume found, it doesn't return as an array
+        if (!Array.isArray(volumes)) {
+            volumes = [volumes];
+        }
 
         //find volume with matching name and year
         let volume = volumes.find(function(volume) {
@@ -47,12 +56,21 @@ function requestIssues(volumeId, cb) {
         fieldList: ['api_detail_url', 'id', 'cover_date', 'image', 'issue_number', 'name', 'volume', 'description']
     };
 
-    api.apiRequest(params, function(err, issues) {
+    api.apiRequest(params, function(err, res) {
         if (err) {
             return cb(err);
         }
 
-        issues = issues.issue;
+        if (res === {}) {
+            return cb('No issue metadata found for volume ' + volumeId);
+        }
+
+        let issues = res.issue;
+
+        // If there is only one issue found, it doesn't return as an array
+        if (!Array.isArray(issues)) {
+            issues = [issues];
+        }
 
         issues.sort(function(a, b) {
             if(a.issue_number < b.issue_number) { return -1; }
@@ -107,16 +125,8 @@ function detailStoryArc(url, cb) {
         }
 
         storyArc.detailed = 'Y';
-        let imageUrl = storyArc.image.super_url;
-        let fileName = imageUrl.split('/').pop();
-        let path = config.thumbDirectory + '/story_arcs/' + fileName;
 
-        requestImage(imageUrl, path, function (err, imgPath) {
-            if (!err) {
-                storyArc.cover = imgPath;
-            }
-            return cb(null, storyArc);
-        });
+        return cb(null, storyArc);
     });
 }
 
