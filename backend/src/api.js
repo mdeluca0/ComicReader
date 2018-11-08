@@ -1,7 +1,7 @@
 const request = require('request');
 const fs = require('fs');
 const xml = require('./xml');
-const consts = require('./consts');
+const config = require('./config');
 
 function apiRequest(params, cb) {
     if (!params.url) {
@@ -9,8 +9,8 @@ function apiRequest(params, cb) {
     }
 
     let options = {
-        url: params.url + '?api_key=' + consts.apiKey + '&offset=0',
-        headers: {'user-agent': consts.userAgent}
+        url: params.url + '?api_key=' + config.apiKey + '&offset=0',
+        headers: {'user-agent': config.userAgent}
     };
 
     if (params.filter) {
@@ -64,7 +64,7 @@ function apiRequestHelper(options, offset, results, cb) {
 function imageRequest(url, path, cb) {
     let options = {
         'url': url,
-        'headers': {'user-agent': consts.userAgent},
+        'headers': {'user-agent': config.userAgent},
         'encoding': null
     };
     request(options, function (err, res, body) {
@@ -76,13 +76,13 @@ function imageRequest(url, path, cb) {
             let fileName = decodeURIComponent(dir.pop());
             dir = dir.join('/');
 
-            let cover = dir.replace(consts.thumbDirectory + '/', '') + '/' + fileName;
+            let cover = dir.replace(config.thumbDirectory + '/', '') + '/' + fileName;
 
             if (fs.existsSync(dir + '/' + fileName)) {
                 return cb(null, cover);
             }
 
-            consts.mkDirRecursive(dir);
+            mkDirRecursive(dir);
 
             fs.writeFile(dir + '/' + fileName, new Buffer(body), function(err){
                 if (err) {
@@ -95,6 +95,30 @@ function imageRequest(url, path, cb) {
             return cb('Image request failed with status code: ' + res.statusCode.toString());
         }
     });
+}
+
+function mkDirRecursive(path) {
+    let parts = path.split('/');
+    let curPath = '';
+    let length = parts.length;
+
+    for (let i = 0; i < length; i++) {
+        if (curPath !== '') {
+            curPath += '/';
+        }
+
+        let part = parts.shift();
+
+        curPath += part;
+
+        if (part.indexOf(':') !== -1) {
+            continue;
+        }
+
+        if (!fs.existsSync(curPath)) {
+            fs.mkdirSync(curPath);
+        }
+    }
 }
 
 module.exports.apiRequest = apiRequest;

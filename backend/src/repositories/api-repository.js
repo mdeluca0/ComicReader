@@ -1,5 +1,6 @@
 const api = require('../api');
-const consts = require('../consts');
+const strManip = require('../str-manip');
+const config = require('../config');
 
 function requestImage(url, path, cb) {
     api.imageRequest(url, path, function(err, res) {
@@ -11,9 +12,11 @@ function requestImage(url, path, cb) {
 }
 
 function requestVolume(name, year, cb) {
+    name = strManip.replaceEscapedCharacters(name);
+
     let params = {
-        url: consts.apiUrl + 'volumes/',
-        filter: 'name:' + consts.replaceEscapedCharacters(name).toLowerCase().replace(/[ ]/g, '_'),
+        url: config.apiUrl + 'volumes/',
+        filter: 'name:' + name.toLowerCase().replace(/[ ]/g, '_'),
         fieldList: ['api_detail_url', 'id', 'name', 'start_year', 'count_of_issues', 'description', 'image']
     };
 
@@ -39,7 +42,7 @@ function requestVolume(name, year, cb) {
 
 function requestIssues(volumeId, cb) {
     let params = {
-        url: consts.apiUrl + 'issues/',
+        url: config.apiUrl + 'issues/',
         filter: 'volume:' + volumeId.toString(),
         fieldList: ['api_detail_url', 'id', 'cover_date', 'image', 'issue_number', 'name', 'volume', 'description']
     };
@@ -51,12 +54,11 @@ function requestIssues(volumeId, cb) {
 
         issues = issues.issue;
 
-        //set issue numbers to integers so mongodb can sort them
-        for (let i = 0; i < issues.length; i++) {
-            issues[i].issue_number = parseInt(issues[i].issue_number);
-        }
-
-        issues.sort(function(a, b) { return a.issue_number - b.issue_number });
+        issues.sort(function(a, b) {
+            if(a.issue_number < b.issue_number) { return -1; }
+            if(a.issue_number > b.issue_number) { return 1; }
+            return 0;
+        });
 
         return cb(null, issues);
     });
@@ -107,7 +109,7 @@ function detailStoryArc(url, cb) {
         storyArc.detailed = 'Y';
         let imageUrl = storyArc.image.super_url;
         let fileName = imageUrl.split('/').pop();
-        let path = consts.thumbDirectory + '/story_arcs/' + fileName;
+        let path = config.thumbDirectory + '/story_arcs/' + fileName;
 
         requestImage(imageUrl, path, function (err, imgPath) {
             if (!err) {

@@ -1,4 +1,3 @@
-const consts = require('../consts');
 const directoryRepo = require('../repositories/directory-repository');
 const volumesRepo = require('../repositories/volumes-repository');
 
@@ -43,7 +42,7 @@ module.exports = function(app){
     });
 
     app.get('/volumes/:volumeId', function(req, res) {
-        let query = {_id: consts.convertId(req.params.volumeId)};
+        let query = {_id: require('../db').convertId(req.params.volumeId)};
         let filter = {id: 1, description: 1, name: 1, start_year: 1, cover: 1, 'publisher.name': 1};
 
         directoryRepo.findVolumesWithMeta(query, {}, filter, function(err, volume) {
@@ -57,8 +56,8 @@ module.exports = function(app){
 
     app.get('/volumes/:volumeId/issues', function(req, res) {
         let offset = parseInt(req.query.offset) || 0;
-        let query = {parent: consts.convertId(req.params.volumeId)};
-        let sort = {issue_number: 1};
+        let query = {parent: require('../db').convertId(req.params.volumeId)};
+        let sort = {file: 1};
         let filter = {id: 1, name: 1, issue_number: 1, cover: 1, 'volume.id': 1};
 
         directoryRepo.findIssuesWithMeta(query, sort, filter, function(err, issues) {

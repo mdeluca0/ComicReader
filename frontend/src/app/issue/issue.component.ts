@@ -31,9 +31,9 @@ export class IssueComponent implements OnInit {
         this.volume = null;
 
         this.rest.getIssue(params['id']).subscribe((data: {}) => {
-          this.issue = data[0];
-          this.nextIssue = this.issue.nextIssue;
-          this.prevIssue = this.issue.prevIssue;
+          this.issue = data;
+          this.nextIssue = this.issue.next;
+          this.prevIssue = this.issue.previous;
           this.volume = this.issue.volume;
 
           this.rest.getPageCount(params['id']).subscribe((data: {}) => {

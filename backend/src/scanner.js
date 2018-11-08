@@ -1,8 +1,8 @@
 const fs = require('fs');
-const consts = require('./consts');
+const config = require('./config');
 
 function scan(cb) {
-    fs.readdir(consts.comicDirectory, function (err, folders) {
+    fs.readdir(config.comicDirectory, function (err, folders) {
         if (err) {
             return cb(err);
         }
@@ -24,7 +24,7 @@ function scanIssues(folders, directory, cb) {
 
     let startYear = folder.match(/\([0-9][0-9][0-9][0-9]\)/g);
 
-    if (!startYear) {
+    if (!startYear.length) {
         return cb("No year found");
     }
 
@@ -33,7 +33,7 @@ function scanIssues(folders, directory, cb) {
     let title = folder.replace(/\.[^/.]+$/, '');
     title = folder.replace('(' + startYear + ')', '').trim();
 
-    let path = consts.comicDirectory + '/' + folder;
+    let path = config.comicDirectory + '/' + folder;
 
     fs.readdir(path, function (err, issues) {
         if (err) {
@@ -41,6 +41,14 @@ function scanIssues(folders, directory, cb) {
         }
 
         let issuesCopy = issues.slice();
+
+        for (let i = 0; i < issuesCopy.length; i++) {
+            let ext = issuesCopy[i].slice(-4);
+            if (ext !== '.cbr' && ext !== '.cbz') {
+                issuesCopy.splice(i, 1);
+                i--;
+            }
+        }
 
         directory.push({
             'file': folder,
@@ -53,24 +61,4 @@ function scanIssues(folders, directory, cb) {
     });
 }
 
-function getIssueFile(issue, cb) {
-    let issueNumber = consts.convertToThreeDigits(issue.issue_number);
-    let issuePath = consts.comicDirectory + '/' + issue.volumeName + ' (' + issue.startYear + ')';
-    let fileName =  issue.volumeName + ' - ' + issueNumber;
-
-    fs.readdir(issuePath, function (err, issues) {
-        if (err) {
-            return cb(err);
-        }
-         for (let i = 0; i < issues.length; i++) {
-            let extension = issues[i].substr(issues[i].lastIndexOf('.') + 1);
-
-            if (fileName === issues[i].replace(/\.[^/.]+$/, '')) {
-                return cb(null, issuePath + '/' + fileName + '.' + extension);
-            }
-         }
-    });
-}
-
 module.exports.scan = scan;
-module.exports.getIssueFile = getIssueFile;

@@ -20,6 +20,9 @@ describe('consts', function() {
             assert.equal(consts.convertToThreeDigits('999.1'), '999.1');
             assert.equal(consts.convertToThreeDigits('1000.1'), '1000.1');
         });
+        it('should return a triple digit number with letters appended', function() {
+            assert.equal(consts.convertToThreeDigits('6AU'), '006AU');
+        });
     });
     describe('#replaceEscapedCharacters()', function() {
         it('should replace &47; with /', function() {

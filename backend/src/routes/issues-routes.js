@@ -1,4 +1,3 @@
-const consts = require('../consts');
 const archive = require('../archive');
 const directoryRepo = require('../repositories/directory-repository');
 const issuesRepo = require('../repositories/issues-repository');
@@ -9,7 +8,7 @@ module.exports = function(app) {
     app.get('/issues', function (req, res) {
         let offset = parseInt(req.query.offset) || 0;
         let query = {parent: {$ne: null}};
-        let sort = {'volume.name': 1, issue_number: 1};
+        let sort = {'volume.name': 1, file: 1};
         let filter = {id: 1, name: 1, issue_number: 1, cover: 1, 'volume.id': 1};
 
         directoryRepo.findIssuesWithMeta(query, sort, filter, function (err, issues) {
@@ -31,7 +30,7 @@ module.exports = function(app) {
         }
 
         let query = {$text: {$search: req.query.search}};
-        let sort = {'volume.name': 1, issue_number: 1};
+        let sort = {'volume.name': 1, file: 1};
         let filter = {name: 1, issue_number: 1, cover: 1, 'volume.id': 1, 'volume.name': 1};
 
         issuesRepo.search(query, sort, filter, function(err, issues) {
@@ -43,58 +42,54 @@ module.exports = function(app) {
     });
 
     app.get('/issues/:issueId', function (req, res) {
-        let query = {_id: consts.convertId(req.params.issueId)};
+        let query = {_id: require('../db').convertId(req.params.issueId)};
 
         directoryRepo.findIssuesWithMeta(query, {}, {}, function (err, issue) {
             if (err) {
                 //TODO: send error response
             }
 
-            issue[0].nextIssue = {};
-            issue[0].prevIssue = {};
-
             if (!issue.length) {
-                res.send(issue);
-                return;
+                return {};
             }
 
-            const nextIssueNum = issue[0].issue_number + 1;
-            const prevIssueNum = issue[0].issue_number - 1;
-            let query = {
-                $or: [
-                    {parent: issue[0].parent, issue_number: nextIssueNum},
-                    {parent: issue[0].parent, issue_number: prevIssueNum}
-                ]
-            };
-            let filter = {name: 1, issue_number: 1, cover: 1};
+            issue = issue.shift();
+            issue.previous = {};
+            issue.next = {};
 
-            directoryRepo.findIssuesWithMeta(query, {}, filter, function (err, issues) {
+            //pull issues by volume
+            let query = {parent: issue.parent};
+            let filter = {_id: 1, issue_number: 1};
+            directoryRepo.findIssuesWithMeta(query, {}, filter, function(err, issues) {
                 if (err) {
                     res.send(issue);
-                    //TODO: send error response
+                    return;
                 }
 
-                for (let i = 0; i < issues.length; i++) {
-                    let issueInfo = {
-                        _id: issues[i]._id.toString(),
-                        name: issues[i].metadata != null ? issues[i].metadata.name : issues[i].volume.name,
-                        issue_number: issues[i].issue_number
+                issues.sort(require('../sorts').sortIssueNumber);
+
+                let index = issues.findIndex(obj => obj.file === issue.file);
+
+                if (index - 1 >= 0) {
+                    issue.previous = {
+                        _id: issues[index-1]._id.toString(),
+                        issue_number: issues[index-1].issue_number
                     };
-                    if (issues[i].issue_number === nextIssueNum) {
-                        issue[0].nextIssue = issueInfo;
-                    } else if (issues[i].issue_number === prevIssueNum) {
-                        issue[0].prevIssue = issueInfo;
-                    }
+                }
+                if (index + 1 < issues.length) {
+                    issue.next = {
+                        _id: issues[index+1]._id.toString(),
+                        issue_number: issues[index+1].issue_number
+                    };
                 }
 
                 res.send(issue);
             });
-
         });
     });
 
     app.get('/issues/:issueId/page_count', function (req, res) {
-        let query = {_id: consts.convertId(req.params.issueId)}
+        let query = {_id: require('../db').convertId(req.params.issueId)}
 
         directoryRepo.findIssuesWithMeta(query, {}, {}, function (err, issue) {
             if (err) {
@@ -131,7 +126,7 @@ module.exports = function(app) {
     });
 
     app.get('/issues/:issueId/:pageNo', function (req, res) {
-        let query = {_id: consts.convertId(req.params.issueId)};
+        let query = {_id: require('../db').convertId(req.params.issueId)};
         let pageNo = req.params.pageNo;
 
         if (isNaN(parseInt(pageNo))) {

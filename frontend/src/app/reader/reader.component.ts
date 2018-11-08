@@ -45,10 +45,10 @@ export class ReaderComponent implements OnInit {
         this.toolbarState = 'hide';
 
         this.rest.getIssue(params['id']).subscribe((data: {}) => {
-          this.issue = data[0];
+          this.issue = data;
           this.volume = this.issue.volume;
-          this.nextIssue = this.issue.nextIssue;
-          this.prevIssue = this.issue.prevIssue;
+          this.nextIssue = this.issue.next;
+          this.prevIssue = this.issue.previous;
           this.rest.getPageCount(params['id']).subscribe((data: {}) => {
             this.pages = new Array<number>(parseInt(data['page_count']));
             this.goToPage(this.curPageNum);

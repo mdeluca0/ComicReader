@@ -18,6 +18,6 @@ app.use((req, res, next) => {
 
 require('./routes')(app);
 require('./refresh');
-require('./monitor');
+//require('./monitor');
 
 module.exports = app;

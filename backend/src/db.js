@@ -1,7 +1,12 @@
 const mongo = require('mongodb').MongoClient;
-const url = require('./consts').dbUrl;
+const ObjectId = require('mongodb').ObjectId;
+const url = require('./config').dbUrl;
 
 var client = null;
+
+function convertId(id) {
+    return new ObjectId(id.toString());
+}
 
 function connect(cb) {
     if (client == null) {
@@ -130,6 +135,7 @@ function aggregate(options, cb) {
     });
 }
 
+module.exports.convertId = convertId;
 module.exports.find = find;
 module.exports.upsert = upsert;
 module.exports.remove = remove;

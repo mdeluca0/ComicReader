@@ -3,7 +3,7 @@
 <div class="volume-card-container" (window:scroll)="onScroll()">
   <app-volume-card *ngFor="let volume of volumes"
     [_id]="volume._id"
-    [name]="volume.name"
+    [name]="volume.metadata != null ? volume.metadata.name : volume.name"
     [start_year]="volume.start_year"
     [cover]="volume.metadata != null ? volume.metadata.cover : null">
   </app-volume-card>

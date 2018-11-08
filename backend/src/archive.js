@@ -1,7 +1,7 @@
 const unrar = require('unrar'); //UnRAR must be listed in your PATH variable.
 const admZip = require('adm-zip');
 const toArray = require('stream-to-array');
-const consts = require('./consts');
+const config = require('./config');
 
 //takes an issue from the db and attempts to extract the issue
 function extractIssue(file, cb) {
@@ -10,7 +10,7 @@ function extractIssue(file, cb) {
     }
 
     var ext = file.substr(file.lastIndexOf('.') + 1);
-    file = consts.comicDirectory + '/' + file;
+    file = config.comicDirectory + '/' + file;
 
     if (ext === 'cbr') {
         extractCbr(file, function (err, handler, entries) {
