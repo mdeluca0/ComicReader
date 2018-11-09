@@ -5,7 +5,7 @@ import {Component, Input, OnInit } from '@angular/core';
   templateUrl: './volume-card.component.html',
   styleUrls: ['./volume-card.component.css']
 })
-export class VolumeCardComponent {
+export class VolumeCardComponent implements OnInit {
   @Input('_id') _id:string;
   @Input('name') name:string;
   @Input('start_year') start_year:string;
@@ -14,7 +14,9 @@ export class VolumeCardComponent {
   constructor() { }
 
   ngOnInit() {
-    this.cover = encodeURIComponent(this.cover);
+    if (this.cover != null) {
+      this.cover = encodeURIComponent(this.cover);
+    }
   }
 
 }

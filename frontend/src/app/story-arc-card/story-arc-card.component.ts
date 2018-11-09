@@ -5,7 +5,7 @@ import {Component, Input, OnInit} from '@angular/core';
   templateUrl: './story-arc-card.component.html',
   styleUrls: ['./story-arc-card.component.css']
 })
-export class StoryArcCardComponent {
+export class StoryArcCardComponent implements OnInit {
   @Input('id') id:string;
   @Input('name') name:string;
   @Input('cover') cover:string;
@@ -13,6 +13,8 @@ export class StoryArcCardComponent {
   constructor() { }
 
   ngOnInit() {
-    this.cover = encodeURIComponent(this.cover);
+    if (this.cover != null) {
+      this.cover = encodeURIComponent(this.cover);
+    }
   }
 }
