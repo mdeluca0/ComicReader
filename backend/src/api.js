@@ -80,20 +80,27 @@ function imageRequest(url, path, cb) {
         'encoding': null
     };
 
-    let statusCode = null;
+    let error = null;
 
     request.get(options)
         .on('response', function(res) {
-            statusCode = res.statusCode;
+            if (res.statusCode !== 200) {
+                error = res.statusCode + ' error - ' + fileName;
+            }
+        })
+        .on('error', function(err) {
+            error = err;
         })
         .pipe(fs.createWriteStream(dir + '/' + fileName))
         .on('close', function() {
-            if (statusCode === 200) {
-                return cb(null, cover);
-            } else {
+            if (error) {
                 fs.unlink(dir + '/' + fileName);
-                return cb(statusCode + ' error - ' + fileName);
+                return cb(error);
             }
+            return cb(null, cover);
+        })
+        .on('error', function(err) {
+            error = err;
         });
 }
 

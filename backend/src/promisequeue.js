@@ -37,7 +37,7 @@ class PromiseQueue {
                 delete that.removeId(item.id);
             }).catch(function(err) {
                 delete that.removeId(item.id);
-                return err;
+                console.log(err);
             });
         }
     }

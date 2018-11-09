@@ -6,7 +6,6 @@ const config = require('./config');
 const directoryRepo = require('./repositories/directory-repository');
 const volumesRepo = require('./repositories/volumes-repository');
 const issuesRepo = require('./repositories/issues-repository');
-const storyarcsRepo = require('./repositories/storyarcs-repository');
 const apiRepo = require('./repositories/api-repository');
 
 const watcher = chokidar.watch(config.comicDirectory, {ignored: /(^|[\/\\])\../, persistent: true});
@@ -61,18 +60,18 @@ function refresh() {
                         console.log('Adding ' + volumeName + ' (' + volumeYear + ')...');
                         addVolume(volumeName, volumeYear, function (err, volume) {
                             if (err) {
-                                console.log('Add ' + volumeName + ' (' + volumeYear + ') Failed!');
+                                console.log('Failed - Add ' + volumeName + ' (' + volumeYear + ')');
                                 resolve(err);
                                 return;
                             }
-                            console.log('Add ' + volumeName + ' (' + volumeYear + ') Success!');
+                            console.log('Adding ' + volumeName + ' (' + volumeYear + ') Issues...');
                             addIssues(volume.id, volume.start_year, volume.count_of_issues, function (err, issues) {
                                 if (err) {
-                                    console.log('Add ' + volumeName + ' (' + volumeYear + ') Issues Failed!');
+                                    console.log('Failed - Add ' + volumeName + ' (' + volumeYear + ') Issues');
                                     resolve(err);
                                     return;
                                 }
-                                console.log('Add ' + volumeName + ' (' + volumeYear + ') Issues Success!');
+                                console.log('Success - Add ' + volumeName + ' (' + volumeYear + ') Issues');
                                 resolve(null);
                             });
                         });
@@ -80,17 +79,7 @@ function refresh() {
                 }
 
                 Promise.all(promises).then(function() {
-                    checkCovers(function(err) {
-                        if (err) {
-                            console.log('Refresh Failed - ' + err);
-                            refreshing = false;
-                            return err;
-                        }
-                        console.log('Refresh Finished Successfully!');
-                        refreshing = false;
-                    });
-                }).catch(function(err){
-                    console.log('Refresh Failed - ' + err);
+                    console.log('Refresh Finished!');
                     refreshing = false;
                 });
             });
@@ -350,135 +339,3 @@ function addIssues(volumeId, startYear, issueCount, cb) {
         });
     });
 }
-
-function checkCovers(cb) {
-    let promises = [];
-
-    promises.push(new Promise(function(resolve, reject) {
-        volumesRepo.find({cover: {$exists: false}}, {}, {}, function (err, volumes) {
-            if (err) {
-                resolve(err);
-            } else {
-                resolve(volumes);
-            }
-        });
-    }));
-
-    promises.push(new Promise(function(resolve, reject) {
-        issuesRepo.find({cover: {$exists: false}}, {}, {}, function (err, issues) {
-            if (err) {
-                resolve(err);
-            } else {
-                resolve(issues);
-            }
-        });
-    }));
-
-    promises.push(new Promise(function(resolve, reject) {
-        storyarcsRepo.find({cover: {$exists: false}, detailed: 'Y'}, {}, {}, function (err, storyArcs) {
-            if (err) {
-                resolve(err);
-            } else {
-                resolve(storyArcs);
-            }
-        });
-    }));
-
-    Promise.all(promises).then(function(results) {
-        let volumes = results[0] || [];
-        let issues = results[1] || [];
-        let storyArcs = results[2] || [];
-        let promises = [];
-
-        for (let i = 0; i < volumes.length; i++) {
-            let id = volumes[i].id.toString();
-            let imageUrl = volumes[i].image.super_url;
-            let fileName = imageUrl.split('/').pop();
-            let path = config.thumbDirectory + '/' + id + '/' + fileName;
-
-            promises.push(new Promise(function(resolve, reject) {
-                apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
-                    if (err) {
-                        resolve(err);
-                        return;
-                    }
-                    volumesRepo.upsert({id: id}, {cover: imgPath}, function (err, res) {
-                        if (err) {
-                            resolve(err);
-                            return;
-                        }
-                        resolve(null);
-                    });
-                });
-            }));
-        }
-
-        for (let i = 0; i < issues.length; i++) {
-            let id = issues[i].id;
-            let volumeId = issues[i].volume.id.toString();
-            let imageUrl = issues[i].image.super_url;
-            let fileName = imageUrl.split('/').pop();
-            let path = config.thumbDirectory + '/' + volumeId + '/' + fileName;
-
-            promises.push(new Promise(function(resolve, reject) {
-                apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
-                    if (err) {
-                        resolve(err);
-                        return;
-                    }
-                    issuesRepo.upsert({id: id}, {cover: imgPath}, function (err, res) {
-                        if (err) {
-                            resolve(err);
-                            return;
-                        }
-                        resolve(null);
-                    });
-                });
-            }));
-        }
-
-        for (let i = 0; i < storyArcs.length; i++) {
-            promises.push(new Promise(function (resolve, reject) {
-                let id = storyArcs[i].id.toString();
-                let imageUrl = storyArcs[i].image.super_url;
-                let fileName = imageUrl.split('/').pop();
-                let path = config.thumbDirectory + '/story_arcs/' + fileName;
-
-                apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
-                    if (err) {
-                        resolve(err);
-                        return;
-                    }
-                    storyarcsRepo.upsert({id: id}, {cover: imgPath}, function (err, res) {
-                        if (err) {
-                            resolve(err);
-                            return;
-                        }
-                        resolve(null);
-                    });
-                });
-            }));
-        }
-
-        Promise.all(promises).then(function() {
-            return cb(null);
-        });
-    });
-}
-
-module.exports.getToday = function() {
-    let today = new Date();
-    let dd = today.getDate();
-    let mm = today.getMonth() + 1;
-    let yyyy = today.getFullYear();
-
-    if (dd < 10) {
-        dd = '0' + dd;
-    }
-
-    if (mm < 10) {
-        mm = '0' + mm;
-    }
-
-    return yyyy + '-' + mm + '-' + dd;
-};
