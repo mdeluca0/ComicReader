@@ -62,39 +62,39 @@ function apiRequestHelper(options, offset, results, cb) {
 }
 
 function imageRequest(url, path, cb) {
+    let dir = path.split('/');
+    let fileName = decodeURIComponent(dir.pop());
+    dir = dir.join('/');
+
+    let cover = dir.replace(config.thumbDirectory + '/', '') + '/' + fileName;
+
+    if (fs.existsSync(dir + '/' + fileName)) {
+        return cb(null, cover);
+    }
+
+    mkDirRecursive(dir);
+
     let options = {
         'url': url,
         'headers': {'user-agent': config.userAgent},
         'encoding': null
     };
-    request(options, function (err, res, body) {
-        if (err) {
-            return cb(err);
-        }
-        if (res.statusCode === 200) {
-            let dir = path.split('/');
-            let fileName = decodeURIComponent(dir.pop());
-            dir = dir.join('/');
 
-            let cover = dir.replace(config.thumbDirectory + '/', '') + '/' + fileName;
+    let statusCode = null;
 
-            if (fs.existsSync(dir + '/' + fileName)) {
+    request.get(options)
+        .on('response', function(res) {
+            statusCode = res.statusCode;
+        })
+        .pipe(fs.createWriteStream(dir + '/' + fileName))
+        .on('close', function() {
+            if (statusCode === 200) {
                 return cb(null, cover);
+            } else {
+                fs.unlink(dir + '/' + fileName);
+                return cb(statusCode + ' error - ' + fileName);
             }
-
-            mkDirRecursive(dir);
-
-            fs.writeFile(dir + '/' + fileName, new Buffer(body), function(err){
-                if (err) {
-                    return cb(err);
-                }
-
-                return cb(null, cover);
-            });
-        } else {
-            return cb('Image request failed with status code: ' + res.statusCode.toString());
-        }
-    });
+        });
 }
 
 function mkDirRecursive(path) {

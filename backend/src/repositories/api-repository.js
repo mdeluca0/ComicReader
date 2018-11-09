@@ -44,7 +44,7 @@ function requestVolume(name, year, cb) {
         if (volume) {
             return cb(null, volume);
         } else {
-            return cb('Volume with name and year not found');
+            return cb('Volume with ' + name + ' and ' + year + ' not found');
         }
     });
 }

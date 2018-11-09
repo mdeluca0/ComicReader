@@ -18,10 +18,16 @@ mat-card-content {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 14px;
-  font-weight: bold;
+
   text-align: left;
   position: relative;
   width: 165px;
   left: -15px;
   top: -10px;
+}
+.volume-name {
+  font-weight: bold;
+}
+.volume-year {
+  color: #808080;
 }

@@ -44,4 +44,14 @@ describe('strManip', function() {
             assert.equal(strManip.removeHtmlTags('<div>qwdqwdqwdq</div>'), 'qwdqwdqwdq');
         });
     });
+    describe('#removeLeadingZeroes()', function() {
+        it('remove leading zeroes', function() {
+            assert.equal(strManip.removeLeadingZeroes('006'), '6');
+            assert.equal(strManip.removeLeadingZeroes('6AU'), '6AU');
+            assert.equal(strManip.removeLeadingZeroes('6AU.0'), '6AU.0');
+            assert.equal(strManip.removeLeadingZeroes('100'), '100');
+            assert.equal(strManip.removeLeadingZeroes('201'), '201');
+            assert.equal(strManip.removeLeadingZeroes('1000.1'), '1000.1');
+        });
+    });
 });

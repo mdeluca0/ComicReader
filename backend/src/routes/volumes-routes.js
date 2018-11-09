@@ -37,6 +37,9 @@ module.exports = function(app){
             if (err) {
                 //TODO: send error
             }
+
+            volumes = volumes.filter(a => a.volumeFile != null);
+
             res.send(volumes);
         });
     });

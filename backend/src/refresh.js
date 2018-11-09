@@ -41,13 +41,13 @@ function refresh() {
 
         scanner.scan(function (err, directory) {
             if (err) {
-                console.log('Refresh Failed - ' + err);
+                console.log('Scanner Failed - ' + err);
                 refreshing = false;
                 return err;
             }
             syncDirectory(directory, function (err, newDir) {
                 if (err) {
-                    console.log('Refresh Failed - ' + err);
+                    console.log('Sync Directory Failed - ' + err);
                     refreshing = false;
                     return err;
                 }
@@ -58,16 +58,21 @@ function refresh() {
                     let volumeName = newDir[i].name;
                     let volumeYear = newDir[i].start_year;
                     promises.push(new Promise(function (resolve, reject) {
+                        console.log('Adding ' + volumeName + ' (' + volumeYear + ')...');
                         addVolume(volumeName, volumeYear, function (err, volume) {
                             if (err) {
-                                reject(err);
+                                console.log('Add ' + volumeName + ' (' + volumeYear + ') Failed!');
+                                resolve(err);
                                 return;
                             }
+                            console.log('Add ' + volumeName + ' (' + volumeYear + ') Success!');
                             addIssues(volume.id, volume.start_year, volume.count_of_issues, function (err, issues) {
                                 if (err) {
-                                    reject(err);
+                                    console.log('Add ' + volumeName + ' (' + volumeYear + ') Issues Failed!');
+                                    resolve(err);
                                     return;
                                 }
+                                console.log('Add ' + volumeName + ' (' + volumeYear + ') Issues Success!');
                                 resolve(null);
                             });
                         });
@@ -352,37 +357,37 @@ function checkCovers(cb) {
     promises.push(new Promise(function(resolve, reject) {
         volumesRepo.find({cover: {$exists: false}}, {}, {}, function (err, volumes) {
             if (err) {
-                reject(err);
-                return;
+                resolve(err);
+            } else {
+                resolve(volumes);
             }
-            resolve(volumes);
         });
     }));
 
     promises.push(new Promise(function(resolve, reject) {
         issuesRepo.find({cover: {$exists: false}}, {}, {}, function (err, issues) {
             if (err) {
-                reject(err);
-                return;
+                resolve(err);
+            } else {
+                resolve(issues);
             }
-            resolve(issues);
         });
     }));
 
     promises.push(new Promise(function(resolve, reject) {
         storyarcsRepo.find({cover: {$exists: false}, detailed: 'Y'}, {}, {}, function (err, storyArcs) {
             if (err) {
-                reject(err);
-                return;
+                resolve(err);
+            } else {
+                resolve(storyArcs);
             }
-            resolve(storyArcs);
         });
     }));
 
     Promise.all(promises).then(function(results) {
-        let volumes = results[0];
-        let issues = results[1];
-        let storyArcs = results[2];
+        let volumes = results[0] || [];
+        let issues = results[1] || [];
+        let storyArcs = results[2] || [];
         let promises = [];
 
         for (let i = 0; i < volumes.length; i++) {
@@ -394,15 +399,15 @@ function checkCovers(cb) {
             promises.push(new Promise(function(resolve, reject) {
                 apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
                     if (err) {
-                        reject(err);
+                        resolve(err);
                         return;
                     }
                     volumesRepo.upsert({id: id}, {cover: imgPath}, function (err, res) {
                         if (err) {
-                            reject(err);
+                            resolve(err);
                             return;
                         }
-                        resolve(res);
+                        resolve(null);
                     });
                 });
             }));
@@ -418,15 +423,15 @@ function checkCovers(cb) {
             promises.push(new Promise(function(resolve, reject) {
                 apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
                     if (err) {
-                        reject(err);
+                        resolve(err);
                         return;
                     }
                     issuesRepo.upsert({id: id}, {cover: imgPath}, function (err, res) {
                         if (err) {
-                            reject(err);
+                            resolve(err);
                             return;
                         }
-                        resolve(res);
+                        resolve(null);
                     });
                 });
             }));
@@ -441,15 +446,15 @@ function checkCovers(cb) {
 
                 apiRepo.requestImage(imageUrl, path, function (err, imgPath) {
                     if (err) {
-                        reject(err);
+                        resolve(err);
                         return;
                     }
                     storyarcsRepo.upsert({id: id}, {cover: imgPath}, function (err, res) {
                         if (err) {
-                            reject(err);
+                            resolve(err);
                             return;
                         }
-                        resolve(res);
+                        resolve(null);
                     });
                 });
             }));
@@ -457,12 +462,7 @@ function checkCovers(cb) {
 
         Promise.all(promises).then(function() {
             return cb(null);
-        }).catch(function(err) {
-            return cb(err);
         });
-
-    }).catch(function(err) {
-        return cb(err);
     });
 }
 

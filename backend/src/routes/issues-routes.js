@@ -37,6 +37,9 @@ module.exports = function(app) {
             if (err) {
                 //TODO: send error
             }
+
+            issues = issues.filter(a => a.issueFile != null);
+
             res.send(issues);
         });
     });

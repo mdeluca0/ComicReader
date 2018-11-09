@@ -1,6 +1,9 @@
 <mat-card class="volume-card" title="{{name}}" routerLink="/volumes/{{_id}}">
   <img *ngIf="cover != null" class="mat-card-image" src="../../../assets/thumbs/{{cover}}">
   <img *ngIf="cover == null" class="mat-card-image blank-cover"/>
-  <mat-card-content>{{name}}<br/>{{start_year}}
+  <mat-card-content>
+    <span class="volume-name">{{name}}</span>
+    <br/>
+    <span class="volume-year">{{start_year}}</span>
   </mat-card-content>
 </mat-card>

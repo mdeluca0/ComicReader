@@ -23,7 +23,7 @@ function removeHtmlTags(html) {
 
 function removeLeadingZeroes(s) {
     s = s.toString();
-    return s.replace(/[0]+(?=[^0])/g, '');
+    return s.replace(/^0+/g, '');
 }
 
 module.exports.replaceEscapedCharacters = replaceEscapedCharacters;
