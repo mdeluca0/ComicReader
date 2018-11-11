@@ -1,7 +1,5 @@
 <mat-card class="story-arc-card" title="{{name}}" routerLink="/story-arc/{{id}}">
-  <img *ngIf="cover.length" class="mat-card-image" src="../../../assets/thumbs/story_arcs/{{cover}}">
-  <img *ngIf="!cover.length" class="mat-card-image blank-cover"/>
-  <mat-card-content>
-    <span *ngIf="name.length">{{name}}</span>
-  </mat-card-content>
+  <img *ngIf="cover != null" class="mat-card-image" src="../../../assets/thumbs/{{cover}}">
+  <img *ngIf="cover == null" class="mat-card-image blank-cover"/>
+  <mat-card-content>{{name}}</mat-card-content>
 </mat-card>

@@ -53,5 +53,9 @@ describe('strManip', function() {
             assert.equal(strManip.removeLeadingZeroes('201'), '201');
             assert.equal(strManip.removeLeadingZeroes('1000.1'), '1000.1');
         });
+        it('returns 0 if it is all zeroes', function() {
+            assert.equal(strManip.removeLeadingZeroes('0'), '0');
+            assert.equal(strManip.removeLeadingZeroes('000'), '0');
+        });
     });
 });
