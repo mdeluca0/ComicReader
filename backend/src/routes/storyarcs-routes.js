@@ -9,19 +9,17 @@ module.exports = function(app){
 
         storyarcsRepo.find(query, sort, filter, offset, function(err, storyArcs) {
             if (err) {
-                //TODO: send error response
-                return err;
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
             }
 
+            res.status(200);
             res.send({story_arcs: storyArcs});
         });
     });
 
     app.get('/story_arcs/search', function(req, res) {
-        if (!req.query.search) {
-            res.send({});
-        }
-
         let query = {$text: {$search: req.query.search}};
         let sort = {name: 1};
         let filter = {id: 1, name: 1, cover: 1};
@@ -29,8 +27,18 @@ module.exports = function(app){
 
         storyarcsRepo.search(query, sort, filter, offset, function(err, storyArcs) {
             if (err) {
-                //TODO: send error
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
             }
+
+            if (!storyArcs.length) {
+                res.status(200);
+                res.send({story_arcs: []});
+                return;
+            }
+
+            res.status(200);
             res.send({story_arcs: storyArcs});
         });
     });
@@ -41,9 +49,12 @@ module.exports = function(app){
 
         storyarcsRepo.find(query, {}, filter, null, function(err, storyArc) {
             if (err) {
-                //TODO: send error response
-                return err;
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
             }
+
+            res.status(200);
             res.send({story_arcs: storyArc});
         });
     });
@@ -63,10 +74,12 @@ module.exports = function(app){
 
         storyarcsRepo.findIssues(query, sort, filter, offset, function(err, issues) {
             if (err) {
-                //TODO: send error response
-                return err;
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
             }
 
+            res.status(200);
             res.send({issues: issues});
         });
     });

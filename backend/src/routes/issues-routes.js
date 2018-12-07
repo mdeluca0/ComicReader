@@ -11,18 +11,17 @@ module.exports = function(app) {
 
         directoryRepo.findIssuesWithMeta(query, sort, filter, offset, function (err, issues) {
             if (err) {
-                //TODO: send error response
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
             }
 
+            res.status(200);
             res.send({issues: issues});
         });
     });
 
     app.get('/issues/search', function(req, res) {
-        if (!req.query.search) {
-            res.send({});
-        }
-
         let query = {$text: {$search: req.query.search}};
         let sort = {'issueFile.file': 1};
         let filter = {name: 1, issue_number: 1, cover: 1, 'volume.id': 1, 'volume.name': 1};
@@ -30,37 +29,59 @@ module.exports = function(app) {
 
         issuesRepo.search(query, sort, filter, offset, function(err, issues) {
             if (err) {
-                //TODO: send error
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
+            }
+
+            if (!issues.length) {
+                res.status(200);
+                res.send({issues: []});
+                return;
             }
 
             issues = issues.filter(a => a.issueFile != null);
 
+            res.status(200);
             res.send({issues: issues});
         });
     });
 
     app.get('/issues/:issueId', function (req, res) {
         let query = {_id: require('../db').convertId(req.params.issueId)};
+        let filter = {
+            _id: 1,
+            name: 1,
+            cover_date: 1,
+            description: 1,
+            issue_number: 1,
+            cover: 1,
+            index_in_volume: 1,
+            'volume.name': 1
+        };
 
-        directoryRepo.findIssuesWithMeta(query, {}, {}, null, function (err, issue) {
+        directoryRepo.findIssuesWithMeta(query, {}, filter, null, function (err, issue) {
             if (err) {
-                //TODO: send error response
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
             }
 
             if (!issue.length) {
-                return {};
+                res.status(200);
+                res.send({issues: []});
+                return;
             }
 
             issue = issue.shift();
             issue.previous = {};
             issue.next = {};
 
+            //TODO: fix this for issues without metadata
             let query = {
                 $or: [
-                    {$and: [
-                        {parent: issue.parent}, {index_in_volume: issue.index_in_volume - 1},
-                        {parent: issue.parent}, {index_in_volume: issue.index_in_volume + 1}
-                    ]}
+                    {$and: [{parent: issue.parent}, {'metadata.index_in_volume': issue.metadata.index_in_volume - 1}]},
+                    {$and: [{parent: issue.parent}, {'metadata.index_in_volume': issue.metadata.index_in_volume + 1}]}
                 ]
             };
             let filter = {_id: 1, issue_number: 1};
@@ -95,11 +116,13 @@ module.exports = function(app) {
 
         directoryRepo.findIssuesWithMeta(query, {}, {}, null, function (err, issue) {
             if (err) {
-                //todo: send error response
+                res.status(500);
+                res.send('ERROR: Server Error');
                 return;
             }
             if (!issue.length) {
-                //todo: send error response
+                res.status(404);
+                res.send('ERROR: Issue Not Found');
                 return;
             }
 
@@ -113,14 +136,18 @@ module.exports = function(app) {
 
             archive.extractIssue(path, function (err, handler, entries) {
                 if (err) {
-                    //todo: send error response
+                    res.status(500);
+                    res.send('ERROR: Server Error');
                     return;
                 }
                 archive.getPageCount(entries, function (err, count) {
                     if (err) {
-                        //todo: send error response
+                        res.status(500);
+                        res.send('ERROR: Server Error');
                         return;
                     }
+
+                    res.status(200);
                     res.send({page_count: count});
                 });
             });
@@ -132,17 +159,20 @@ module.exports = function(app) {
         let pageNo = req.params.pageNo;
 
         if (isNaN(parseInt(pageNo))) {
-            //todo: send error response
+            res.status(400);
+            res.send('ERROR: Page Number Is Not A Number');
             return;
         }
 
         directoryRepo.findIssuesWithMeta(query, {}, {}, null, function (err, issue) {
             if (err) {
-                //todo: send error response
+                res.status(500);
+                res.send('ERROR: Server Error');
                 return;
             }
             if (!issue.length) {
-                //todo: send error response
+                res.status(404);
+                res.send('ERROR: Issue Not Found');
                 return;
             }
 
@@ -156,16 +186,19 @@ module.exports = function(app) {
 
             archive.extractIssue(path, function (err, handler, entries, ext) {
                 if (err) {
-                    //todo: send error response
+                    res.status(500);
+                    res.send('ERROR: Server Error');
+                    return;
                 }
                 archive.getPage(handler, entries, ext, pageNo, function (err, base64Img) {
                     if (err) {
-                        //todo: send error response
+                        res.status(500);
+                        res.send('ERROR: Server Error');
+                        return;
                     }
-                    res.send({
-                        pageNo: pageNo,
-                        image: base64Img
-                    });
+
+                    res.status(200);
+                    res.send({pageNo: pageNo, image: base64Img});
                 });
             });
         });

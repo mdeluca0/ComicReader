@@ -10,19 +10,17 @@ module.exports = function(app){
 
         directoryRepo.findVolumesWithMeta(query, sort, filter, offset, function(err, volumes) {
             if (err) {
-                //TODO: send error response
-                return err;
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
             }
 
+            res.status(200);
             res.send({volumes: volumes});
         });
     });
 
     app.get('/volumes/search', function(req, res) {
-        if (!req.query.search) {
-            res.send({});
-        }
-
         let query = {$text: {$search: req.query.search}};
         let sort = {name: 1};
         let filter = {id: 1, name: 1, start_year: 1, cover: 1};
@@ -30,11 +28,20 @@ module.exports = function(app){
 
         volumesRepo.search(query, sort, filter, offset, function(err, volumes) {
             if (err) {
-                //TODO: send error
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
+            }
+
+            if (!volumes.length) {
+                res.status(200);
+                res.send({volumes: []});
+                return;
             }
 
             volumes = volumes.filter(a => a.volumeFile != null);
 
+            res.status(200);
             res.send({volumes: volumes});
         });
     });
@@ -45,25 +52,37 @@ module.exports = function(app){
 
         directoryRepo.findVolumesWithMeta(query, {}, filter, null, function(err, volume) {
             if (err) {
-                //TODO: send error response
-                return err;
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
             }
 
-            res.send({volumes: volume});
+            res.status(200);
+            res.send({volumes: [volume]});
         });
     });
 
     app.get('/volumes/:volumeId/issues', function(req, res) {
-        let query = {parent: require('../db').convertId(req.params.volumeId)};
+        let volumeId = require('../db').convertId(req.params.volumeId);
+        if (volumeId === null) {
+            res.status(404);
+            res.send("ERROR: Volume doesn't exist");
+            return;
+        }
+
+        let query = {parent: volumeId};
         let sort = {'metadata.index_in_volume': 1, file: 1};
         let filter = {id: 1, name: 1, issue_number: 1, cover: 1, 'volume.id': 1};
         let offset = parseInt(req.query.offset) || 0;
 
         directoryRepo.findIssuesWithMeta(query, sort, filter, offset, function(err, issues) {
             if (err) {
-                //TODO: send error
+                res.status(500);
+                res.send('ERROR: Server Error');
+                return;
             }
 
+            res.status(200);
             res.send({issues: issues});
         });
     });

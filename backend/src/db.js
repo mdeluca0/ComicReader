@@ -5,7 +5,11 @@ const config = require('./config');
 var client = null;
 
 function convertId(id) {
-    return new ObjectId(id.toString());
+    try {
+        return new ObjectId(id.toString());
+    } catch (err) {
+        return null;
+    }
 }
 
 function connect(cb) {
