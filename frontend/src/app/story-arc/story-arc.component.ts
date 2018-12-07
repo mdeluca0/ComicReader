@@ -25,8 +25,8 @@ export class StoryArcComponent implements OnInit {
   constructor(public rest:RestService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
-    this.rest.getStoryArc(this.route.snapshot.params['id']).subscribe((data: {}) => {
-      this.storyArc = data[0];
+    this.rest.getStoryArc(this.route.snapshot.params['id']).subscribe((data: { story_arcs }) => {
+      this.storyArc = data.story_arcs[0];
 
       this.name = this.storyArc.name;
       this.publisher = this.storyArc.publisher.name;

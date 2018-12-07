@@ -1,25 +1,19 @@
 const storyarcsRepo = require('../repositories/storyarcs-repository');
 
-const pageSize = 50;
-
 module.exports = function(app){
     app.get('/story_arcs', function(req, res) {
-        let offset = parseInt(req.query.offset) || 0;
         let query = {};
         let sort = {name: 1};
         let filter = {name: 1, cover: 1};
+        let offset = parseInt(req.query.offset) || 0;
 
-        storyarcsRepo.find(query, sort, filter, function(err, storyArcs) {
+        storyarcsRepo.find(query, sort, filter, offset, function(err, storyArcs) {
             if (err) {
                 //TODO: send error response
                 return err;
             }
 
-            storyArcs = {
-                story_arcs: storyArcs.slice(offset, offset + pageSize)
-            };
-
-            res.send(storyArcs);
+            res.send({story_arcs: storyArcs});
         });
     });
 
@@ -31,12 +25,13 @@ module.exports = function(app){
         let query = {$text: {$search: req.query.search}};
         let sort = {name: 1};
         let filter = {id: 1, name: 1, cover: 1};
+        let offset = parseInt(req.query.offset) || null;
 
-        storyarcsRepo.search(query, sort, filter, function(err, storyArcs) {
+        storyarcsRepo.search(query, sort, filter, offset, function(err, storyArcs) {
             if (err) {
                 //TODO: send error
             }
-            res.send(storyArcs);
+            res.send({story_arcs: storyArcs});
         });
     });
 
@@ -44,12 +39,12 @@ module.exports = function(app){
         let query = {id: req.params.storyArcId};
         let filter = {id: 1, cover: 1, name: 1, deck: 1, 'publisher.name': 1};
 
-        storyarcsRepo.find(query, {}, filter, function(err, storyArc) {
+        storyarcsRepo.find(query, {}, filter, null, function(err, storyArc) {
             if (err) {
                 //TODO: send error response
                 return err;
             }
-            res.send(storyArc);
+            res.send({story_arcs: storyArc});
         });
     });
 
@@ -66,17 +61,13 @@ module.exports = function(app){
             'volume.name': 1
         };
 
-        storyarcsRepo.findIssues(query, sort, filter, function(err, issues) {
+        storyarcsRepo.findIssues(query, sort, filter, offset, function(err, issues) {
             if (err) {
                 //TODO: send error response
                 return err;
             }
 
-            issues = {
-                issues: issues.slice(offset, offset + pageSize)
-            };
-
-            res.send(issues);
+            res.send({issues: issues});
         });
     });
 };

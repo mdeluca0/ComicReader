@@ -30,8 +30,8 @@ export class IssueComponent implements OnInit {
         this.prevIssue = null;
         this.volume = null;
 
-        this.rest.getIssue(params['id']).subscribe((data: {}) => {
-          this.issue = data;
+        this.rest.getIssue(params['id']).subscribe((data: { issues }) => {
+          this.issue = data.issues[0];
           this.nextIssue = this.issue.next;
           this.prevIssue = this.issue.previous;
           this.volume = this.issue.volume;

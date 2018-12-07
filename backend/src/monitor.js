@@ -27,7 +27,7 @@ function populateDetailQueue() {
     let promises = [];
 
     promises.push(new Promise(function(resolve, reject) {
-        volumesRepo.find({detailed: {$not: /[Y]/}}, {}, {}, function(err, volumes) {
+        volumesRepo.find({detailed: {$not: /[Y]/}}, {}, {}, null, function(err, volumes) {
             if (err) {
                 resolve([]);
             } else {
@@ -37,7 +37,7 @@ function populateDetailQueue() {
     }));
 
     promises.push(new Promise(function(resolve, reject) {
-        issuesRepo.find({detailed: {$not: /[Y]/}}, {}, {}, function(err, issues) {
+        issuesRepo.find({detailed: {$not: /[Y]/}}, {}, {}, null, function(err, issues) {
             if (err) {
                 resolve([]);
             } else {
@@ -47,7 +47,7 @@ function populateDetailQueue() {
     }));
 
     promises.push(new Promise(function(resolve, reject) {
-        storyArcsRepo.find({detailed: {$not: /[Y]/}}, {}, {}, function(err, storyArcs) {
+        storyArcsRepo.find({detailed: {$not: /[Y]/}}, {}, {}, null, function(err, storyArcs) {
             if (err) {
                 resolve([]);
             } else {
@@ -79,7 +79,7 @@ function populateDetailQueue() {
                         reject(err);
                     }
 
-                    if (issue.story_arc_credits.story_arc) {
+                    if (issue.story_arc_credits && issue.story_arc_credits.story_arc) {
                         addStoryArc(issue.story_arc_credits.story_arc, function (err, res) {
                             if (err) {
                                 //TODO: handle error
@@ -102,6 +102,9 @@ function populateDetailQueue() {
                     if (err) {
                         reject(err);
                     }
+                    if (!storyArc.id) {
+                        reject('Story Arc missing id');
+                    }
                     storyArcsRepo.upsert({id: storyArc.id}, storyArc, function(err, res) {
                         if (err) {
                             reject(err);
@@ -118,7 +121,7 @@ function populateCoversQueue() {
     let promises = [];
 
     promises.push(new Promise(function(resolve, reject) {
-        volumesRepo.find({cover: {$exists: false}}, {}, {}, function (err, volumes) {
+        volumesRepo.find({cover: {$exists: false}}, {}, {}, null, function (err, volumes) {
             if (err) {
                 resolve([]);
             } else {
@@ -128,7 +131,7 @@ function populateCoversQueue() {
     }));
 
     promises.push(new Promise(function(resolve, reject) {
-        issuesRepo.find({cover: {$exists: false}}, {}, {}, function (err, issues) {
+        issuesRepo.find({cover: {$exists: false}}, {}, {}, null, function (err, issues) {
             if (err) {
                 resolve([]);
             } else {
@@ -138,7 +141,7 @@ function populateCoversQueue() {
     }));
 
     promises.push(new Promise(function(resolve, reject) {
-        storyArcsRepo.find({cover: {$exists: false}, detailed: 'Y'}, {}, {}, function (err, storyArcs) {
+        storyArcsRepo.find({cover: {$exists: false}, detailed: 'Y'}, {}, {}, null, function (err, storyArcs) {
             if (err) {
                 resolve([]);
             } else {
@@ -225,7 +228,10 @@ function populateCoversQueue() {
 }
 
 function addStoryArc(storyArc, cb) {
-    storyArcsRepo.find({id: storyArc.id}, {}, {}, function(err, res) {
+    if (!storyArc.id) {
+        return cb('No story arc id to add from');
+    }
+    storyArcsRepo.find({id: storyArc.id}, {}, {}, null, function(err, res) {
         if (err) {
             return cb(err);
         }

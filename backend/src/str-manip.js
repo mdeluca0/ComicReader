@@ -27,6 +27,34 @@ function removeLeadingZeroes(s) {
     return !s.length ? '0' : s;
 }
 
+function dissectFileName(s) {
+    let issueNumber = '';
+    let ext = '';
+
+    let split = s;
+
+    if (split.indexOf('.') !== -1) {
+        split = split.split('.');
+        ext = split.pop().trim();
+        split = split.join('.');
+    }
+
+    if (split.indexOf('-') !== -1) {
+        split = split.split('-');
+        issueNumber = split.pop().trim();
+        split = split.join('-');
+    }
+
+    let name = split.trim();
+
+    return {
+        name: name,
+        issueNumber: issueNumber,
+        ext: ext
+    };
+}
+
 module.exports.replaceEscapedCharacters = replaceEscapedCharacters;
 module.exports.removeHtmlTags = removeHtmlTags;
 module.exports.removeLeadingZeroes = removeLeadingZeroes;
+module.exports.dissectFileName = dissectFileName;

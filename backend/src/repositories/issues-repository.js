@@ -1,11 +1,12 @@
 const db = require('../db');
 
-function find(query, sort, filter, cb) {
+function find(query, sort, filter, offset, cb) {
     let params = {
         collection: 'issues',
         query: query,
         sort: sort,
-        filter: filter
+        filter: filter,
+        offset: offset
     };
     db.find(params, function(err, res) {
         if (err) {
@@ -29,7 +30,7 @@ function upsert(query, document, cb) {
     });
 }
 
-function search(query, sort, filter, cb) {
+function search(query, sort, filter, offset, cb) {
     let agg = [];
     agg.push({$match: query});
     agg.push({
@@ -79,6 +80,10 @@ function search(query, sort, filter, cb) {
                 issueFile: 1
             }, filter)
         });
+    }
+    if (offset && Object.keys(offset).length > 0) {
+        agg.push({$skip: offset});
+        agg.push({$limit: config.responseLimit});
     }
 
     db.aggregate({collection: 'issues', aggregation: agg}, function(err, res) {

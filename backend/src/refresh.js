@@ -88,7 +88,7 @@ function refresh() {
 }
 
 function syncDirectory(newDir, cb) {
-    directoryRepo.find({parent: null}, {name: 1, start_year: 1}, {}, function(err, curVolumes) {
+    directoryRepo.find({parent: null}, {name: 1, start_year: 1}, {}, null, function(err, curVolumes) {
         if (err) {
             return cb(err);
         }
@@ -140,7 +140,7 @@ function syncDirectory(newDir, cb) {
                         reject(err);
                         return;
                     }
-                    directoryRepo.find(query, {}, {}, function(err, res) {
+                    directoryRepo.find(query, {}, {}, null, function(err, res) {
                         if (err) {
                             reject(err);
                             return;
@@ -166,7 +166,7 @@ function syncDirectory(newDir, cb) {
             let file = updates.same[i].file;
             let issues = updates.same[i].issues;
             promises.push(new Promise(function(resolve, reject) {
-                directoryRepo.find({file: file}, {name: 1, start_year: 1}, {}, function(err, res) {
+                directoryRepo.find({file: file}, {name: 1, start_year: 1}, {}, null, function(err, res) {
                     if (err) {
                         reject(err);
                         return;
@@ -187,7 +187,7 @@ function syncDirectory(newDir, cb) {
         }
 
         Promise.all(promises).then(function() {
-             directoryRepo.find({parent: null}, {name: 1, start_year: 1}, {}, function(err, res) {
+             directoryRepo.find({parent: null}, {name: 1, start_year: 1}, {}, null, function(err, res) {
                 if (err) {
                     return cb(err);
                 }
@@ -201,7 +201,7 @@ function syncDirectory(newDir, cb) {
 function syncIssues(newIssues, volumeId, cb) {
     volumeId = require('./db').convertId(volumeId);
 
-    directoryRepo.find({parent: volumeId}, {file: 1}, {}, function(err, res) {
+    directoryRepo.find({parent: volumeId}, {file: 1}, {}, null, function(err, res) {
         if (err) {
             return cb(err);
         }
@@ -216,17 +216,11 @@ function syncIssues(newIssues, volumeId, cb) {
 
         if (diff.added.length) {
             for (let i = 0; i < diff.added.length; i++) {
-                let issueNumber = '';
-                if (diff.added[i].indexOf('-') !== -1) {
-                    issueNumber = diff.added[i].split('.');
-                    issueNumber.pop();
-                    issueNumber = issueNumber.join('.').split('-');
-                    issueNumber = issueNumber.pop().trim();
-                }
+                let fileParts = strManip.dissectFileName(diff.added[i]);
 
                 let insert = {
                     file: diff.added[i],
-                    issue_number: strManip.removeLeadingZeroes(issueNumber),
+                    issue_number: strManip.removeLeadingZeroes(fileParts.issueNumber),
                     parent: volumeId
                 };
                 promises.push(new Promise(function (resolve, reject) {
@@ -268,7 +262,7 @@ function syncIssues(newIssues, volumeId, cb) {
 }
 
 function addVolume(name, year, cb) {
-    volumesRepo.find({name: name, start_year: year}, {}, {}, function(err, res) {
+    volumesRepo.find({name: name, start_year: year}, {}, {}, null, function(err, res) {
         if (err) {
             return cb(err);
         } else if (res.length) {
@@ -278,6 +272,10 @@ function addVolume(name, year, cb) {
         apiRepo.requestVolume(name, year, function(err, volume) {
             if (err) {
                 return cb(err);
+            }
+
+            if (volume.id === null) {
+                return cb('Volume ' + name + '(' + year + ') has null id');
             }
 
             volume.description = volume.description.replace(/<h4>Collected Editions.*/, '');
@@ -295,7 +293,7 @@ function addVolume(name, year, cb) {
 }
 
 function addIssues(volumeId, startYear, issueCount, cb) {
-    issuesRepo.find({'volume.id': volumeId}, {issue_number: 1}, {}, function(err, curIssues) {
+    issuesRepo.find({'volume.id': volumeId}, {index_in_volume: 1}, {}, null, function(err, curIssues) {
         if (err) {
             return cb(err);
         } else if (issueCount != null && curIssues.length === parseInt(issueCount)) {
@@ -316,6 +314,11 @@ function addIssues(volumeId, startYear, issueCount, cb) {
 
             for (let i = 0; i < added.length; i++) {
                 let issue = added[i];
+
+                if (issue.id === null) {
+                    continue;
+                }
+
                 issue.volume.start_year = startYear;
                 issue.description = strManip.removeHtmlTags(issue.description);
                 issue.detailed = 'N';

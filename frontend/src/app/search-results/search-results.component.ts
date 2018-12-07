@@ -29,14 +29,14 @@ export class SearchResultsComponent implements OnInit {
         this.storyArcs = [];
         this.search = params['search'].toString();
 
-        this.rest.volumesSearch(params['search']).subscribe((data: {}) => {
-          this.volumes = data;
+        this.rest.volumesSearch(params['search']).subscribe((data: { volumes }) => {
+          this.volumes = data.volumes;
         });
-        this.rest.issuesSearch(params['search']).subscribe((data: {}) => {
-          this.issues = data;
+        this.rest.issuesSearch(params['search']).subscribe((data: { issues }) => {
+          this.issues = data.issues;
         });
-        this.rest.storyArcSearch(params['search']).subscribe((data: {}) => {
-          this.storyArcs = data;
+        this.rest.storyArcSearch(params['search']).subscribe((data: { story_arcs }) => {
+          this.storyArcs = data.story_arcs;
         });
     });
   }

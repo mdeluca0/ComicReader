@@ -2,25 +2,19 @@ const archive = require('../archive');
 const directoryRepo = require('../repositories/directory-repository');
 const issuesRepo = require('../repositories/issues-repository');
 
-const pageSize = 50;
-
 module.exports = function(app) {
     app.get('/issues', function (req, res) {
-        let offset = parseInt(req.query.offset) || 0;
         let query = {parent: {$ne: null}};
         let sort = {'volume.name': 1, file: 1};
         let filter = {id: 1, name: 1, issue_number: 1, cover: 1, 'volume.id': 1};
+        let offset = parseInt(req.query.offset) || 0;
 
-        directoryRepo.findIssuesWithMeta(query, sort, filter, function (err, issues) {
+        directoryRepo.findIssuesWithMeta(query, sort, filter, offset, function (err, issues) {
             if (err) {
                 //TODO: send error response
             }
 
-            issues = {
-                issues: issues.slice(offset, offset + pageSize)
-            };
-
-            res.send(issues);
+            res.send({issues: issues});
         });
     });
 
@@ -32,22 +26,23 @@ module.exports = function(app) {
         let query = {$text: {$search: req.query.search}};
         let sort = {'issueFile.file': 1};
         let filter = {name: 1, issue_number: 1, cover: 1, 'volume.id': 1, 'volume.name': 1};
+        let offset = parseInt(req.query.offset) || null;
 
-        issuesRepo.search(query, sort, filter, function(err, issues) {
+        issuesRepo.search(query, sort, filter, offset, function(err, issues) {
             if (err) {
                 //TODO: send error
             }
 
             issues = issues.filter(a => a.issueFile != null);
 
-            res.send(issues);
+            res.send({issues: issues});
         });
     });
 
     app.get('/issues/:issueId', function (req, res) {
         let query = {_id: require('../db').convertId(req.params.issueId)};
 
-        directoryRepo.findIssuesWithMeta(query, {}, {}, function (err, issue) {
+        directoryRepo.findIssuesWithMeta(query, {}, {}, null, function (err, issue) {
             if (err) {
                 //TODO: send error response
             }
@@ -60,33 +55,37 @@ module.exports = function(app) {
             issue.previous = {};
             issue.next = {};
 
-            //pull issues by volume
-            let query = {parent: issue.parent};
+            let query = {
+                $or: [
+                    {$and: [
+                        {parent: issue.parent}, {index_in_volume: issue.index_in_volume - 1},
+                        {parent: issue.parent}, {index_in_volume: issue.index_in_volume + 1}
+                    ]}
+                ]
+            };
             let filter = {_id: 1, issue_number: 1};
-            directoryRepo.findIssuesWithMeta(query, {}, filter, function(err, issues) {
+            directoryRepo.findIssuesWithMeta(query, {}, filter, null, function(err, issues) {
                 if (err) {
                     res.send(issue);
                     return;
                 }
 
-                issues.sort(require('../sorts').sortIssueNumber);
-
-                let index = issues.findIndex(obj => obj.file === issue.file);
-
-                if (index - 1 >= 0) {
-                    issue.previous = {
-                        _id: issues[index-1]._id.toString(),
-                        issue_number: issues[index-1].issue_number
-                    };
-                }
-                if (index + 1 < issues.length) {
-                    issue.next = {
-                        _id: issues[index+1]._id.toString(),
-                        issue_number: issues[index+1].issue_number
-                    };
+                for (let i = 0; i < issues.length; i++) {
+                    if (issues[i].index_in_volume === issue.index_in_volume - 1) {
+                        issue.previous = {
+                            _id: issues[i]._id.toString(),
+                            issue_number: issues[i].issue_number
+                        };
+                    }
+                    if (issues[i].index_in_volume === issue.index_in_volume + 1) {
+                        issue.next = {
+                            _id: issues[i]._id.toString(),
+                            issue_number: issues[i].issue_number
+                        };
+                    }
                 }
 
-                res.send(issue);
+                res.send({issues: [issue]});
             });
         });
     });
@@ -94,7 +93,7 @@ module.exports = function(app) {
     app.get('/issues/:issueId/page_count', function (req, res) {
         let query = {_id: require('../db').convertId(req.params.issueId)}
 
-        directoryRepo.findIssuesWithMeta(query, {}, {}, function (err, issue) {
+        directoryRepo.findIssuesWithMeta(query, {}, {}, null, function (err, issue) {
             if (err) {
                 //todo: send error response
                 return;
@@ -137,7 +136,7 @@ module.exports = function(app) {
             return;
         }
 
-        directoryRepo.findIssuesWithMeta(query, {}, {}, function (err, issue) {
+        directoryRepo.findIssuesWithMeta(query, {}, {}, null, function (err, issue) {
             if (err) {
                 //todo: send error response
                 return;

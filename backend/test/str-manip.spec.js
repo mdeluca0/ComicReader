@@ -58,4 +58,23 @@ describe('strManip', function() {
             assert.equal(strManip.removeLeadingZeroes('000'), '0');
         });
     });
+    describe('#dissectFileName()', function() {
+        it('split name correctly', function() {
+            assert.deepEqual(strManip.dissectFileName('Name - 001.cbr'), {
+                name: 'Name',
+                issueNumber: '001',
+                ext: 'cbr'
+            });
+            assert.deepEqual(strManip.dissectFileName('Name-With-Hyphens - 001.cbr'), {
+                name: 'Name-With-Hyphens',
+                issueNumber: '001',
+                ext: 'cbr'
+            });
+            assert.deepEqual(strManip.dissectFileName('Name-Without-Extension - 001'), {
+                name: 'Name-Without-Extension',
+                issueNumber: '001',
+                ext: ''
+            });
+        });
+    });
 });

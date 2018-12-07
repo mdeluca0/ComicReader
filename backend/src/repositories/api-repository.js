@@ -1,5 +1,6 @@
 const api = require('../api');
 const strManip = require('../str-manip');
+const sorts = require('../sorts');
 const config = require('../config');
 
 function requestImage(url, path, cb) {
@@ -72,11 +73,11 @@ function requestIssues(volumeId, cb) {
             issues = [issues];
         }
 
-        issues.sort(function(a, b) {
-            if(a.issue_number < b.issue_number) { return -1; }
-            if(a.issue_number > b.issue_number) { return 1; }
-            return 0;
-        });
+        // Assign volume order
+        issues.sort(sorts.sortIssueNumber);
+        for (let i = 0; i < issues.length; i++) {
+            issues[i].index_in_volume = i;
+        }
 
         return cb(null, issues);
     });

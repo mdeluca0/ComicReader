@@ -1,11 +1,13 @@
 const db = require('../db');
+const config = require('../config');
 
-function find(query, sort, filter, cb) {
+function find(query, sort, filter, offset, cb) {
     let params = {
         collection: 'story_arcs',
         query: query,
         sort: sort,
-        filter: filter
+        filter: filter,
+        offset: offset
     };
     db.find(params, function(err, res) {
         if (err) {
@@ -29,7 +31,7 @@ function upsert(query, document, cb) {
     });
 }
 
-function search(query, sort, filter, cb) {
+function search(query, sort, filter, offset, cb) {
     let agg = [];
     agg.push({$match: query});
     if (sort && Object.keys(sort).length > 0) {
@@ -42,6 +44,10 @@ function search(query, sort, filter, cb) {
             }, filter)
         });
     }
+    if (offset !== null) {
+        agg.push({$skip: offset});
+        agg.push({$limit: config.responseLimit});
+    }
 
     db.aggregate({collection: 'story_arcs', aggregation: agg}, function(err, res) {
         if (err) {
@@ -51,7 +57,7 @@ function search(query, sort, filter, cb) {
     });
 }
 
-function findIssues(query, sort, filter, cb) {
+function findIssues(query, sort, filter, offset, cb) {
     let agg = [];
     agg.push({$match: query});
     agg.push({
@@ -144,6 +150,10 @@ function findIssues(query, sort, filter, cb) {
                 issueFile: 1
             }, filter)
         });
+    }
+    if (offset !== null) {
+        agg.push({$skip: offset});
+        agg.push({$limit: config.responseLimit});
     }
 
     db.aggregate({collection: 'story_arcs', aggregation: agg}, function(err, res) {

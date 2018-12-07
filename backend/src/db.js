@@ -1,6 +1,6 @@
 const mongo = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectId;
-const url = require('./config').dbUrl;
+const config = require('./config');
 
 var client = null;
 
@@ -10,7 +10,7 @@ function convertId(id) {
 
 function connect(cb) {
     if (client == null) {
-        mongo.connect(url, {useNewUrlParser: true}, function (err, c) {
+        mongo.connect(config.dbUrl, {useNewUrlParser: true}, function (err, c) {
             if (err) {
                 return cb(err);
             }
@@ -49,6 +49,7 @@ function find(options, cb) {
         options.query = options.query || {};
         options.filter = options.filter || {};
         options.sort = options.sort || {};
+        options.offset = options.offset || null;
 
         // Find
         q = q.find(options.query);
@@ -61,6 +62,12 @@ function find(options, cb) {
         // Sort
         if (options.sort !== {}) {
             q = q.sort(options.sort);
+        }
+
+        // Offset
+        if (options.offset !== null) {
+            q = q.skip(parseInt(options.offset));
+            q = q.limit(config.responseLimit);
         }
 
         q.toArray(function (err, res) {

@@ -18,8 +18,8 @@ export class VolumeComponent implements OnInit {
   constructor(public rest:RestService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
-    this.rest.getVolume(this.route.snapshot.params['id']).subscribe((data: {}) => {
-      this.volume = data[0];
+    this.rest.getVolume(this.route.snapshot.params['id']).subscribe((data: { volumes }) => {
+      this.volume = data.volumes[0];
 
       this.breadcrumbs.push(
         {icon: 'home', link: '/'},
