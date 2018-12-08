@@ -73,11 +73,7 @@ function requestIssues(volumeId, cb) {
             issues = [issues];
         }
 
-        // Assign volume order
         issues.sort(sorts.sortIssueNumber);
-        for (let i = 0; i < issues.length; i++) {
-            issues[i].index_in_volume = i;
-        }
 
         return cb(null, issues);
     });

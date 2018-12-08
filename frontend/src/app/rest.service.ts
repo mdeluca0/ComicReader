@@ -48,7 +48,7 @@ export class RestService {
   }
 
   getPageCount(id): Observable<any> {
-    return this.http.get(endpoint + 'issues/' + <string>id + '/page_count')
+    return this.http.get(endpoint + 'issues/' + <string>id + '/pageCount')
       .pipe(map(this.extractData));
   }
 

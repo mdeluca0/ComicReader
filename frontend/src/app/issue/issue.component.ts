@@ -37,7 +37,7 @@ export class IssueComponent implements OnInit {
           this.volume = this.issue.volume;
 
           this.rest.getPageCount(params['id']).subscribe((data: {}) => {
-            this.pageCount = data['page_count'];
+            this.pageCount = data['pageCount'];
           });
 
           if (this.issue.metadata && this.issue.metadata.story_arc_credits) {

@@ -50,7 +50,7 @@ export class ReaderComponent implements OnInit {
           this.nextIssue = this.issue.next;
           this.prevIssue = this.issue.previous;
           this.rest.getPageCount(params['id']).subscribe((data: {}) => {
-            this.pages = new Array<number>(parseInt(data['page_count']));
+            this.pages = new Array<number>(parseInt(data['pageCount']));
             this.goToPage(this.curPageNum);
           });
         });

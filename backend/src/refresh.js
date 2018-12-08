@@ -2,6 +2,7 @@ const chokidar = require('chokidar');
 const fad = require('fast-array-diff');
 const scanner = require('./scanner');
 const strManip = require('./str-manip');
+const sorts = require('./sorts');
 const config = require('./config');
 const directoryRepo = require('./repositories/directory-repository');
 const volumesRepo = require('./repositories/volumes-repository');
@@ -293,12 +294,14 @@ function addVolume(name, year, cb) {
 }
 
 function addIssues(volumeId, startYear, issueCount, cb) {
-    issuesRepo.find({'volume.id': volumeId}, {index_in_volume: 1}, {}, null, function(err, curIssues) {
+    issuesRepo.find({'volume.id': volumeId}, {}, {}, null, function (err, curIssues) {
         if (err) {
             return cb(err);
         } else if (issueCount != null && curIssues.length === parseInt(issueCount)) {
             return cb(null, curIssues);
         }
+
+        curIssues.sort(sorts.sortIssueNumber);
 
         apiRepo.requestIssues(volumeId, function(err, issues) {
             if (err) {

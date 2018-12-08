@@ -1,6 +1,7 @@
 const archive = require('../archive');
 const directoryRepo = require('../repositories/directory-repository');
 const issuesRepo = require('../repositories/issues-repository');
+const sorts = require('../sorts');
 
 module.exports = function(app) {
     app.get('/issues', function (req, res) {
@@ -56,8 +57,10 @@ module.exports = function(app) {
             description: 1,
             issue_number: 1,
             cover: 1,
-            index_in_volume: 1,
-            'volume.name': 1
+            'volume.name': 1,
+            person_credits: 1,
+            'story_arc_credits.story_arc.id': 1,
+            'story_arc_credits.story_arc.name': 1
         };
 
         directoryRepo.findIssuesWithMeta(query, {}, filter, null, function (err, issue) {
@@ -66,52 +69,47 @@ module.exports = function(app) {
                 res.send('ERROR: Server Error');
                 return;
             }
-
             if (!issue.length) {
                 res.status(200);
                 res.send({issues: []});
                 return;
             }
 
-            issue = issue.shift();
-            issue.previous = {};
-            issue.next = {};
+            issue[0].previous = {};
+            issue[0].next = {};
 
-            //TODO: fix this for issues without metadata
-            let query = {
-                $or: [
-                    {$and: [{parent: issue.parent}, {'metadata.index_in_volume': issue.metadata.index_in_volume - 1}]},
-                    {$and: [{parent: issue.parent}, {'metadata.index_in_volume': issue.metadata.index_in_volume + 1}]}
-                ]
-            };
+            let query = {parent: issue[0].volume._id};
             let filter = {_id: 1, issue_number: 1};
-            directoryRepo.findIssuesWithMeta(query, {}, filter, null, function(err, issues) {
+
+            directoryRepo.find(query, {}, filter, null, function (err, issues) {
                 if (err) {
-                    res.send(issue);
+                    res.status(500);
+                    res.send('ERROR: Server Error');
+                    return;
+                }
+                if (!issues.length) {
+                    res.status(200);
+                    res.send({issues: issue});
                     return;
                 }
 
-                for (let i = 0; i < issues.length; i++) {
-                    if (issues[i].index_in_volume === issue.index_in_volume - 1) {
-                        issue.previous = {
-                            _id: issues[i]._id.toString(),
-                            issue_number: issues[i].issue_number
-                        };
-                    }
-                    if (issues[i].index_in_volume === issue.index_in_volume + 1) {
-                        issue.next = {
-                            _id: issues[i]._id.toString(),
-                            issue_number: issues[i].issue_number
-                        };
-                    }
+                // Really inefficient *shrugs*
+                issues.sort(sorts.sortIssueNumber);
+                let index = issues.findIndex(a => a._id.toString() === issue[0]._id.toString());
+                if (issues[index - 1]) {
+                    issue[0].previous = {_id: issues[index - 1]._id};
+                }
+                if (issues[index + 1]) {
+                    issue[0].next = {_id: issues[index + 1]._id};
                 }
 
-                res.send({issues: [issue]});
+                res.status(200);
+                res.send({issues: issue});
             });
         });
     });
 
-    app.get('/issues/:issueId/page_count', function (req, res) {
+    app.get('/issues/:issueId/pageCount', function (req, res) {
         let query = {_id: require('../db').convertId(req.params.issueId)}
 
         directoryRepo.findIssuesWithMeta(query, {}, {}, null, function (err, issue) {
@@ -148,7 +146,7 @@ module.exports = function(app) {
                     }
 
                     res.status(200);
-                    res.send({page_count: count});
+                    res.send({pageCount: count});
                 });
             });
         });
