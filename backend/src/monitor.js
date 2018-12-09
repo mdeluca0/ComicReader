@@ -21,7 +21,7 @@ setInterval(function () {
         coversQueue.dequeue();
     }
     populateCoversQueue();
-}, 20);
+}, 40);
 
 function populateDetailQueue() {
     let promises = [];

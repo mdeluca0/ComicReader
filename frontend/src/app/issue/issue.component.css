@@ -26,10 +26,22 @@
   height: 35px;
 }
 
+.issue-name {
+  font-weight: bold;
+}
+
 .story-arc-link {
   font-weight: bold;
   cursor: pointer;
 }
 .story-arc-link:hover {
   text-decoration: underline;
+}
+
+.writer {
+  font-weight: bold;
+}
+
+.artist {
+  font-weight: bold;
 }

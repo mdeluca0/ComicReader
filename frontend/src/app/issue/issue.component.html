@@ -22,15 +22,17 @@
     </div>
 
     <p>{{'#' + issue.issue_number}}
-      <span *ngIf="issue.metadata != null && issue.metadata.name.length">{{' - ' + issue.metadata.name}}</span>
+      <span *ngIf="issue.metadata != null && issue.metadata.name.length"> - <span class="issue-name">{{issue.metadata.name}}</span></span>
       <span *ngIf="issue.metadata != null"><br/>{{issue.metadata.cover_date}}</span>
     </p>
     <p *ngIf="storyArcId.length && storyArcId.length">
       This issue is a part of: <span class="story-arc-link" routerLink="/story-arc/{{storyArcId}}">{{storyArcName}}</span>
     </p>
     <p>
-      <span *ngIf="writer.length">{{'Written By: ' + writer}}</span>
-      <span *ngIf="artist.length"><br/>{{'Illustrated By: ' + artist}}</span>
+      <span *ngIf="writer.length"><span class="written-by">Written By: </span><span
+        class="writer">{{writer}}</span></span>
+      <span *ngIf="artist.length"><br/><span class="drawn-by">Illustrated By: </span><span
+        class="artist">{{artist}}</span></span>
     </p>
     <p>{{pageCount + ' pages'}}</p>
     <app-description-text *ngIf="issue.metadata != null" [text]="issue.metadata.description"></app-description-text>
