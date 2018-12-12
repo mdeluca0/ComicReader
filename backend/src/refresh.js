@@ -37,17 +37,17 @@ watcher.on('ready', function(path) {
 function refresh() {
     if (!refreshing) {
         refreshing = true;
-        console.log('Refresh started...');
+        console.log('\x1b[32m%s\x1b[0m', 'Refresh started...');
 
         scanner.scan(function (err, directory) {
             if (err) {
-                console.log('Scanner Failed - ' + err);
+                console.log('\x1b[31m%s\x1b[0m', 'Scanner Failed - ' + err);
                 refreshing = false;
                 return err;
             }
             syncDirectory(directory, function (err, newDir) {
                 if (err) {
-                    console.log('Sync Directory Failed - ' + err);
+                    console.log('\x1b[31m%s\x1b[0m', 'Sync Directory Failed - ' + err);
                     refreshing = false;
                     return err;
                 }
@@ -58,21 +58,21 @@ function refresh() {
                     let volumeName = newDir[i].name;
                     let volumeYear = newDir[i].start_year;
                     promises.push(new Promise(function (resolve, reject) {
-                        console.log('Adding ' + volumeName + ' (' + volumeYear + ')...');
+                        console.log('\x1b[32m%s\x1b[0m', 'Adding ' + volumeName + ' (' + volumeYear + ')...');
                         addVolume(volumeName, volumeYear, function (err, volume) {
                             if (err) {
-                                console.log('Failed - Add ' + volumeName + ' (' + volumeYear + ')');
+                                console.log('\x1b[31m%s\x1b[0m', 'Failed - Add ' + volumeName + ' (' + volumeYear + ')');
                                 resolve(err);
                                 return;
                             }
-                            console.log('Adding ' + volumeName + ' (' + volumeYear + ') Issues...');
+                            console.log('\x1b[32m%s\x1b[0m', 'Adding ' + volumeName + ' (' + volumeYear + ') Issues...');
                             addIssues(volume.id, volume.start_year, volume.count_of_issues, function (err, issues) {
                                 if (err) {
-                                    console.log('Failed - Add ' + volumeName + ' (' + volumeYear + ') Issues');
+                                    console.log('\x1b[31m%s\x1b[0m', 'Failed - Add ' + volumeName + ' (' + volumeYear + ') Issues');
                                     resolve(err);
                                     return;
                                 }
-                                console.log('Success - Add ' + volumeName + ' (' + volumeYear + ') Issues');
+                                console.log('\x1b[32m%s\x1b[0m', 'Success - Add ' + volumeName + ' (' + volumeYear + ') Issues');
                                 resolve(null);
                             });
                         });
@@ -80,7 +80,7 @@ function refresh() {
                 }
 
                 Promise.all(promises).then(function() {
-                    console.log('Refresh Finished!');
+                    console.log('\x1b[32m%s\x1b[0m', 'Refresh Finished!');
                     refreshing = false;
                 });
             });
@@ -221,7 +221,9 @@ function syncIssues(newIssues, volumeId, cb) {
 
                 let insert = {
                     file: diff.added[i],
-                    issue_number: strManip.removeLeadingZeroes(fileParts.issueNumber),
+                    issue_number: fileParts.issueNumber,
+                    sort_number: fileParts.sortNumber,
+                    sort_letter: fileParts.sortLetter,
                     parent: volumeId
                 };
                 promises.push(new Promise(function (resolve, reject) {

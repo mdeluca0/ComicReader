@@ -46,10 +46,15 @@ function dissectFileName(s) {
     }
 
     let name = split.trim();
+    issueNumber = removeLeadingZeroes(issueNumber);
+    let sortNumber = parseFloat(issueNumber.replace(/[^0-9.]/g, ''));
+    let sortLetter = issueNumber.replace(/[^a-zA-Z]/g, '').toString();
 
     return {
         name: name,
         issueNumber: issueNumber,
+        sortNumber: sortNumber,
+        sortLetter: sortLetter,
         ext: ext
     };
 }

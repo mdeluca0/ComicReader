@@ -1,12 +1,11 @@
 const archive = require('../archive');
 const directoryRepo = require('../repositories/directory-repository');
 const issuesRepo = require('../repositories/issues-repository');
-const sorts = require('../sorts');
 
 module.exports = function(app) {
     app.get('/issues', function (req, res) {
         let query = {parent: {$ne: null}};
-        let sort = {'volume.name': 1, file: 1};
+        let sort = {'volume.name': 1, sort_number: 1, sort_letter: 1};
         let filter = {id: 1, name: 1, issue_number: 1, cover: 1, 'volume.id': 1};
         let offset = parseInt(req.query.offset) || 0;
 
@@ -79,9 +78,10 @@ module.exports = function(app) {
             issue[0].next = {};
 
             let query = {parent: issue[0].volume._id};
+            let sort = {sort_number: 1, sort_letter: 1};
             let filter = {_id: 1, issue_number: 1};
 
-            directoryRepo.find(query, {}, filter, null, function (err, issues) {
+            directoryRepo.find(query, sort, filter, null, function (err, issues) {
                 if (err) {
                     res.status(500);
                     res.send('ERROR: Server Error');
@@ -93,9 +93,8 @@ module.exports = function(app) {
                     return;
                 }
 
-                // Really inefficient *shrugs*
-                issues.sort(sorts.sortIssueNumber);
                 let index = issues.findIndex(a => a._id.toString() === issue[0]._id.toString());
+
                 if (issues[index - 1]) {
                     issue[0].previous = {_id: issues[index - 1]._id};
                 }

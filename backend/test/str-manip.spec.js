@@ -62,18 +62,38 @@ describe('strManip', function() {
         it('split name correctly', function() {
             assert.deepEqual(strManip.dissectFileName('Name - 001.cbr'), {
                 name: 'Name',
-                issueNumber: '001',
+                issueNumber: '1',
+                sortNumber: 1,
+                sortLetter: '',
                 ext: 'cbr'
             });
             assert.deepEqual(strManip.dissectFileName('Name-With-Hyphens - 001.cbr'), {
                 name: 'Name-With-Hyphens',
-                issueNumber: '001',
+                issueNumber: '1',
+                sortNumber: 1,
+                sortLetter: '',
                 ext: 'cbr'
             });
             assert.deepEqual(strManip.dissectFileName('Name-Without-Extension - 001'), {
                 name: 'Name-Without-Extension',
-                issueNumber: '001',
+                issueNumber: '1',
+                sortNumber: 1,
+                sortLetter: '',
                 ext: ''
+            });
+            assert.deepEqual(strManip.dissectFileName('Name - 006AU.cbr'), {
+                name: 'Name',
+                issueNumber: '6AU',
+                sortNumber: 6,
+                sortLetter: 'AU',
+                ext: 'cbr'
+            });
+            assert.deepEqual(strManip.dissectFileName('Name - 023.2.cbr'), {
+                name: 'Name',
+                issueNumber: '23.2',
+                sortNumber: 23.2,
+                sortLetter: '',
+                ext: 'cbr'
             });
         });
     });

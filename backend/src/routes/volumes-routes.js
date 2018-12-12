@@ -1,6 +1,5 @@
 const directoryRepo = require('../repositories/directory-repository');
 const volumesRepo = require('../repositories/volumes-repository');
-const sorts = require('../sorts');
 
 module.exports = function(app){
     app.get('/volumes', function(req, res) {
@@ -72,17 +71,16 @@ module.exports = function(app){
         }
 
         let query = {parent: volumeId};
+        let sort = {sort_number: 1, sort_letter: 1};
         let filter = {id: 1, name: 1, issue_number: 1, cover: 1, 'volume.id': 1};
         let offset = parseInt(req.query.offset) || 0;
 
-        directoryRepo.findIssuesWithMeta(query, {}, filter, offset, function (err, issues) {
+        directoryRepo.findIssuesWithMeta(query, sort, filter, offset, function (err, issues) {
             if (err) {
                 res.status(500);
                 res.send('ERROR: Server Error');
                 return;
             }
-
-            issues.sort(sorts.sortIssueNumber);
 
             res.status(200);
             res.send({issues: issues});

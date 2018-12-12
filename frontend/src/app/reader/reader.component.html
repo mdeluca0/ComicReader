@@ -15,7 +15,7 @@
       <div class="reader-breadcrumb" routerLink="/volumes/{{volume._id}}">{{volume.name}}</div>
       <div class="reader-breadcrumb" routerLink="/issues/{{issue._id}}">
         #{{issue.issue_number}}
-        <span *ngIf="issue.metadata != null">- {{issue.metadata.name}}</span>
+        <span *ngIf="issue.metadata.name != null && issue.metadata.name.length">- {{issue.metadata.name}}</span>
       </div>
     </div>
 
